@@ -63,6 +63,8 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
+    implementation(libs.androidx.appcompat.v160)
+
     implementation(libs.firebase.messaging.ktx)
     implementation(libs.mvikotlin.main)
     implementation(libs.mvikotlin.core)
@@ -73,6 +75,7 @@ dependencies {
     implementation(libs.decompose.jetpack)
 
     implementation(libs.room.core)
+    implementation(libs.androidx.appcompat)
     ksp(libs.room.compiler)
 
     implementation(libs.dagger.core)
