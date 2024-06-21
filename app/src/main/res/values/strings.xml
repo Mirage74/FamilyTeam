@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Family Team</string>
+    <string name="default_notification_channel_id" translatable="false">Reminder</string>
+    <string name="fcm_message" translatable="false">Test message</string>
 </resources>

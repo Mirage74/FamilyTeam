@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.parcelize)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -63,9 +64,6 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
-    implementation(libs.androidx.appcompat.v160)
-
-    implementation(libs.firebase.messaging.ktx)
     implementation(libs.mvikotlin.main)
     implementation(libs.mvikotlin.core)
     implementation(libs.mvikotlin.coroutines)
@@ -75,7 +73,6 @@ dependencies {
     implementation(libs.decompose.jetpack)
 
     implementation(libs.room.core)
-    implementation(libs.androidx.appcompat)
     ksp(libs.room.compiler)
 
     implementation(libs.dagger.core)
@@ -87,6 +84,11 @@ dependencies {
     implementation(libs.icons)
 
     implementation(libs.logging.interceptor)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.messaging.ktx)
+    implementation(libs.firebase.auth.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
