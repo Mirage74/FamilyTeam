@@ -1,13 +1,14 @@
 {
   "project_info": {
-    "project_number": "313098869071",
-    "project_id": "family-team-e3e00",
-    "storage_bucket": "family-team-e3e00.appspot.com"
+    "project_number": "",
+    "firebase_url": "",
+    "project_id": "",
+    "storage_bucket": ""
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:313098869071:android:dc7003d5e3e77d23010d3a",
+        "mobilesdk_app_id": "",
         "android_client_info": {
           "package_name": "com.balex.familyteam"
         }
@@ -15,7 +16,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBTx5y-vmn5gC2Usr2II-e2U2jXkg5LtxI"
+          "current_key": ""
         }
       ],
       "services": {

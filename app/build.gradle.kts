@@ -85,10 +85,14 @@ dependencies {
 
     implementation(libs.logging.interceptor)
 
+    implementation(libs.androidx.security.crypto)
+
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.messaging.ktx)
     implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.database)
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

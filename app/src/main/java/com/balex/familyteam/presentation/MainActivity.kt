@@ -1,6 +1,5 @@
-package com.balex.familyteam
+package com.balex.familyteam.presentation
 
-import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -26,17 +25,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.google.firebase.Firebase
+import com.balex.familyteam.LocalLocalizedContext
+import com.balex.familyteam.LocalizedContextProvider
+import com.balex.familyteam.R
 import com.google.firebase.FirebaseException
-import com.google.firebase.FirebaseTooManyRequestsException
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
-import com.google.firebase.auth.FirebaseAuthMissingActivityForRecaptchaException
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
-import com.google.firebase.auth.auth
 import java.util.concurrent.TimeUnit
 
 val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -76,40 +73,40 @@ class MainActivity : ComponentActivity() {
             //loginUser("balexvicx@gmail.com", "123456")
 //        registerUser("balexvicx@gmail.com", "123456")
 
-        val phoneNumber = "+41789424340" // Формат номера телефона должен начинаться с "+" и кода страны
-        val options = PhoneAuthOptions.newBuilder(FirebaseAuth.getInstance())
-            .setPhoneNumber(phoneNumber)       // Номер телефона для верификации
-            .setTimeout(60L, TimeUnit.SECONDS) // Время ожидания SMS-кода
-            .setActivity(this)                 // Текущая активити, где отображается входной экран
-            .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
-                override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-                    // Автоматический вход в систему после успешной верификации
-                }
-
-                override fun onVerificationFailed(exception: FirebaseException) {
-                    // Обработка ошибок верификации номера телефона
-                    Log.e(TAG, "Verification failed: ${exception.message}")
-                }
-
-                override fun onCodeSent(verificationId: String, token: PhoneAuthProvider.ForceResendingToken) {
-                    val smsCode = "123456"
-                    val credential = PhoneAuthProvider.getCredential(verificationId, smsCode)
-
-                    FirebaseAuth.getInstance().signInWithCredential(credential)
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                // Вход в систему успешен после верификации номера телефона
-                            } else {
-                                // Обработка ошибок входа после верификации номера телефона
-                                val exception = task.exception
-                                Log.e(TAG, "Sign in failed: ${exception?.message}")
-                            }
-                        }
-                }
-            })
-            .build()
-
-        PhoneAuthProvider.verifyPhoneNumber(options)
+//        val phoneNumber = "+41789424340" // Формат номера телефона должен начинаться с "+" и кода страны
+//        val options = PhoneAuthOptions.newBuilder(FirebaseAuth.getInstance())
+//            .setPhoneNumber(phoneNumber)       // Номер телефона для верификации
+//            .setTimeout(60L, TimeUnit.SECONDS) // Время ожидания SMS-кода
+//            .setActivity(this)                 // Текущая активити, где отображается входной экран
+//            .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+//                override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+//                    // Автоматический вход в систему после успешной верификации
+//                }
+//
+//                override fun onVerificationFailed(exception: FirebaseException) {
+//                    // Обработка ошибок верификации номера телефона
+//                    Log.e(TAG, "Verification failed: ${exception.message}")
+//                }
+//
+//                override fun onCodeSent(verificationId: String, token: PhoneAuthProvider.ForceResendingToken) {
+//                    val smsCode = "123456"
+//                    val credential = PhoneAuthProvider.getCredential(verificationId, smsCode)
+//
+//                    FirebaseAuth.getInstance().signInWithCredential(credential)
+//                        .addOnCompleteListener { task ->
+//                            if (task.isSuccessful) {
+//                                // Вход в систему успешен после верификации номера телефона
+//                            } else {
+//                                // Обработка ошибок входа после верификации номера телефона
+//                                val exception = task.exception
+//                                Log.e(TAG, "Sign in failed: ${exception?.message}")
+//                            }
+//                        }
+//                }
+//            })
+//            .build()
+//
+//        PhoneAuthProvider.verifyPhoneNumber(options)
 
 
 
