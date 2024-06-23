@@ -10,4 +10,10 @@ data class User(
     val adminName: String = "",
     val name: String = "",
     val listToDo: ToDoList = ToDoList(),
-): Parcelable
+): Parcelable {
+    companion object {
+        const val ERROR_LOADING_USER_DATA_FROM_FIREBASE = "ERROR_LOADING_USER_DATA_FROM_FIREBASE"
+    }
+}
+
+

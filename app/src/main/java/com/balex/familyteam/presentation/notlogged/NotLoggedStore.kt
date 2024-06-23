@@ -5,6 +5,8 @@ import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
+import com.balex.familyteam.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
+import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.usecase.RegLog.ObserveUserUseCase
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore.Intent
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore.Label
@@ -31,7 +33,9 @@ interface NotLoggedStore : Store<Intent, State, Label> {
 
             data object Initial : LogChooseState
 
-            data object SavedUserLoading : LogChooseState
+            data object NoSavedUserFound : LogChooseState
+
+            data object ErrorLoadingUserData : LogChooseState
 
         }
     }
@@ -65,19 +69,20 @@ class NotLoggedStoreFactory @Inject constructor(
 
     private sealed interface Action {
 
-        data object UserIsLogged : Action
+        data object UserNotExistInPreference : Action
+
+        data object UserExistInPreferenceAndLoadedUserData: Action
+
+        data object UserExistInPreferenceButErrorLoadingUserData : Action
+
 
     }
 
     private sealed interface Msg {
 
-        data object UserIsLogged : Msg
+        data object UserIsNotExistInPreference : Msg
 
-        data object RegAsAdmin : Msg
-
-        data object LogAsAdmin : Msg
-
-        data object LogAsUser : Msg
+        data object UserExistInPreferenceButErrorLoadingUserData : Msg
 
     }
 
@@ -85,8 +90,20 @@ class NotLoggedStoreFactory @Inject constructor(
         override fun invoke() {
             scope.launch {
                 observeUserUseCase().collect {
-                    if (it.login.isNotEmpty()) {
-                        dispatch(Action.UserIsLogged)
+                    val login = it.login
+                    if (login.isNotEmpty()) {
+                        when (login) {
+                            NO_USER_SAVED_IN_SHARED_PREFERENCES -> {
+                                dispatch(Action.UserNotExistInPreference)
+                            }
+                            User.ERROR_LOADING_USER_DATA_FROM_FIREBASE -> {
+                                dispatch(Action.UserExistInPreferenceButErrorLoadingUserData)
+                            }
+                            else -> {
+                                dispatch(Action.UserExistInPreferenceAndLoadedUserData)
+                            }
+                        }
+
                     }
                 }
             }
@@ -115,8 +132,17 @@ class NotLoggedStoreFactory @Inject constructor(
 
         override fun executeAction(action: Action, getState: () -> State) {
             when (action) {
-                Action.UserIsLogged -> {
+
+                Action.UserExistInPreferenceAndLoadedUserData -> {
                     publish(Label.UserIsLogged)
+                }
+
+                Action.UserExistInPreferenceButErrorLoadingUserData -> {
+                    dispatch(Msg.UserExistInPreferenceButErrorLoadingUserData)
+                }
+
+                Action.UserNotExistInPreference -> {
+                    dispatch(Msg.UserIsNotExistInPreference)
                 }
             }
         }
@@ -124,10 +150,15 @@ class NotLoggedStoreFactory @Inject constructor(
 
     private object ReducerImpl : Reducer<State, Msg> {
         override fun State.reduce(msg: Msg): State = when (msg) {
-            Msg.LogAsAdmin -> TODO()
-            Msg.LogAsUser -> TODO()
-            Msg.RegAsAdmin -> TODO()
-            Msg.UserIsLogged -> TODO()
+
+            Msg.UserIsNotExistInPreference -> {
+                copy(logChooseState = State.LogChooseState.NoSavedUserFound)
+            }
+
+            Msg.UserExistInPreferenceButErrorLoadingUserData -> {
+                copy(logChooseState = State.LogChooseState.ErrorLoadingUserData)
+            }
+
         }
     }
 }

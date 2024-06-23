@@ -32,8 +32,10 @@ class RegLogRepositoryImpl @Inject constructor(
 
     override fun observeUser(): StateFlow<User> = flow {
         val adminFromStorage = Storage.getUser(context)
-        if (adminFromStorage != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
-
+        if (adminFromStorage == Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
+            val emptyUserNotSaved = User(login = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES)
+            _user = emptyUserNotSaved
+        } else {
 
         }
         isCurrentUserNeedRefreshFlow.emit(Unit)

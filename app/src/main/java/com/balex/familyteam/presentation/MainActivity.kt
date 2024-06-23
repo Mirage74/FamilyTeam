@@ -1,42 +1,12 @@
 package com.balex.familyteam.presentation
 
-import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import com.arkivanov.decompose.defaultComponentContext
 import com.balex.familyteam.FamilyApp
-import com.balex.familyteam.LocalLocalizedContext
-import com.balex.familyteam.LocalizedContextProvider
-import com.balex.familyteam.R
 import com.balex.familyteam.presentation.root.DefaultRootComponent
-import com.google.firebase.FirebaseException
-import com.google.firebase.messaging.FirebaseMessaging
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.PhoneAuthCredential
-import com.google.firebase.auth.PhoneAuthOptions
-import com.google.firebase.auth.PhoneAuthProvider
-import java.util.concurrent.TimeUnit
+import com.balex.familyteam.presentation.root.RootContent
 import javax.inject.Inject
 
 //val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -50,13 +20,8 @@ class MainActivity : ComponentActivity() {
         (applicationContext as FamilyApp).applicationComponent.inject(this)
         super.onCreate(savedInstanceState)
 
-
-
-
-
-
         setContent {
-            //MyApp()
+            RootContent(component = rootComponentFactory.create(defaultComponentContext()))
         }
     }
 }
