@@ -8,9 +8,7 @@ import androidx.security.crypto.MasterKeys
 object Storage {
 
     private const val FILE_NAME = "encrypted_preferences"
-    private const val ADMIN_KEY = "shared_prefs_admin"
     private const val USER_KEY = "shared_prefs_user"
-    const val NO_ADMIN_SAVED_IN_SHARED_PREFERENCES = "NO_ADMIN_SAVED_IN_SHARED_PREFERENCES"
     const val NO_USER_SAVED_IN_SHARED_PREFERENCES = "NO_USER_SAVED_IN_SHARED_PREFERENCES"
 
     private val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
@@ -26,16 +24,11 @@ object Storage {
         ))
     }
 
-    fun saveAdmin(context: Context, adminName: String) {
-        getEncryptedSharedPreferences(context).edit().apply {
-            putString(ADMIN_KEY, adminName)
-        }.apply()
-    }
 
-    fun getAdmin(context: Context): String {
+    fun getUser(context: Context): String {
         return getEncryptedSharedPreferences(context).getString(
-            ADMIN_KEY,
-            NO_ADMIN_SAVED_IN_SHARED_PREFERENCES
+            USER_KEY,
+            NO_USER_SAVED_IN_SHARED_PREFERENCES
         ).toString()
     }
 
@@ -45,7 +38,7 @@ object Storage {
         }.apply()
     }
 
-    fun saveUser(context: Context): String {
+    fun saveNoExistUser(context: Context): String {
         return getEncryptedSharedPreferences(context).getString(
             USER_KEY,
             NO_USER_SAVED_IN_SHARED_PREFERENCES

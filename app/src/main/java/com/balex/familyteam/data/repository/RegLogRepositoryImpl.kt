@@ -16,38 +16,39 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class RegLogRepositoryImpl(
+class RegLogRepositoryImpl @Inject constructor(
     private val context: Context
 ) : RegLogRepository {
 
-    private var _admin = Admin()
-    private val admin: Admin
-        get() = _admin.copy()
+    private var _user = User()
+    private val user: User
+        get() = _user.copy()
 
-    private val isCurrentAdminNeedRefreshFlow = MutableSharedFlow<Unit>(replay = 1)
+    private val isCurrentUserNeedRefreshFlow = MutableSharedFlow<Unit>(replay = 1)
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-    override fun getAdmin(): StateFlow<Admin> = flow {
-        val adminFromStorage = Storage.getAdmin(context)
-        if (adminFromStorage != Storage.NO_ADMIN_SAVED_IN_SHARED_PREFERENCES) {
+    override fun observeUser(): StateFlow<User> = flow {
+        val adminFromStorage = Storage.getUser(context)
+        if (adminFromStorage != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
 
 
         }
-        isCurrentAdminNeedRefreshFlow.emit(Unit)
+        isCurrentUserNeedRefreshFlow.emit(Unit)
 
-        isCurrentAdminNeedRefreshFlow.collect {
-            emit(admin)
+        isCurrentUserNeedRefreshFlow.collect {
+            emit(user)
         }
     }
         .stateIn(
             scope = coroutineScope,
             started = SharingStarted.Lazily,
-            initialValue = admin
+            initialValue = user
         )
 
-    override fun getUser(): StateFlow<User> {
+    override fun observeAdmin(): StateFlow<Admin> {
         TODO("Not yet implemented")
     }
 

@@ -9,5 +9,5 @@ data class User(
     val isAdmin: Boolean = false,
     val adminName: String = "",
     val name: String = "",
-    val listToDo: ToDoList,
+    val listToDo: ToDoList = ToDoList(),
 ): Parcelable

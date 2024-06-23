@@ -7,9 +7,9 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface RegLogRepository {
 
-    fun getAdmin(): StateFlow<Admin>
+    fun observeAdmin(): StateFlow<Admin>
 
-    fun getUser(): StateFlow<User>
+    fun observeUser(): StateFlow<User>
 
     fun registerAdmin(email: String = "", phone: String = "", password: String)
 
