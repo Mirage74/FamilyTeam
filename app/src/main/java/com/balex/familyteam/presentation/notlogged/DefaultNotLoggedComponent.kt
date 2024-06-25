@@ -4,6 +4,7 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
+import com.balex.familyteam.domain.entity.Language
 import com.balex.familyteam.extensions.componentScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -21,7 +22,7 @@ class DefaultNotLoggedComponent  @AssistedInject constructor(
     @Assisted("componentContext") componentContext: ComponentContext
 ) : NotLoggedComponent, ComponentContext by componentContext {
 
-    private val store = instanceKeeper.getStore { storeFactory.create() }
+    private val store = instanceKeeper.getStore { storeFactory.create(Language.DEFAULT_LANGUAGE.symbol) }
     private val scope = componentScope()
 
     init {
@@ -40,6 +41,7 @@ class DefaultNotLoggedComponent  @AssistedInject constructor(
                         onLoginUserClicked()
 
                     }
+
                     NotLoggedStore.Label.UserIsLogged -> {
                         onUserIsLogged()
                     }
@@ -63,6 +65,10 @@ class DefaultNotLoggedComponent  @AssistedInject constructor(
 
     override fun onLoginUserClicked() {
         store.accept(NotLoggedStore.Intent.ClickedLoginUser)
+    }
+
+    override fun onLanguageChanged(language: String) {
+        store.accept(NotLoggedStore.Intent.ClickedChangeLanguage(language))
     }
 
     @AssistedFactory

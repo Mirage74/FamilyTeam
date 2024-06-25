@@ -9,6 +9,7 @@ data class User(
     val isAdmin: Boolean = false,
     val adminName: String = "",
     val name: String = "",
+    val language: String = Language.DEFAULT_LANGUAGE.symbol,
     val listToDo: ToDoList = ToDoList(),
 ): Parcelable {
     companion object {

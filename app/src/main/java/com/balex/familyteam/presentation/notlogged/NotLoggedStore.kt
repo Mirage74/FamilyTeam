@@ -24,9 +24,12 @@ interface NotLoggedStore : Store<Intent, State, Label> {
 
         data object ClickedLoginUser : Intent
 
+        data class ClickedChangeLanguage(val language: String) : Intent
+
     }
 
     data class State(
+        val language: String,
         val logChooseState: LogChooseState
     ) {
         sealed interface LogChooseState {
@@ -58,16 +61,18 @@ class NotLoggedStoreFactory @Inject constructor(
     private val observeUserUseCase: ObserveUserUseCase
 ) {
 
-    fun create(): NotLoggedStore =
+    fun create(language: String): NotLoggedStore =
         object : NotLoggedStore, Store<Intent, State, Label> by storeFactory.create(
             name = "NotLoggedStore",
-            initialState = State(State.LogChooseState.Initial),
+            initialState = State(language, State.LogChooseState.Initial),
             bootstrapper = BootstrapperImpl(),
             executorFactory = ::ExecutorImpl,
             reducer = ReducerImpl
         ) {}
 
     private sealed interface Action {
+
+        data class LanguageIsChanged(val language: String) : Action
 
         data object UserNotExistInPreference : Action
 
@@ -83,6 +88,8 @@ class NotLoggedStoreFactory @Inject constructor(
         data object UserIsNotExistInPreference : Msg
 
         data object UserExistInPreferenceButErrorLoadingUserData : Msg
+
+        data class UserLanguageChanged(val language: String) : Msg
 
     }
 
@@ -111,7 +118,7 @@ class NotLoggedStoreFactory @Inject constructor(
         }
     }
 
-    private class ExecutorImpl : CoroutineExecutor<Intent, Action, State, Msg, Label>() {
+    private inner class ExecutorImpl : CoroutineExecutor<Intent, Action, State, Msg, Label>() {
         override fun executeIntent(intent: Intent, getState: () -> State) {
             when (intent) {
 
@@ -125,6 +132,10 @@ class NotLoggedStoreFactory @Inject constructor(
 
                 Intent.ClickedLoginUser -> {
                     publish(Label.ClickedLoginUser)
+                }
+
+                is Intent.ClickedChangeLanguage -> {
+                    dispatch(Msg.UserLanguageChanged(intent.language))
                 }
 
             }
@@ -144,6 +155,10 @@ class NotLoggedStoreFactory @Inject constructor(
                 Action.UserNotExistInPreference -> {
                     dispatch(Msg.UserIsNotExistInPreference)
                 }
+
+                is Action.LanguageIsChanged -> {
+                    dispatch(Msg.UserLanguageChanged(action.language))
+                }
             }
         }
     }
@@ -159,6 +174,9 @@ class NotLoggedStoreFactory @Inject constructor(
                 copy(logChooseState = State.LogChooseState.ErrorLoadingUserData)
             }
 
+            is Msg.UserLanguageChanged -> {
+                copy(language = msg.language)
+            }
         }
     }
 }

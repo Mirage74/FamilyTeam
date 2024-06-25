@@ -2,6 +2,7 @@ package com.balex.familyteam
 
 import android.content.Context
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -25,6 +26,8 @@ fun LocalizedContextProvider(languageCode: String, content: @Composable () -> Un
     val context = LocalContext.current
     val localizedContext = remember(languageCode) { setLocale(context, languageCode) }
 
+
+    Log.d("LanguageChooserScreen", "Current Locale: ${context.resources.configuration.locales[0].language}")
     CompositionLocalProvider(LocalLocalizedContext provides localizedContext) {
         content()
     }

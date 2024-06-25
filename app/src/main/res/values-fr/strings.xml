@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">Équipe familiale</string>
+    <string name="reg_adm" >Inscrire nouvelle famille</string>
+    <string name="log_adm">Admin connectez-vous en tant</string>
+    <string name="log_user">Utilisateur connectez-vous en tant</string>
+</resources>

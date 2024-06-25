@@ -1,5 +1,6 @@
 package com.balex.familyteam.presentation.notlogged
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,21 +19,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -42,12 +39,15 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.balex.familyteam.LocalLocalizedContext
+import com.balex.familyteam.LocalizedContextProvider
 import com.balex.familyteam.R
-import com.balex.familyteam.presentation.ui.theme.FamilyTeamTheme
+import com.balex.familyteam.domain.entity.LanguagesList
 
+private val LANGUAGE_LIST_TEXT_SIZE = 20.sp
+private val BUTTON_TEXT_SIZE = 20.sp
 
 @Composable
 fun NotLoggedContent(component: NotLoggedComponent) {
@@ -55,50 +55,64 @@ fun NotLoggedContent(component: NotLoggedComponent) {
     Surface(
         modifier = Modifier
             .fillMaxSize(),
-        //color = MaterialTheme.colorScheme.background
-        color = colorResource(R.color.orange_gold)
-    ) {
+        color = colorResource(R.color.orange_gold),
 
-        when (state.logChooseState) {
-            NotLoggedStore.State.LogChooseState.Initial -> {
-                LanguageChooserScreen(false)
-            }
+        ) {
+        LocalizedContextProvider(languageCode = state.language.lowercase()) {
 
-            NotLoggedStore.State.LogChooseState.ErrorLoadingUserData -> {
-                TODO()
-            }
+            when (state.logChooseState) {
+                NotLoggedStore.State.LogChooseState.Initial -> {
+                    LanguageChooserScreen(false, language = state.language)
+                }
 
-            NotLoggedStore.State.LogChooseState.NoSavedUserFound -> {
-                LanguageChooserScreen(true)
+                NotLoggedStore.State.LogChooseState.ErrorLoadingUserData -> {
+                    TODO()
+                }
+
+                NotLoggedStore.State.LogChooseState.NoSavedUserFound -> {
+                    LanguageChooserScreen(
+                        true,
+                        component,
+                        state.language
+                    )
+
+                    LanguageChooserScreen(true, component, state.language)
+                }
             }
         }
-        //}
     }
 }
 
 @Composable
-fun LanguageChooserScreen(isEbabled: Boolean) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        SwitchLanguage()
-        ThreeButtonsScreen(isEbabled = isEbabled)
+fun LanguageChooserScreen(
+    isEnabled: Boolean,
+    component: NotLoggedComponent? = null,
+    language: String
+) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            SwitchLanguage(language, component)
+            ThreeButtonsScreen(isEnabled = isEnabled)
+        }
     }
-}
+
 
 
 @Composable
-fun SwitchLanguage() {
+fun SwitchLanguage(
+    currentLanguage: String,
+    component: NotLoggedComponent? = null
+) {
     var isChooseOptionDropMenuExpanded by rememberSaveable { mutableStateOf(false) }
-    val languages = listOf("English", "Spanish", "French")
+
+    val languages = LanguagesList().languages
 
     Box(
         modifier = Modifier
             .padding(16.dp, 0.dp, 0.dp, 0.dp)
-//            .background(Color.White)
-//            .border(width = 1.dp, color = Color.Black),
     ) {
 
         Row(
@@ -120,137 +134,124 @@ fun SwitchLanguage() {
             ) {
 
 
-            IconButton(
-                onClick = { /* Действие по переключению языка */ },
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_language), // Замените на ваш ресурс иконки
-                    contentDescription = "Переключить язык"
-                )
-            }
-                Spacer(modifier = Modifier.width(4.dp)) // Пробел между значком и кнопкой
-            Text(
-                modifier = Modifier.clickable {
-                    isChooseOptionDropMenuExpanded = !isChooseOptionDropMenuExpanded
-                },
-                text = "EN"
-            )
-            //Spacer(modifier = Modifier.width(4.dp))
-            IconButton(onClick = {
-                isChooseOptionDropMenuExpanded = !isChooseOptionDropMenuExpanded
-            }) {
-                Icon(imageVector = Icons.Filled.ArrowDropDown, contentDescription = null)
-            }
-        }
-
-        DropdownMenu(
-            //expanded = terminalState.value.isChooseOptionDropMenuExpanded,
-            expanded = isChooseOptionDropMenuExpanded,
-            onDismissRequest = {
-                isChooseOptionDropMenuExpanded = false
-            },
-
-            modifier = Modifier
-                .width(150.dp)
-                .background(Color.White)
-                .padding(0.dp)
-                .border(1.dp, Color.Black)
-
-        ) {
-            languages.forEach { option ->
-                DropdownMenuItem(
-                    modifier = Modifier
-                        .padding(0.dp)
-                        .border(1.dp, Color.LightGray),
+                IconButton(
                     onClick = {
-                        val selectedLanguage = when (option) {
-                            "English" -> "en"
-                            "Spanish" -> "es"
-                            "French" -> "fr"
-                            else -> "en"
-                        }
-                        isChooseOptionDropMenuExpanded = false
-
-//                        onDropDownMenuStateChanged(
-//                            dropDownMenuState.value.copy(
-//                                selectedOption = option,
-//                                selectedAsset = selectedLanguage
-//                            )
-//                        )
+                        isChooseOptionDropMenuExpanded = !isChooseOptionDropMenuExpanded
                     },
-                    text = {
-                        Text(
-                            text = option
-                            //,
-                            //fontSize = LIST_OPTIONS_TEXT_SIZE
-                        )
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_language),
+                        contentDescription = "Switch language"
+                    )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    modifier = Modifier.clickable {
+                        isChooseOptionDropMenuExpanded = !isChooseOptionDropMenuExpanded
                     },
+                    text = currentLanguage
                 )
+                //Spacer(modifier = Modifier.width(4.dp))
+                IconButton(onClick = {
+                    isChooseOptionDropMenuExpanded = !isChooseOptionDropMenuExpanded
+                }) {
+                    Icon(imageVector = Icons.Filled.ArrowDropDown, contentDescription = "Switch language")
+                }
+            }
+
+            DropdownMenu(
+                expanded = isChooseOptionDropMenuExpanded,
+                onDismissRequest = {
+                    isChooseOptionDropMenuExpanded = false
+                },
+
+                modifier = Modifier
+                    .width(150.dp)
+                    .background(Color.White)
+                    .padding(0.dp)
+                    .border(1.dp, Color.Black)
+
+            ) {
+                languages.forEach { option ->
+                    DropdownMenuItem(
+                        modifier = Modifier
+                            .padding(0.dp)
+                            .border(1.dp, Color.LightGray),
+                        onClick = {
+                            component?.onLanguageChanged(option.symbol.uppercase())
+                            isChooseOptionDropMenuExpanded = false
+                        },
+                        text = {
+                            Text(
+                                text = option.description.trim(),
+                                fontSize = LANGUAGE_LIST_TEXT_SIZE
+                            )
+                        },
+                    )
+                }
             }
         }
     }
 }
-}
 
 @Composable
-fun ThreeButtonsScreen(isEbabled: Boolean) {
+fun ThreeButtonsScreen(isEnabled: Boolean) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 64.dp),
         verticalArrangement = Arrangement.SpaceEvenly
     ) {
-//        IconButton(onClick = { /* Действие по переключению языка */ },
-//            modifier = Modifier.size(148.dp) ) {
-//            Icon(
-//                painter = painterResource(id = R.drawable.ic_language), // Замените на ваш ресурс иконки
-//                contentDescription = "Switch language"
-//            )
-//        }
-        Button(
-            onClick = { /* TODO: Handle button click */ },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp),
-            enabled = isEbabled
-        ) {
-            Text(
-                fontSize = 20.sp,
-                text = stringResource(R.string.reg_adm),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-        Button(
-            onClick = { /* TODO: Handle button click */ },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp),
-            enabled = isEbabled
-        ) {
-            Text(
-                fontSize = 20.sp,
-                text = stringResource(R.string.log_adm),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
 
-            )
-        }
-        Button(
-            onClick = { /* TODO: Handle button click */ },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp),
-            enabled = isEbabled
-        ) {
-            Text(
-                fontSize = 20.sp,
-                text = stringResource(R.string.log_user),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            val context = LocalLocalizedContext.current
+            val regAdmText = context.getString(R.string.reg_adm)
+            val logAdmText = context.getString(R.string.log_adm)
+            val logUserText = context.getString(R.string.log_user)
+
+            Button(
+                onClick = { /* TODO: Handle button click */ },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp),
+                enabled = isEnabled
+            ) {
+                Text(
+                    fontSize = BUTTON_TEXT_SIZE,
+                    text = regAdmText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Button(
+                onClick = { /* TODO: Handle button click */ },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp),
+                enabled = isEnabled
+            ) {
+                Text(
+                    fontSize = BUTTON_TEXT_SIZE,
+                    text = logAdmText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+
+                )
+            }
+            Button(
+                onClick = { /* TODO: Handle button click */ },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp),
+                enabled = isEnabled
+            ) {
+                Text(
+                    fontSize = BUTTON_TEXT_SIZE,
+                    text = logUserText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
-}
 
