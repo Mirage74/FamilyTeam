@@ -1,4 +1,4 @@
-package com.balex.familyteam.presentation.notlogged
+package com.balex.familyteam.presentation
 
 import android.app.Activity
 import android.os.Bundle

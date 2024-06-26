@@ -62,7 +62,7 @@ fun NotLoggedContent(component: NotLoggedComponent) {
 
             when (state.logChooseState) {
                 NotLoggedStore.State.LogChooseState.Initial -> {
-                    LanguageChooserScreen(false, language = state.language)
+                    LanguageChooserScreen(true, component, state.language)
                 }
 
                 NotLoggedStore.State.LogChooseState.ErrorLoadingUserData -> {
@@ -86,7 +86,7 @@ fun NotLoggedContent(component: NotLoggedComponent) {
 @Composable
 fun LanguageChooserScreen(
     isEnabled: Boolean,
-    component: NotLoggedComponent? = null,
+    component: NotLoggedComponent,
     language: String
 ) {
         Column(
@@ -95,7 +95,7 @@ fun LanguageChooserScreen(
                 .padding(16.dp)
         ) {
             SwitchLanguage(language, component)
-            ThreeButtonsScreen(isEnabled = isEnabled)
+            ThreeButtonsScreen(isEnabled = isEnabled, component)
         }
     }
 
@@ -196,7 +196,10 @@ fun SwitchLanguage(
 }
 
 @Composable
-fun ThreeButtonsScreen(isEnabled: Boolean) {
+fun ThreeButtonsScreen(
+    isEnabled: Boolean,
+    component: NotLoggedComponent
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -210,7 +213,7 @@ fun ThreeButtonsScreen(isEnabled: Boolean) {
             val logUserText = context.getString(R.string.log_user)
 
             Button(
-                onClick = { /* TODO: Handle button click */ },
+                onClick = {component.onClickRegAdmin()},
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(150.dp),
@@ -224,7 +227,7 @@ fun ThreeButtonsScreen(isEnabled: Boolean) {
                 )
             }
             Button(
-                onClick = { /* TODO: Handle button click */ },
+                onClick = { component.onClickLoginAdmin() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(150.dp),
@@ -239,7 +242,7 @@ fun ThreeButtonsScreen(isEnabled: Boolean) {
                 )
             }
             Button(
-                onClick = { /* TODO: Handle button click */ },
+                onClick = { component.onClickLoginUser() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(150.dp),

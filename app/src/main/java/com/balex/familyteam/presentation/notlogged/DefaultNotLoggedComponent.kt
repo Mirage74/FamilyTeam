@@ -1,5 +1,6 @@
 package com.balex.familyteam.presentation.notlogged
 
+import android.util.Log
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
@@ -31,18 +32,21 @@ class DefaultNotLoggedComponent  @AssistedInject constructor(
                 when (it) {
 
                     is NotLoggedStore.Label.ClickedRegisterAdmin -> {
+                        Log.d("NotLoggedComponent", "ClickedRegisterAdmin")
                         onRegAdminClicked()
                     }
 
                     NotLoggedStore.Label.ClickedLoginAdmin -> {
+                        Log.d("NotLoggedComponent", "ClickedLoginAdmin")
                         onLoginAdminClicked()
                     }
                     NotLoggedStore.Label.ClickedLoginUser -> {
+                        Log.d("NotLoggedComponent", "ClickedLoginUser")
                         onLoginUserClicked()
-
                     }
 
                     NotLoggedStore.Label.UserIsLogged -> {
+                        Log.d("NotLoggedComponent", "UserIsLogged")
                         onUserIsLogged()
                     }
                 }
@@ -55,15 +59,15 @@ class DefaultNotLoggedComponent  @AssistedInject constructor(
     override val model: StateFlow<NotLoggedStore.State> = store.stateFlow
 
 
-    override fun onRegAdminClicked() {
+    override fun onClickRegAdmin() {
         store.accept(NotLoggedStore.Intent.ClickedRegisterAdmin)
     }
 
-    override fun onLoginAdminClicked() {
+    override fun onClickLoginAdmin() {
         store.accept(NotLoggedStore.Intent.ClickedLoginAdmin)
     }
 
-    override fun onLoginUserClicked() {
+    override fun onClickLoginUser() {
         store.accept(NotLoggedStore.Intent.ClickedLoginUser)
     }
 

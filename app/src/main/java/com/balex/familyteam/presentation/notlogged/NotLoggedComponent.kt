@@ -7,11 +7,11 @@ interface NotLoggedComponent {
 
     val model: StateFlow<NotLoggedStore.State>
 
-    fun onRegAdminClicked()
+    fun onClickRegAdmin()
 
-    fun onLoginAdminClicked()
+    fun onClickLoginAdmin()
 
-    fun onLoginUserClicked()
+    fun onClickLoginUser()
 
     fun onLanguageChanged(language: String)
 }
