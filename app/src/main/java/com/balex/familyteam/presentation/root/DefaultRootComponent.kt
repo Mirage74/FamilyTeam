@@ -72,7 +72,7 @@ class DefaultRootComponent @AssistedInject constructor(
                 val component = aboutComponentFactory.create(
                     componentContext = componentContext
                 )
-                RootComponent.Child.RegAdmin(component)
+                RootComponent.Child.About(component)
             }
             is Config.LoggedUser -> TODO()
         }

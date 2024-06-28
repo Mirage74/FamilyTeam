@@ -1,6 +1,5 @@
 package com.balex.familyteam.presentation.notlogged
 
-import com.balex.familyteam.domain.entity.Language
 import kotlinx.coroutines.flow.StateFlow
 
 interface NotLoggedComponent {

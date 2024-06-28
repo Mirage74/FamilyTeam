@@ -25,9 +25,7 @@ fun setLocale(context: Context, languageCode: String): Context {
 fun LocalizedContextProvider(languageCode: String, content: @Composable () -> Unit) {
     val context = LocalContext.current
     val localizedContext = remember(languageCode) { setLocale(context, languageCode) }
-
-
-    Log.d("LanguageChooserScreen", "Current Locale: ${context.resources.configuration.locales[0].language}")
+    //Log.d("LanguageChooserScreen", "Current Locale: ${context.resources.configuration.locales[0].language}")
     CompositionLocalProvider(LocalLocalizedContext provides localizedContext) {
         content()
     }

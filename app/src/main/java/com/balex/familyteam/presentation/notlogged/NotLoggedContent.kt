@@ -90,7 +90,7 @@ fun NotLoggedContent(component: NotLoggedComponent) {
                 TopAppBar(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp),
+                        .height(dimensionResource(id = R.dimen.top_bar_height).value.dp),
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.LightGray
                     ),
@@ -102,7 +102,7 @@ fun NotLoggedContent(component: NotLoggedComponent) {
                             IconButton(
                                 onClick = { scope.launch { drawerState.open() } },
                                 modifier = Modifier
-                                    .size(48.dp)
+                                    .size(dimensionResource(id = R.dimen.top_bar_height).value.dp)
                             ) {
                                 Icon(
                                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_menu_hamburger),
@@ -151,7 +151,7 @@ fun DrawerContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp, 48.dp, 0.dp, 0.dp)
+            .padding(16.dp, dimensionResource(id = R.dimen.top_bar_height).value.dp, 0.dp, 0.dp)
     ) {
         val textSize = dimensionResource(id = R.dimen.hamburger_text_size).value.sp
         items.forEach { item ->
@@ -182,7 +182,7 @@ fun SwitchLanguage(
 
     Box(
         modifier = Modifier
-            .height(48.dp)
+            .height(dimensionResource(id = R.dimen.top_bar_height).value.dp)
             .width(144.dp)
             .background(Color.Gray)
             //.border(width = 1.dp, color = Color.Black)
@@ -192,7 +192,7 @@ fun SwitchLanguage(
                 isChooseOptionDropMenuExpanded = !isChooseOptionDropMenuExpanded
             },
             modifier = Modifier
-                .size(48.dp)
+                .size(dimensionResource(id = R.dimen.top_bar_height).value.dp)
                 .align(Alignment.TopStart)
 
         ) {

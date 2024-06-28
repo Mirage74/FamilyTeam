@@ -5,6 +5,7 @@ import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
+import com.balex.familyteam.domain.entity.RegistrationOption
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.Intent
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.Label
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.State
@@ -16,6 +17,10 @@ interface RegAdminStore : Store<Intent, State, Label> {
     }
 
     data class State(
+        val selectedOption: RegistrationOption,
+        val emailOrPhone: String,
+        val password: String,
+        val passwordVisible: Boolean,
         val regAdminState: RegAdminState
     ) {
         sealed interface RegAdminState {
@@ -37,7 +42,13 @@ class RegAdminStoreFactory @Inject constructor(
     fun create(): RegAdminStore =
         object : RegAdminStore, Store<Intent, State, Label> by storeFactory.create(
             name = "RegAdminStore",
-            initialState = State(State.RegAdminState.Initial),
+            initialState = State(
+                RegistrationOption.EMAIL,
+                "",
+                "",
+                false,
+                State.RegAdminState.Initial
+            ),
             bootstrapper = BootstrapperImpl(),
             executorFactory = ::ExecutorImpl,
             reducer = ReducerImpl
@@ -63,6 +74,6 @@ class RegAdminStoreFactory @Inject constructor(
     }
 
     private object ReducerImpl : Reducer<State, Msg> {
-        override fun State.reduce(msg: Msg): State = State(State.RegAdminState.Initial)
+        override fun State.reduce(msg: Msg): State = State(RegistrationOption.EMAIL, "", "", false, State.RegAdminState.Initial)
     }
 }
