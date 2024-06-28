@@ -14,6 +14,7 @@ loggingInterceptor = "4.11.0"
 mvikotlin = "3.2.1"
 decompose = "2.1.2"
 mvikotlinLogging = "3.2.1"
+navigationCompose = "2.7.7"
 room = "2.6.1"
 ksp = "1.9.22-1.0.16"
 dagger = "2.48.1"
@@ -24,6 +25,7 @@ securityCrypto = "1.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }

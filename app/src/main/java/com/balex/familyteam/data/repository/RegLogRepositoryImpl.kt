@@ -1,8 +1,12 @@
 package com.balex.familyteam.data.repository
 
 import android.content.Context
+import android.content.res.Configuration
+import android.os.Build
+import android.util.Log
 import com.balex.familyteam.data.datastore.Storage
 import com.balex.familyteam.domain.entity.Admin
+import com.balex.familyteam.domain.entity.LanguagesList
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.repository.RegLogRepository
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -32,8 +36,9 @@ class RegLogRepositoryImpl @Inject constructor(
 
     override fun observeUser(): StateFlow<User> = flow {
         val adminFromStorage = Storage.getUser(context)
+        val phoneLang = getCurrentLanguage(context)
         if (adminFromStorage == Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
-            val emptyUserNotSaved = User(login = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES)
+            val emptyUserNotSaved = User(login = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES, language = phoneLang)
             _user = emptyUserNotSaved
         } else {
 
@@ -66,5 +71,17 @@ class RegLogRepositoryImpl @Inject constructor(
         TODO("Not yet implemented")
     }
 
+    private fun getCurrentLanguage(context: Context): String {
+        val configuration: Configuration = context.resources.configuration
+        val locale =
+            configuration.locales[0]
+        val supportedLanguages = LanguagesList().languages.map { it.symbol }
+        val lang = if (supportedLanguages.contains(locale.language)) {
+            locale.language
+        } else {
+            "en"
+        }
+        return lang
+    }
 
 }

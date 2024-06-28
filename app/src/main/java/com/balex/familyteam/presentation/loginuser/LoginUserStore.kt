@@ -9,7 +9,7 @@ import com.balex.familyteam.presentation.loginuser.LoginUserStore.Intent
 import com.balex.familyteam.presentation.loginuser.LoginUserStore.Label
 import com.balex.familyteam.presentation.loginuser.LoginUserStore.State
 
-internal interface LoginUserStore : Store<Intent, State, Label> {
+interface LoginUserStore : Store<Intent, State, Label> {
 
     sealed interface Intent {
     }
@@ -20,7 +20,7 @@ internal interface LoginUserStore : Store<Intent, State, Label> {
     }
 }
 
-internal class LoginUserStoreFactory(
+class LoginUserStoreFactory(
     private val storeFactory: StoreFactory
 ) {
 

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="current_language_text_size">24sp</dimen>
+    <dimen name="language_list_text_size">20sp</dimen>
+    <dimen name="button_text_size">20sp</dimen>
+    <dimen name="hamburger_text_size">20sp</dimen>
+</resources>

@@ -24,6 +24,8 @@ interface NotLoggedStore : Store<Intent, State, Label> {
 
         data object ClickedLoginUser : Intent
 
+        data object ClickedAbout: Intent
+
         data class ClickedChangeLanguage(val language: String) : Intent
 
     }
@@ -52,6 +54,8 @@ interface NotLoggedStore : Store<Intent, State, Label> {
         data object ClickedRegisterAdmin : Label
 
         data object ClickedLoginUser : Label
+
+        data object ClickedAbout : Label
 
     }
 }
@@ -138,6 +142,9 @@ class NotLoggedStoreFactory @Inject constructor(
                     dispatch(Msg.UserLanguageChanged(intent.language))
                 }
 
+                Intent.ClickedAbout -> {
+                    publish(Label.ClickedAbout)
+                }
             }
         }
 

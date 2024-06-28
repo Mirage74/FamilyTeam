@@ -2,6 +2,7 @@ package com.balex.familyteam.presentation.root
 
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
+import com.balex.familyteam.presentation.about.AboutComponent
 import com.balex.familyteam.presentation.loggeduser.LoggedUserComponent
 import com.balex.familyteam.presentation.loginadmin.LoginAdminComponent
 import com.balex.familyteam.presentation.loginuser.LoginUserComponent
@@ -23,6 +24,8 @@ interface RootComponent {
         data class LoginUser(val component: LoginUserComponent) : Child
 
         data class LoggedUser(val component: LoggedUserComponent) : Child
+
+        data class About(val component: AboutComponent) : Child
 
     }
 }

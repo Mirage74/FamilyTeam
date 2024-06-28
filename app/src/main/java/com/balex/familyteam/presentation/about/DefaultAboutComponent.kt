@@ -1,13 +1,14 @@
-package com.balex.familyteam.presentation.regadmin
+package com.balex.familyteam.presentation.about
 
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
+import com.balex.familyteam.presentation.regadmin.RegAdminComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
-class DefaultRegAdminComponent @AssistedInject constructor(
-    private val storeFactory: RegAdminStoreFactory,
+class DefaultAboutComponent  @AssistedInject constructor(
+    private val storeFactory: AboutStoreFactory,
     @Assisted("componentContext") componentContext: ComponentContext
 ) : RegAdminComponent, ComponentContext by componentContext {
 
@@ -18,7 +19,6 @@ class DefaultRegAdminComponent @AssistedInject constructor(
 
         fun create(
             @Assisted("componentContext") componentContext: ComponentContext
-        ): DefaultRegAdminComponent
+        ): DefaultAboutComponent
     }
 }
-

@@ -20,8 +20,10 @@ class DefaultNotLoggedComponent  @AssistedInject constructor(
     @Assisted("onLoginAdminClicked") private val onLoginAdminClicked: () -> Unit,
     @Assisted("onLoginUserClicked") private val onLoginUserClicked: () -> Unit,
     @Assisted("onUserIsLogged") private val onUserIsLogged: () -> Unit,
+    @Assisted("onAbout") private val onAbout: () -> Unit,
     @Assisted("componentContext") componentContext: ComponentContext
 ) : NotLoggedComponent, ComponentContext by componentContext {
+
 
     private val store = instanceKeeper.getStore { storeFactory.create(Language.DEFAULT_LANGUAGE.symbol) }
     private val scope = componentScope()
@@ -49,6 +51,10 @@ class DefaultNotLoggedComponent  @AssistedInject constructor(
                         Log.d("NotLoggedComponent", "UserIsLogged")
                         onUserIsLogged()
                     }
+
+                    NotLoggedStore.Label.ClickedAbout -> {
+                        onAbout()
+                    }
                 }
             }
         }
@@ -75,6 +81,10 @@ class DefaultNotLoggedComponent  @AssistedInject constructor(
         store.accept(NotLoggedStore.Intent.ClickedChangeLanguage(language))
     }
 
+    override fun onClickAbout() {
+        store.accept(NotLoggedStore.Intent.ClickedAbout)
+    }
+
     @AssistedFactory
     interface Factory {
 
@@ -83,6 +93,7 @@ class DefaultNotLoggedComponent  @AssistedInject constructor(
             @Assisted("onLoginAdminClicked") onLoginAdminClicked: () -> Unit,
             @Assisted("onLoginUserClicked") onLoginUserClicked: () -> Unit,
             @Assisted("onUserIsLogged") onUserIsLogged: () -> Unit,
+            @Assisted("onAbout") onAbout: () -> Unit,
             @Assisted("componentContext") componentContext: ComponentContext
         ): DefaultNotLoggedComponent
     }

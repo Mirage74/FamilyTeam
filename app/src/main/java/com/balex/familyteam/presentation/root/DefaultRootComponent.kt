@@ -8,6 +8,7 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
 import com.balex.familyteam.domain.entity.User
+import com.balex.familyteam.presentation.about.DefaultAboutComponent
 import com.balex.familyteam.presentation.notlogged.DefaultNotLoggedComponent
 import com.balex.familyteam.presentation.regadmin.DefaultRegAdminComponent
 import dagger.assisted.Assisted
@@ -19,6 +20,7 @@ import kotlinx.parcelize.Parcelize
 class DefaultRootComponent @AssistedInject constructor(
     private val notLoggedComponentFactory: DefaultNotLoggedComponent.Factory,
     private val regAdminComponentFactory: DefaultRegAdminComponent.Factory,
+    private val aboutComponentFactory: DefaultAboutComponent.Factory,
     @Assisted("componentContext") componentContext: ComponentContext
 ) : RootComponent, ComponentContext by componentContext {
 
@@ -49,6 +51,9 @@ class DefaultRootComponent @AssistedInject constructor(
                     onUserIsLogged = {
 
                     },
+                    onAbout = {
+                        navigation.push(Config.About)
+                    },
                     componentContext = componentContext
                 )
                 RootComponent.Child.NotLogged(component)
@@ -63,8 +68,13 @@ class DefaultRootComponent @AssistedInject constructor(
 
             Config.LoginAdmin -> TODO()
             Config.LoginUser -> TODO()
+            Config.About -> {
+                val component = aboutComponentFactory.create(
+                    componentContext = componentContext
+                )
+                RootComponent.Child.RegAdmin(component)
+            }
             is Config.LoggedUser -> TODO()
-
         }
     }
 
@@ -84,6 +94,9 @@ class DefaultRootComponent @AssistedInject constructor(
 
         @Parcelize
         data class LoggedUser(val user: User) : Config
+
+        @Parcelize
+        data object About : Config
 
     }
 

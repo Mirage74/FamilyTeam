@@ -1,15 +1,15 @@
-package com.balex.familyteam.presentation.loginadmin
+package com.balex.familyteam.presentation.onetask
 
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
-import com.balex.familyteam.presentation.loginadmin.LoginAdminStore.Intent
-import com.balex.familyteam.presentation.loginadmin.LoginAdminStore.Label
-import com.balex.familyteam.presentation.loginadmin.LoginAdminStore.State
+import com.balex.familyteam.presentation.onetask.OneTaskStore.Intent
+import com.balex.familyteam.presentation.onetask.OneTaskStore.Label
+import com.balex.familyteam.presentation.onetask.OneTaskStore.State
 
-interface LoginAdminStore : Store<Intent, State, Label> {
+interface OneTaskStore : Store<Intent, State, Label> {
 
     sealed interface Intent {
     }
@@ -20,16 +20,16 @@ interface LoginAdminStore : Store<Intent, State, Label> {
     }
 }
 
-class LoginAdminStoreFactory(
+class OneTaskStoreFactory(
     private val storeFactory: StoreFactory
 ) {
 
-    fun create(): LoginAdminStore =
-        object : LoginAdminStore, Store<Intent, State, Label> by storeFactory.create(
-            name = "LoginAdminStore",
+    fun create(): OneTaskStore =
+        object : OneTaskStore, Store<Intent, State, Label> by storeFactory.create(
+            name = "OneTaskStore",
             initialState = State(Unit),
             bootstrapper = BootstrapperImpl(),
-            executorFactory = ::ExecutorImpl,
+            executorFactory = OneTaskStoreFactory::ExecutorImpl,
             reducer = ReducerImpl
         ) {}
 

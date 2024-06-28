@@ -2,6 +2,7 @@ package com.balex.familyteam.presentation.root
 
 import com.arkivanov.decompose.extensions.compose.jetpack.stack.Children
 import androidx.compose.runtime.Composable
+import com.balex.familyteam.presentation.about.AboutContent
 import com.balex.familyteam.presentation.loggeduser.LoggedUserContent
 import com.balex.familyteam.presentation.loginadmin.LoginAdminContent
 import com.balex.familyteam.presentation.loginuser.LoginUserContent
@@ -34,6 +35,10 @@ fun RootContent(component: RootComponent) {
                 
                 is RootComponent.Child.LoggedUser -> {
                     LoggedUserContent(component = instance.component)
+                }
+
+                is RootComponent.Child.About -> {
+                    AboutContent(component = instance.component)
                 }
             }
         }

@@ -1,15 +1,16 @@
-package com.balex.familyteam.presentation.loginadmin
+package com.balex.familyteam.presentation.about
 
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
-import com.balex.familyteam.presentation.loginadmin.LoginAdminStore.Intent
-import com.balex.familyteam.presentation.loginadmin.LoginAdminStore.Label
-import com.balex.familyteam.presentation.loginadmin.LoginAdminStore.State
+import com.balex.familyteam.presentation.about.AboutStore.Intent
+import com.balex.familyteam.presentation.about.AboutStore.Label
+import com.balex.familyteam.presentation.about.AboutStore.State
+import javax.inject.Inject
 
-interface LoginAdminStore : Store<Intent, State, Label> {
+interface AboutStore : Store<Intent, State, Label> {
 
     sealed interface Intent {
     }
@@ -20,13 +21,13 @@ interface LoginAdminStore : Store<Intent, State, Label> {
     }
 }
 
-class LoginAdminStoreFactory(
+class AboutStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory
 ) {
 
-    fun create(): LoginAdminStore =
-        object : LoginAdminStore, Store<Intent, State, Label> by storeFactory.create(
-            name = "LoginAdminStore",
+    fun create(): AboutStore =
+        object : AboutStore, Store<Intent, State, Label> by storeFactory.create(
+            name = "AboutStore",
             initialState = State(Unit),
             bootstrapper = BootstrapperImpl(),
             executorFactory = ::ExecutorImpl,
