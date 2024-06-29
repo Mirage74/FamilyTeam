@@ -6,4 +6,5 @@
     <dimen name="hamburger_text_size">20sp</dimen>
 
     <dimen name="top_bar_height">48dp</dimen>
+    <dimen name="reg_buttons_height">96dp</dimen>
 </resources>

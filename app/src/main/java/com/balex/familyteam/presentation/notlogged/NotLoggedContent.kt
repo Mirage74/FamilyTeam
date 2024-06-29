@@ -55,12 +55,29 @@ import com.balex.familyteam.domain.entity.MenuItems
 import kotlinx.coroutines.launch
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun NotLoggedContent(component: NotLoggedComponent) {
 
     val state by component.model.collectAsState()
 
+    when (state.logChooseState) {
+        NotLoggedStore.State.LogChooseState.ErrorLoadingUserData -> TODO()
+        NotLoggedStore.State.LogChooseState.Initial -> {
+            NotLoggedScreen(component)
+        }
+        NotLoggedStore.State.LogChooseState.NoSavedUserFound -> {
+            NotLoggedScreen(component)
+        }
+    }
+
+
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NotLoggedScreen(component: NotLoggedComponent) {
+    val state by component.model.collectAsState()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -83,9 +100,9 @@ fun NotLoggedContent(component: NotLoggedComponent) {
         Surface(
             modifier = Modifier
                 .fillMaxSize(),
-            color = colorResource(R.color.orange_gold),
+            color = colorResource(R.color.orange_gold)
 
-            ) {
+        ) {
             Column {
                 TopAppBar(
                     modifier = Modifier

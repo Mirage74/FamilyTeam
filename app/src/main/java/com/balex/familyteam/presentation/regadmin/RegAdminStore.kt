@@ -14,6 +14,21 @@ import javax.inject.Inject
 interface RegAdminStore : Store<Intent, State, Label> {
 
     sealed interface Intent {
+
+        data object ClickedBack : Intent
+
+        data object ClickedRegister : Intent
+
+        data object ClickedEmailOrPhoneButton : Intent
+
+        data object ClickedChangePasswordVisibility : Intent
+
+        data object ClickedTryAgain : Intent
+
+        data class LoginFieldChanged(val currentLoginText: String) : Intent
+
+        data class PasswordFieldChanged(val currentPasswordText: String) : Intent
+
     }
 
     data class State(
@@ -21,17 +36,23 @@ interface RegAdminStore : Store<Intent, State, Label> {
         val emailOrPhone: String,
         val password: String,
         val passwordVisible: Boolean,
+        val isRegisterButtonWasPressed: Boolean,
+        val isRegError: Boolean,
         val regAdminState: RegAdminState
     ) {
         sealed interface RegAdminState {
 
-            data object Initial : RegAdminState
-
+            data object Content : RegAdminState
 
         }
     }
 
     sealed interface Label {
+
+        data object AdminIsRegisteredAndVerified : RegAdminStore.Label
+
+        data object ClickedBack : RegAdminStore.Label
+
     }
 }
 
@@ -46,8 +67,10 @@ class RegAdminStoreFactory @Inject constructor(
                 RegistrationOption.EMAIL,
                 "",
                 "",
-                false,
-                State.RegAdminState.Initial
+                passwordVisible = false,
+                isRegisterButtonWasPressed = false,
+                isRegError = false,
+                regAdminState = State.RegAdminState.Content
             ),
             bootstrapper = BootstrapperImpl(),
             executorFactory = ::ExecutorImpl,
@@ -55,9 +78,22 @@ class RegAdminStoreFactory @Inject constructor(
         ) {}
 
     private sealed interface Action {
+
     }
 
     private sealed interface Msg {
+
+        data object ProcessRegister : Msg
+
+        data object ChangeEmailOrPhoneButton : Msg
+
+        data object ChangePasswordVisibility : Msg
+
+        data object ProcessTryAgain : Msg
+
+        data class UpdateLoginFieldText(val currentLoginText: String) : Msg
+
+        data class UpdatePasswordFieldText(val currentPasswordText: String) : Msg
     }
 
     private class BootstrapperImpl : CoroutineBootstrapper<Action>() {
@@ -67,6 +103,29 @@ class RegAdminStoreFactory @Inject constructor(
 
     private class ExecutorImpl : CoroutineExecutor<Intent, Action, State, Msg, Label>() {
         override fun executeIntent(intent: Intent, getState: () -> State) {
+            when (intent) {
+                Intent.ClickedBack -> {
+                    publish(Label.ClickedBack)
+                }
+                Intent.ClickedChangePasswordVisibility -> {
+                    dispatch(Msg.ChangePasswordVisibility)
+                }
+                Intent.ClickedEmailOrPhoneButton -> {
+                    dispatch(Msg.ChangeEmailOrPhoneButton)
+                }
+                Intent.ClickedRegister -> {
+                    dispatch(Msg.ProcessRegister)
+                }
+                Intent.ClickedTryAgain -> {
+                    dispatch(Msg.ProcessTryAgain)
+                }
+                is Intent.LoginFieldChanged -> {
+                    dispatch(Msg.UpdateLoginFieldText(intent.currentLoginText))
+                }
+                is Intent.PasswordFieldChanged -> {
+                    dispatch(Msg.UpdatePasswordFieldText(intent.currentPasswordText))
+                }
+            }
         }
 
         override fun executeAction(action: Action, getState: () -> State) {
@@ -74,6 +133,42 @@ class RegAdminStoreFactory @Inject constructor(
     }
 
     private object ReducerImpl : Reducer<State, Msg> {
-        override fun State.reduce(msg: Msg): State = State(RegistrationOption.EMAIL, "", "", false, State.RegAdminState.Initial)
+        override fun State.reduce(msg: Msg): State =when(msg) {
+
+            Msg.ChangeEmailOrPhoneButton -> {
+                copy(
+                    emailOrPhone = "",
+                    selectedOption = if (selectedOption == RegistrationOption.EMAIL) RegistrationOption.PHONE else RegistrationOption.EMAIL
+                )
+            }
+
+            Msg.ChangePasswordVisibility -> {
+                copy(passwordVisible = !passwordVisible)
+            }
+
+            Msg.ProcessRegister -> {
+                TODO()
+            }
+
+            Msg.ProcessTryAgain -> {
+                copy(
+                    selectedOption = RegistrationOption.EMAIL,
+                    emailOrPhone = "",
+                    password = "",
+                    passwordVisible = false,
+                    isRegisterButtonWasPressed = false,
+                    isRegError = false
+                )
+            }
+
+            is Msg.UpdateLoginFieldText -> {
+                copy(emailOrPhone = msg.currentLoginText)
+            }
+
+            is Msg.UpdatePasswordFieldText -> {
+                copy(password = msg.currentPasswordText)
+            }
+
+        }
     }
 }

@@ -8,8 +8,9 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.balex.familyteam.presentation.loggeduser.LoggedUserStore.Intent
 import com.balex.familyteam.presentation.loggeduser.LoggedUserStore.Label
 import com.balex.familyteam.presentation.loggeduser.LoggedUserStore.State
+import javax.inject.Inject
 
-internal interface LoggedUserStore : Store<Intent, State, Label> {
+interface LoggedUserStore : Store<Intent, State, Label> {
 
     sealed interface Intent {
     }
@@ -20,7 +21,7 @@ internal interface LoggedUserStore : Store<Intent, State, Label> {
     }
 }
 
-internal class LoggedUserStoreFactory(
+class LoggedUserStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory
 ) {
 
