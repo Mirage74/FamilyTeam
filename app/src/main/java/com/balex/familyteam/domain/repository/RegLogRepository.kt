@@ -11,10 +11,18 @@ interface RegLogRepository {
 
     fun observeUser(): StateFlow<User>
 
+    fun observeLanguage(): StateFlow<String>
+
     fun registerAdmin(email: String = "", phone: String = "", password: String)
 
     fun loginAdmin(email: String = "", phone: String = "", password: String)
 
     fun loginUser(email: String, password: String)
+
+    fun saveUser(userLogin: String)
+
+    fun saveLanguage(language: String)
+
+    fun getCurrentLanguage(): String
 
 }

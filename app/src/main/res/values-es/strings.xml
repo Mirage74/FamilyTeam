@@ -4,4 +4,12 @@
     <string name="reg_adm" >Reg. nueva familia</string>
     <string name="log_adm">Admin iniciar sesión como</string>
     <string name="log_user">Usuario iniciar sesión como</string>
+
+    <string name="by_email">por Email</string>
+    <string name="by_phone">por Teléfono</string>
+    <string name="e_mail">Email</string>
+    <string name="phone">Teléfono</string>
+    <string name="password">Contraseña</string>
+    <string name="reg_button">Registro</string>
+    <string name="try_again_button">Inténtalo de nuevo</string>
 </resources>

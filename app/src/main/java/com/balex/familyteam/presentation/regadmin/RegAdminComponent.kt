@@ -20,4 +20,6 @@ interface RegAdminComponent {
 
     fun onPasswordFieldChanged(currentPasswordText: String)
 
+    fun onLanguageChanged(language: String)
+
 }

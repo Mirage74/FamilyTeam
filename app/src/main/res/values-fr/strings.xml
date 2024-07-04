@@ -4,4 +4,12 @@
     <string name="reg_adm" >Inscrire nouvelle famille</string>
     <string name="log_adm">Admin connectez-vous en tant</string>
     <string name="log_user">Utilisateur connectez-vous en tant</string>
+
+    <string name="by_email">par Email</string>
+    <string name="by_phone">par Téléphone</string>
+    <string name="e_mail">Email</string>
+    <string name="phone">Téléphone</string>
+    <string name="password">Mot de passe</string>
+    <string name="reg_button">Registre</string>
+    <string name="try_again_button">Réessayer</string>
 </resources>

@@ -4,4 +4,12 @@
     <string name="reg_adm" >Рег. новую семью</string>
     <string name="log_adm">Войти, администратор</string>
     <string name="log_user">Войти, пользователь</string>
+
+    <string name="by_email">по Email</string>
+    <string name="by_phone">по Телефону</string>
+    <string name="e_mail">Email</string>
+    <string name="phone">Телефон</string>
+    <string name="password">Пароль</string>
+    <string name="reg_button">Зарегистрировать</string>
+    <string name="try_again_button">Попробовать снова</string>
 </resources>

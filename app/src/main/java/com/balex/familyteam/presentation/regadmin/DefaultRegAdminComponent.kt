@@ -1,9 +1,11 @@
 package com.balex.familyteam.presentation.regadmin
 
 import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.essenty.backhandler.BackHandler
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
+import com.balex.familyteam.domain.entity.Language
 import com.balex.familyteam.extensions.componentScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -19,7 +21,7 @@ class DefaultRegAdminComponent @AssistedInject constructor(
     @Assisted("componentContext") componentContext: ComponentContext
 ) : RegAdminComponent, ComponentContext by componentContext {
 
-    private val store = instanceKeeper.getStore { storeFactory.create() }
+    private val store = instanceKeeper.getStore { storeFactory.create(Language.DEFAULT_LANGUAGE.symbol) }
 
     private val scope = componentScope()
 
@@ -40,6 +42,7 @@ class DefaultRegAdminComponent @AssistedInject constructor(
         }
     }
 
+
     @OptIn(ExperimentalCoroutinesApi::class)
     override val model: StateFlow<RegAdminStore.State> = store.stateFlow
 
@@ -58,6 +61,10 @@ class DefaultRegAdminComponent @AssistedInject constructor(
 
     override fun onClickChangePasswordVisibility() {
         store.accept(RegAdminStore.Intent.ClickedChangePasswordVisibility)
+    }
+
+    override fun onLanguageChanged(language: String) {
+        store.accept(RegAdminStore.Intent.ClickedChangeLanguage(language))
     }
 
     override fun onClickTryAgain() {

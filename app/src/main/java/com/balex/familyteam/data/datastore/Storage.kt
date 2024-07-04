@@ -7,9 +7,9 @@ import androidx.security.crypto.MasterKeys
 
 object Storage {
 
-    private const val FILE_NAME = "encrypted_preferences"
-    private const val USER_KEY = "shared_prefs_user"
-    private const val LANGUAGE_KEY = "shared_prefs_language"
+    private const val FILE_NAME = "encrypted_preferences_family_app"
+    private const val USER_KEY = "shared_prefs_user_family_app"
+    private const val LANGUAGE_KEY = "shared_prefs_language_family_app"
     const val NO_USER_SAVED_IN_SHARED_PREFERENCES = "NO_USER_SAVED_IN_SHARED_PREFERENCES"
     const val NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES = "NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES"
 

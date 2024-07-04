@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.Configuration
 import com.balex.familyteam.data.datastore.Storage
 import com.balex.familyteam.domain.entity.Admin
+import com.balex.familyteam.domain.entity.Language
 import com.balex.familyteam.domain.entity.LanguagesList
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.repository.RegLogRepository
@@ -24,13 +25,27 @@ class RegLogRepositoryImpl @Inject constructor(
     private val user: User
         get() = _user.copy()
 
+    private var _language = Language.DEFAULT_LANGUAGE.symbol
+    private val language: String
+        get() = _language
+
     private val isCurrentUserNeedRefreshFlow = MutableSharedFlow<Unit>(replay = 1)
+    private val isCurrentLanguageNeedRefreshFlow = MutableSharedFlow<Unit>(replay = 1)
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     override fun observeUser(): StateFlow<User> = flow {
         val adminFromStorage = Storage.getUser(context)
-        val phoneLang = getCurrentLanguage(context)
+        val phoneLanguageFromStorage = Storage.getLanguage(context)
+        val phoneLang = if (phoneLanguageFromStorage != Storage.NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES) {
+            _language = phoneLanguageFromStorage
+            isCurrentLanguageNeedRefreshFlow.emit(Unit)
+            phoneLanguageFromStorage
+        } else {
+            _language = getCurrentLanguage(context)
+            language
+        }
+
         if (adminFromStorage == Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
             val emptyUserNotSaved = User(login = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES, language = phoneLang)
             _user = emptyUserNotSaved
@@ -49,6 +64,27 @@ class RegLogRepositoryImpl @Inject constructor(
             initialValue = user
         )
 
+    override fun observeLanguage(): StateFlow<String> = flow {
+        val phoneLanguageFromStorage = Storage.getLanguage(context)
+        val phoneLang = if (phoneLanguageFromStorage != Storage.NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES) {
+            _language = phoneLanguageFromStorage
+            phoneLanguageFromStorage
+        } else {
+            getCurrentLanguage(context)
+        }
+        _language = phoneLang
+        isCurrentLanguageNeedRefreshFlow.emit(Unit)
+
+        isCurrentLanguageNeedRefreshFlow.collect {
+            emit(language)
+        }
+    }
+    .stateIn(
+    scope = coroutineScope,
+    started = SharingStarted.Lazily,
+    initialValue = language
+    )
+
     override fun observeAdmin(): StateFlow<Admin> {
         TODO("Not yet implemented")
     }
@@ -63,6 +99,19 @@ class RegLogRepositoryImpl @Inject constructor(
 
     override fun loginUser(email: String, password: String) {
         TODO("Not yet implemented")
+    }
+
+    override fun saveLanguage(language: String) {
+        _language = language
+        Storage.saveLanguage(context, language)
+    }
+
+    override fun getCurrentLanguage(): String {
+        return language
+    }
+
+    override fun saveUser(userLogin: String) {
+        Storage.saveUser(context, userLogin)
     }
 
     private fun getCurrentLanguage(context: Context): String {

@@ -6,9 +6,12 @@ import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.balex.familyteam.domain.entity.RegistrationOption
+import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
+import com.balex.familyteam.domain.usecase.regLog.SaveLanguageUseCase
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.Intent
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.Label
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.State
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 interface RegAdminStore : Store<Intent, State, Label> {
@@ -29,9 +32,12 @@ interface RegAdminStore : Store<Intent, State, Label> {
 
         data class PasswordFieldChanged(val currentPasswordText: String) : Intent
 
+        data class ClickedChangeLanguage(val language: String) : Intent
+
     }
 
     data class State(
+        val language: String,
         val selectedOption: RegistrationOption,
         val emailOrPhone: String,
         val password: String,
@@ -57,13 +63,16 @@ interface RegAdminStore : Store<Intent, State, Label> {
 }
 
 class RegAdminStoreFactory @Inject constructor(
-    private val storeFactory: StoreFactory
+    private val storeFactory: StoreFactory,
+    private val observeLanguageUseCase: ObserveLanguageUseCase,
+    private val saveLanguageUseCase: SaveLanguageUseCase
 ) {
 
-    fun create(): RegAdminStore =
+    fun create(language: String): RegAdminStore =
         object : RegAdminStore, Store<Intent, State, Label> by storeFactory.create(
             name = "RegAdminStore",
             initialState = State(
+                language,
                 RegistrationOption.EMAIL,
                 "",
                 "",
@@ -78,6 +87,9 @@ class RegAdminStoreFactory @Inject constructor(
         ) {}
 
     private sealed interface Action {
+        data class LanguageIsChanged(val language: String) : Action
+
+        data class LanguageIsCheckedInPreference (val language: String): Action
 
     }
 
@@ -94,41 +106,69 @@ class RegAdminStoreFactory @Inject constructor(
         data class UpdateLoginFieldText(val currentLoginText: String) : Msg
 
         data class UpdatePasswordFieldText(val currentPasswordText: String) : Msg
+
+        data class UserLanguageChanged(val language: String) : Msg
     }
 
-    private class BootstrapperImpl : CoroutineBootstrapper<Action>() {
+    private inner class BootstrapperImpl : CoroutineBootstrapper<Action>() {
         override fun invoke() {
+            scope.launch {
+                observeLanguageUseCase().collect {
+                    dispatch(Action.LanguageIsChanged(it))
+                }
+            }
         }
     }
 
-    private class ExecutorImpl : CoroutineExecutor<Intent, Action, State, Msg, Label>() {
+    private inner class ExecutorImpl : CoroutineExecutor<Intent, Action, State, Msg, Label>() {
         override fun executeIntent(intent: Intent, getState: () -> State) {
             when (intent) {
                 Intent.ClickedBack -> {
                     publish(Label.ClickedBack)
                 }
+
                 Intent.ClickedChangePasswordVisibility -> {
                     dispatch(Msg.ChangePasswordVisibility)
                 }
+
                 Intent.ClickedEmailOrPhoneButton -> {
                     dispatch(Msg.ChangeEmailOrPhoneButton)
                 }
+
                 Intent.ClickedRegister -> {
                     dispatch(Msg.ProcessRegister)
                 }
+
                 Intent.ClickedTryAgain -> {
                     dispatch(Msg.ProcessTryAgain)
                 }
+
                 is Intent.LoginFieldChanged -> {
                     dispatch(Msg.UpdateLoginFieldText(intent.currentLoginText))
                 }
+
                 is Intent.PasswordFieldChanged -> {
                     dispatch(Msg.UpdatePasswordFieldText(intent.currentPasswordText))
                 }
+
+                is Intent.ClickedChangeLanguage -> {
+                    saveLanguageUseCase(intent.language)
+                    dispatch(Msg.UserLanguageChanged(intent.language))
+                }
+
             }
         }
 
         override fun executeAction(action: Action, getState: () -> State) {
+            when (action) {
+                is Action.LanguageIsChanged -> {
+                    dispatch(Msg.UserLanguageChanged(action.language))
+                }
+
+                is Action.LanguageIsCheckedInPreference -> {
+                    dispatch(Msg.UserLanguageChanged(action.language))
+                }
+            }
         }
     }
 
@@ -169,6 +209,9 @@ class RegAdminStoreFactory @Inject constructor(
                 copy(password = msg.currentPasswordText)
             }
 
+            is Msg.UserLanguageChanged -> {
+                copy(language = msg.language)
+            }
         }
     }
 }

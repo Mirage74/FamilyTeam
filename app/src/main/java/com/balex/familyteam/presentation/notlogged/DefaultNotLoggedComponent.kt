@@ -2,6 +2,7 @@ package com.balex.familyteam.presentation.notlogged
 
 import android.util.Log
 import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
@@ -29,6 +30,9 @@ class DefaultNotLoggedComponent  @AssistedInject constructor(
     private val scope = componentScope()
 
     init {
+        lifecycle.doOnResume {
+            onRefreshLanguage()
+        }
         scope.launch {
             store.labels.collect {
                 when (it) {
@@ -61,9 +65,14 @@ class DefaultNotLoggedComponent  @AssistedInject constructor(
     }
 
 
+
+
     @OptIn(ExperimentalCoroutinesApi::class)
     override val model: StateFlow<NotLoggedStore.State> = store.stateFlow
 
+    override fun onRefreshLanguage() {
+        store.accept(NotLoggedStore.Intent.RefreshLanguage)
+    }
 
     override fun onClickRegAdmin() {
         store.accept(NotLoggedStore.Intent.ClickedRegisterAdmin)

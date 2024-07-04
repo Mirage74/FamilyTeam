@@ -15,4 +15,6 @@ interface NotLoggedComponent {
     fun onLanguageChanged(language: String)
 
     fun onClickAbout()
+
+    fun onRefreshLanguage()
 }

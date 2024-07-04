@@ -7,7 +7,10 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.balex.familyteam.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
 import com.balex.familyteam.domain.entity.User
-import com.balex.familyteam.domain.usecase.RegLog.ObserveUserUseCase
+import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
+import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
+import com.balex.familyteam.domain.usecase.regLog.ObserveUserUseCase
+import com.balex.familyteam.domain.usecase.regLog.SaveLanguageUseCase
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore.Intent
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore.Label
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore.State
@@ -25,6 +28,8 @@ interface NotLoggedStore : Store<Intent, State, Label> {
         data object ClickedLoginUser : Intent
 
         data object ClickedAbout: Intent
+
+        data object RefreshLanguage : Intent
 
         data class ClickedChangeLanguage(val language: String) : Intent
 
@@ -62,7 +67,10 @@ interface NotLoggedStore : Store<Intent, State, Label> {
 
 class NotLoggedStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
-    private val observeUserUseCase: ObserveUserUseCase
+    private val observeUserUseCase: ObserveUserUseCase,
+    private val observeLanguageUseCase: ObserveLanguageUseCase,
+    private val saveLanguageUseCase: SaveLanguageUseCase,
+    private val getLanguageUseCase: GetLanguageUseCase
 ) {
 
     fun create(language: String): NotLoggedStore =
@@ -78,6 +86,8 @@ class NotLoggedStoreFactory @Inject constructor(
 
         data class LanguageIsChanged(val language: String) : Action
 
+        data class LanguageIsCheckedInPreference (val language: String): Action
+
         data object UserNotExistInPreference : Action
 
         data object UserExistInPreferenceAndLoadedUserData: Action
@@ -88,6 +98,8 @@ class NotLoggedStoreFactory @Inject constructor(
     }
 
     private sealed interface Msg {
+
+        data class RefreshLanguage(val language: String) : Msg
 
         data object UserIsNotExistInPreference : Msg
 
@@ -119,6 +131,12 @@ class NotLoggedStoreFactory @Inject constructor(
                 }
             }
 
+            scope.launch {
+                observeLanguageUseCase().collect {
+                    dispatch(Action.LanguageIsChanged(it))
+                }
+            }
+
         }
     }
 
@@ -139,11 +157,16 @@ class NotLoggedStoreFactory @Inject constructor(
                 }
 
                 is Intent.ClickedChangeLanguage -> {
+                    saveLanguageUseCase(intent.language)
                     dispatch(Msg.UserLanguageChanged(intent.language))
                 }
 
                 Intent.ClickedAbout -> {
                     publish(Label.ClickedAbout)
+                }
+
+                Intent.RefreshLanguage -> {
+                    dispatch(Msg.RefreshLanguage(getLanguageUseCase()))
                 }
             }
         }
@@ -166,6 +189,10 @@ class NotLoggedStoreFactory @Inject constructor(
                 is Action.LanguageIsChanged -> {
                     dispatch(Msg.UserLanguageChanged(action.language))
                 }
+
+                is Action.LanguageIsCheckedInPreference -> {
+                    dispatch(Msg.UserLanguageChanged(action.language))
+                }
             }
         }
     }
@@ -182,6 +209,10 @@ class NotLoggedStoreFactory @Inject constructor(
             }
 
             is Msg.UserLanguageChanged -> {
+                copy(language = msg.language)
+            }
+
+            is Msg.RefreshLanguage -> {
                 copy(language = msg.language)
             }
         }

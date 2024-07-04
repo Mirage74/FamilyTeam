@@ -14,4 +14,7 @@ class FamilyApp : Application() {
         applicationComponent = DaggerApplicationComponent.factory().create(this)
         FirebaseApp.initializeApp(this)
     }
+
+
+
 }

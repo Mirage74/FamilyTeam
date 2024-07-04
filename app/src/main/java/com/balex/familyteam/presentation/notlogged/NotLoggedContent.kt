@@ -1,25 +1,16 @@
 package com.balex.familyteam.presentation.notlogged
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,17 +23,12 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -50,10 +36,9 @@ import androidx.compose.ui.unit.sp
 import com.balex.familyteam.LocalLocalizedContext
 import com.balex.familyteam.LocalizedContextProvider
 import com.balex.familyteam.R
-import com.balex.familyteam.domain.entity.LanguagesList
 import com.balex.familyteam.domain.entity.MenuItems
+import com.balex.familyteam.presentation.SwitchLanguage
 import kotlinx.coroutines.launch
-
 
 
 @Composable
@@ -126,7 +111,10 @@ fun NotLoggedScreen(component: NotLoggedComponent) {
                                     contentDescription = "Open Drawer"
                                 )
                             }
-                            SwitchLanguage(state.language, component)
+                            val onLanguageChanged: (String) -> Unit = { newLanguage ->
+                                component.onLanguageChanged(newLanguage)
+                            }
+                            SwitchLanguage(state.language, onLanguageChanged)
                         }
                     }
                 )
@@ -187,105 +175,7 @@ fun DrawerContent(
 }
 
 
-@Composable
-fun SwitchLanguage(
-    currentLanguage: String,
-    component: NotLoggedComponent
-) {
-    var isChooseOptionDropMenuExpanded by rememberSaveable { mutableStateOf(false) }
 
-    val languages = LanguagesList().languages
-
-
-    Box(
-        modifier = Modifier
-            .height(dimensionResource(id = R.dimen.top_bar_height).value.dp)
-            .width(144.dp)
-            .background(Color.Gray)
-            //.border(width = 1.dp, color = Color.Black)
-    ) {
-        IconButton(
-            onClick = {
-                isChooseOptionDropMenuExpanded = !isChooseOptionDropMenuExpanded
-            },
-            modifier = Modifier
-                .size(dimensionResource(id = R.dimen.top_bar_height).value.dp)
-                .align(Alignment.TopStart)
-
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_language),
-                contentDescription = "Switch language"
-            )
-        }
-        Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .padding(horizontal = 16.dp)
-                .align(Alignment.Center),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-
-        ) {
-            val textSize = dimensionResource(id = R.dimen.current_language_text_size).value.sp
-            Text(
-                modifier = Modifier.clickable {
-                    isChooseOptionDropMenuExpanded = !isChooseOptionDropMenuExpanded
-                },
-
-
-                fontSize = textSize,
-                text = currentLanguage.uppercase()
-            )
-        }
-
-
-        IconButton(
-            onClick = {
-                isChooseOptionDropMenuExpanded = !isChooseOptionDropMenuExpanded
-            },
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-        ) {
-            Icon(imageVector = Icons.Filled.ArrowDropDown, contentDescription = "Switch language")
-        }
-
-
-        DropdownMenu(
-            expanded = isChooseOptionDropMenuExpanded,
-            onDismissRequest = {
-                isChooseOptionDropMenuExpanded = false
-            },
-
-            modifier = Modifier
-                .width(150.dp)
-                .background(Color.White)
-                .padding(0.dp)
-                .border(1.dp, Color.Black)
-
-        ) {
-            val textSize = dimensionResource(id = R.dimen.language_list_text_size).value.sp
-            languages.forEach { option ->
-                DropdownMenuItem(
-                    modifier = Modifier
-                        .padding(0.dp)
-                        .border(1.dp, Color.LightGray),
-                    onClick = {
-                        component?.onLanguageChanged(option.symbol.uppercase())
-                        isChooseOptionDropMenuExpanded = false
-                    },
-                    text = {
-                        Text(
-                            text = option.description.trim(),
-                            fontSize = textSize
-                        )
-                    },
-                )
-            }
-        }
-
-    }
-}
 
 @Composable
 fun ThreeButtonsScreen(
