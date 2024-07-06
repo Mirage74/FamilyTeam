@@ -174,25 +174,8 @@ class MainActivity : ComponentActivity() {
 //}
 //
 //
-//
-//
-//
-//@Composable
-//fun MyScreen(onLanguageChange: (String) -> Unit) {
-//    val context = LocalLocalizedContext.current
-//    val exampleString = context.getString(R.string.app_name)
-//
-//    Column {
-//        Text(text = exampleString)
-//        Button(onClick = { onLanguageChange("de") }) {
-//            Text(text = "Change to DE")
-//        }
-//        Button(onClick = { onLanguageChange("en") }) {
-//            Text(text = "Change to English")
-//        }
-//    }
-//}
-//
+
+
 //@Composable
 //fun NotificationHandler() {
 //    var notification by remember { mutableStateOf("No notifications") }

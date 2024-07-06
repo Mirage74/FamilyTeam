@@ -25,4 +25,8 @@ interface RegLogRepository {
 
     fun getCurrentLanguage(): String
 
+    suspend fun addAdmin(admin: Admin): Result<Unit>
+
+    suspend fun registerAndVerifyByEmail(email: String, password: String)
+
 }

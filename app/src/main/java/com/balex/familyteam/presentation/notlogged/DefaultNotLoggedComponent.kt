@@ -32,13 +32,14 @@ class DefaultNotLoggedComponent  @AssistedInject constructor(
     init {
         lifecycle.doOnResume {
             onRefreshLanguage()
+            //Log.d("NotLoggedComponent", "doOnResume")
         }
         scope.launch {
             store.labels.collect {
                 when (it) {
 
                     is NotLoggedStore.Label.ClickedRegisterAdmin -> {
-                        Log.d("NotLoggedComponent", "ClickedRegisterAdmin")
+                        //Log.d("NotLoggedComponent", "ClickedRegisterAdmin")
                         onRegAdminClicked()
                     }
 

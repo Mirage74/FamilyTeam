@@ -92,6 +92,7 @@ dependencies {
     implementation(libs.firebase.messaging.ktx)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.database)
+    implementation(libs.firebase.firestore.ktx)
 
     implementation (libs.androidx.navigation.compose)
 

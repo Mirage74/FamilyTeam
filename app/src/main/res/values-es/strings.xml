@@ -8,7 +8,7 @@
     <string name="by_email">por Email</string>
     <string name="by_phone">por Teléfono</string>
     <string name="e_mail">Email</string>
-    <string name="phone">Teléfono</string>
+    <string name="phone">Teléfono, sólo dígitos con código de país</string>
     <string name="password">Contraseña</string>
     <string name="reg_button">Registro</string>
     <string name="try_again_button">Inténtalo de nuevo</string>

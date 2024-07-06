@@ -26,6 +26,7 @@ class DefaultRegAdminComponent @AssistedInject constructor(
     private val scope = componentScope()
 
     init {
+
         scope.launch {
             store.labels.collect {
                 when (it) {

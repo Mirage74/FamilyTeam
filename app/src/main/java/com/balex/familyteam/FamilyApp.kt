@@ -15,6 +15,4 @@ class FamilyApp : Application() {
         FirebaseApp.initializeApp(this)
     }
 
-
-
 }

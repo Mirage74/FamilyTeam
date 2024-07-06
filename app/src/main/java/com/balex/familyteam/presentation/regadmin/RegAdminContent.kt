@@ -21,13 +21,17 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
@@ -137,7 +141,9 @@ fun ContentScreen(component: RegAdminComponent) {
                 val phoneText =
                     if (state.selectedOption == RegistrationOption.PHONE) state.emailOrPhone else ""
 
-
+                val emailColor = if (state.isPasswordEnabled) Color.Unspecified else Color.Red
+                val passwordColor =
+                    if (state.isRegisterButtonEnabled) Color.Unspecified else Color.Red
 
                 TextField(
                     value = emailText,
@@ -147,8 +153,12 @@ fun ContentScreen(component: RegAdminComponent) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),
+                    textStyle = LocalTextStyle.current.copy(
+                        color = emailColor
+                    ),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                 )
+
                 TextField(
                     value = phoneText,
                     onValueChange = { component.onLoginFieldChanged(it) },
@@ -157,13 +167,17 @@ fun ContentScreen(component: RegAdminComponent) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    textStyle = LocalTextStyle.current.copy(
+                        color = emailColor
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 )
 
                 TextField(
                     value = state.password,
                     onValueChange = { component.onPasswordFieldChanged(it) },
                     label = { Text(context.getString(R.string.password)) },
+                    enabled = (state.isPasswordEnabled) && (!state.isRegisterButtonWasPressed),
                     visualTransformation = if (state.passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
                         val image = if (state.passwordVisible)
@@ -176,6 +190,9 @@ fun ContentScreen(component: RegAdminComponent) {
                             Icon(imageVector = image, contentDescription = null)
                         }
                     },
+                    textStyle = LocalTextStyle.current.copy(
+                        color = passwordColor
+                    ),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -187,6 +204,7 @@ fun ContentScreen(component: RegAdminComponent) {
                     Text("Registration failed")
                 } else {
                     if (state.isRegisterButtonWasPressed) {
+                        Spacer(modifier = Modifier.height(24.dp))
                         if (state.selectedOption == RegistrationOption.EMAIL) {
                             Text("Please verify your email")
                         } else {
@@ -198,20 +216,30 @@ fun ContentScreen(component: RegAdminComponent) {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Button(
-                    enabled = !state.isRegisterButtonWasPressed,
-                    onClick = {
-                        // Handle registration logic
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(dimensionResource(id = R.dimen.reg_buttons_height).value.dp)
-                ) {
-                    if (!state.isRegError) {
+                if (!state.isRegisterButtonWasPressed) {
+                    Button(
+                        enabled = state.isPasswordEnabled && state.isRegisterButtonEnabled,
+                        onClick = {
+                            component.onClickRegister()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(dimensionResource(id = R.dimen.reg_buttons_height).value.dp)
+                    ) {
                         Text(text = context.getString(R.string.reg_button))
-                    } else {
+                    }
+                } else {
+                    Button(
+                        onClick = {
+                            component.onClickTryAgain()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(dimensionResource(id = R.dimen.reg_buttons_height).value.dp)
+                    ) {
                         Text(text = context.getString(R.string.try_again_button))
                     }
+
 
                 }
             }
