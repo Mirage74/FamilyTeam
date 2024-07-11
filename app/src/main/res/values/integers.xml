@@ -2,4 +2,5 @@
 <resources>
     <integer name="min_numbers_in_phone">7</integer>
     <integer name="min_password_length">6</integer>
+    <integer name="sms_code_length">6</integer>
 </resources>

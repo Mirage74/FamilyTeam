@@ -6,12 +6,15 @@ import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
+import com.balex.familyteam.FamilyApp
 import com.balex.familyteam.R
 import com.balex.familyteam.domain.entity.Admin
 import com.balex.familyteam.domain.entity.RegistrationOption
 import com.balex.familyteam.domain.usecase.regLog.AddAdminUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
+import com.balex.familyteam.domain.usecase.regLog.ObserveVerifiedStatusUseCase
 import com.balex.familyteam.domain.usecase.regLog.RegisterAndVerifyByEmailUseCase
+import com.balex.familyteam.domain.usecase.regLog.RegisterAndVerifyByPhoneUseCase
 import com.balex.familyteam.domain.usecase.regLog.SaveLanguageUseCase
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.Intent
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.Label
@@ -29,6 +32,8 @@ interface RegAdminStore : Store<Intent, State, Label> {
 
         data object ClickedRegister : Intent
 
+        data object ClickedSmsCodeConfirmation : Intent
+
         data object ClickedEmailOrPhoneButton : Intent
 
         data object ClickedChangePasswordVisibility : Intent
@@ -39,6 +44,8 @@ interface RegAdminStore : Store<Intent, State, Label> {
 
         data class PasswordFieldChanged(val currentPasswordText: String) : Intent
 
+        data class SmsNumberFieldChanged(val currentSmsNumberText: String) : Intent
+
         data class ClickedChangeLanguage(val language: String) : Intent
 
     }
@@ -48,11 +55,14 @@ interface RegAdminStore : Store<Intent, State, Label> {
         val selectedOption: RegistrationOption,
         val emailOrPhone: String,
         val password: String,
+        val smsCode: String,
         val isPasswordEnabled: Boolean,
         val passwordVisible: Boolean,
         val isRegisterButtonEnabled: Boolean,
         val isRegisterButtonWasPressed: Boolean,
-        val isRegError: Boolean,
+        val isSmsVerifyButtonWasPressed: Boolean,
+        val isSmsOkButtonEnabled: Boolean,
+        val isEmailOrPhoneNumberVerified: Boolean,
         val regAdminState: RegAdminState
     ) {
         sealed interface RegAdminState {
@@ -64,9 +74,9 @@ interface RegAdminStore : Store<Intent, State, Label> {
 
     sealed interface Label {
 
-        data object AdminIsRegisteredAndVerified : RegAdminStore.Label
+        data object AdminIsRegisteredAndVerified : Label
 
-        data object ClickedBack : RegAdminStore.Label
+        data object ClickedBack : Label
 
     }
 }
@@ -74,11 +84,14 @@ interface RegAdminStore : Store<Intent, State, Label> {
 class RegAdminStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
     private val observeLanguageUseCase: ObserveLanguageUseCase,
+    private val observeVerifiedStatusUseCase: ObserveVerifiedStatusUseCase,
     private val saveLanguageUseCase: SaveLanguageUseCase,
     private val addAdminUseCase: AddAdminUseCase,
     private val registerAndVerifyByEmailUseCase: RegisterAndVerifyByEmailUseCase,
-    private val context: Context
+    private val registerAndVerifyByPhoneUseCase: RegisterAndVerifyByPhoneUseCase,
+    context: Context
 ) {
+    val appContext: Context = context.applicationContext
 
     fun create(language: String): RegAdminStore =
         object : RegAdminStore, Store<Intent, State, Label> by storeFactory.create(
@@ -88,11 +101,14 @@ class RegAdminStoreFactory @Inject constructor(
                 RegistrationOption.EMAIL,
                 "",
                 "",
+                "",
                 isPasswordEnabled = false,
                 passwordVisible = false,
                 isRegisterButtonWasPressed = false,
+                isSmsVerifyButtonWasPressed = false,
+                isSmsOkButtonEnabled = false,
                 isRegisterButtonEnabled = false,
-                isRegError = false,
+                isEmailOrPhoneNumberVerified = false,
                 regAdminState = State.RegAdminState.Content
             ),
             bootstrapper = BootstrapperImpl(),
@@ -101,17 +117,20 @@ class RegAdminStoreFactory @Inject constructor(
         ) {}
 
     private sealed interface Action {
+
         data class LanguageIsChanged(val language: String) : Action
 
         data class LanguageIsCheckedInPreference(val language: String) : Action
+
+        data class VerifiedStatusIsChanged(val isVerified: Boolean) : Action
 
     }
 
     private sealed interface Msg {
 
-        data object SuccessRegister : Msg
+        data object ClickedRegister : Msg
 
-        data object ErrorRegister : Msg
+        data object ClickedSmsCodeConfirmation : Msg
 
         data object ChangeEmailOrPhoneButton : Msg
 
@@ -123,6 +142,10 @@ class RegAdminStoreFactory @Inject constructor(
 
         data object EmailOrPhoneNotMatched : Msg
 
+        data object SmsMatched : Msg
+
+        data object SmsMatchedNotMatched : Msg
+
         data object PasswordMatched : Msg
 
         data object PasswordNotMatched : Msg
@@ -130,6 +153,8 @@ class RegAdminStoreFactory @Inject constructor(
         data class UpdateLoginFieldText(val currentLoginText: String) : Msg
 
         data class UpdatePasswordFieldText(val currentPasswordText: String) : Msg
+
+        data class UpdateSmsNumberFieldText(val currentSmsNumberText: String) : Msg
 
         data class UserLanguageChanged(val language: String) : Msg
 
@@ -140,6 +165,11 @@ class RegAdminStoreFactory @Inject constructor(
             scope.launch {
                 observeLanguageUseCase().collect {
                     dispatch(Action.LanguageIsChanged(it))
+                }
+            }
+            scope.launch {
+                observeVerifiedStatusUseCase().collect {
+                    dispatch(Action.VerifiedStatusIsChanged(it))
                 }
             }
         }
@@ -161,19 +191,25 @@ class RegAdminStoreFactory @Inject constructor(
                 }
 
                 Intent.ClickedRegister -> {
-                    val admin = Admin(
-                        isEmailRegistration = getState().selectedOption == RegistrationOption.EMAIL,
-                        emailOrPhoneNumber = getState().emailOrPhone,
-                        isEmailOrPhoneNumberConfirmed = false
-                    )
+                    dispatch(Msg.ClickedRegister)
                     CoroutineScope(Dispatchers.Main).launch {
-//                        val resultFirebase = addAdminUseCase(admin)
-//                        if (resultFirebase.isSuccess) {
-//                            dispatch(Msg.SuccessRegister)
-//                        } else {
-//                            dispatch(Msg.ErrorRegister)
-//                        }
-                        registerAndVerifyByEmailUseCase(getState().emailOrPhone, getState().password)
+                        if (getState.invoke().selectedOption == RegistrationOption.EMAIL) {
+                            registerAndVerifyByEmailUseCase(
+                                getState().emailOrPhone,
+                                getState().password
+                            )
+                        } else {
+
+                            FamilyApp.currentActivity?.let { activity ->
+                                registerAndVerifyByPhoneUseCase(
+                                    getState().emailOrPhone,
+                                    getState().password,
+                                    activity
+                                )
+                            }
+
+                        }
+
                     }
 
                 }
@@ -196,7 +232,7 @@ class RegAdminStoreFactory @Inject constructor(
                     } else {
                         val text = intent.currentLoginText.replace(Regex(REGEX_PATTERN_NUMBERS), "")
                         dispatch(Msg.UpdateLoginFieldText(text))
-                        if (text.length >= context.resources.getInteger(R.integer.min_numbers_in_phone)) {
+                        if (text.length >= appContext.resources.getInteger(R.integer.min_numbers_in_phone)) {
                             dispatch(Msg.EmailOrPhoneMatched)
                         } else {
                             dispatch(Msg.EmailOrPhoneNotMatched)
@@ -207,7 +243,7 @@ class RegAdminStoreFactory @Inject constructor(
 
                 is Intent.PasswordFieldChanged -> {
                     dispatch(Msg.UpdatePasswordFieldText(intent.currentPasswordText))
-                    if (intent.currentPasswordText.length >= context.resources.getInteger(R.integer.min_password_length)) {
+                    if (intent.currentPasswordText.length >= appContext.resources.getInteger(R.integer.min_password_length)) {
                         dispatch(Msg.PasswordMatched)
                     } else {
                         dispatch(Msg.PasswordNotMatched)
@@ -219,6 +255,19 @@ class RegAdminStoreFactory @Inject constructor(
                     dispatch(Msg.UserLanguageChanged(intent.language))
                 }
 
+                Intent.ClickedSmsCodeConfirmation -> {
+                    dispatch(Msg.ClickedSmsCodeConfirmation)
+                }
+
+                is Intent.SmsNumberFieldChanged -> {
+                    val text = intent.currentSmsNumberText.replace(Regex(REGEX_PATTERN_NUMBERS), "")
+                    dispatch(Msg.UpdateSmsNumberFieldText(text))
+                    if (text.length == appContext.resources.getInteger(R.integer.sms_code_length)) {
+                        dispatch(Msg.SmsMatched)
+                    } else {
+                        dispatch(Msg.SmsMatchedNotMatched)
+                    }
+                }
             }
         }
 
@@ -230,6 +279,24 @@ class RegAdminStoreFactory @Inject constructor(
 
                 is Action.LanguageIsCheckedInPreference -> {
                     dispatch(Msg.UserLanguageChanged(action.language))
+                }
+
+                is Action.VerifiedStatusIsChanged -> {
+                    if (action.isVerified) {
+                        val admin = Admin(
+                            isEmailRegistration = getState().selectedOption == RegistrationOption.EMAIL,
+                            emailOrPhoneNumber = getState().emailOrPhone,
+                            isEmailOrPhoneNumberConfirmed = false
+                        )
+                        CoroutineScope(Dispatchers.Main).launch {
+                            val resultFirebase = addAdminUseCase(admin)
+                            if (resultFirebase.isSuccess) {
+                                //dispatch(Msg.SuccessRegister)
+                                publish(Label.AdminIsRegisteredAndVerified)
+                            }
+                        }
+
+                    }
                 }
             }
         }
@@ -260,7 +327,7 @@ class RegAdminStoreFactory @Inject constructor(
                     passwordVisible = false,
                     isRegisterButtonWasPressed = false,
                     isRegisterButtonEnabled = false,
-                    isRegError = false
+                    isEmailOrPhoneNumberVerified = false
                 )
 
             }
@@ -273,21 +340,17 @@ class RegAdminStoreFactory @Inject constructor(
                 copy(password = msg.currentPasswordText)
             }
 
+            is Msg.UpdateSmsNumberFieldText -> {
+                copy(smsCode = msg.currentSmsNumberText)
+            }
+
             is Msg.UserLanguageChanged -> {
                 copy(language = msg.language)
             }
 
-            Msg.SuccessRegister -> {
+            Msg.ClickedRegister -> {
                 copy(
-                    isRegisterButtonWasPressed = true,
-                    isRegError = false
-                )
-            }
-
-            Msg.ErrorRegister -> {
-                copy(
-                    isRegisterButtonWasPressed = true,
-                    isRegError = true
+                    isRegisterButtonWasPressed = true
                 )
             }
 
@@ -305,6 +368,17 @@ class RegAdminStoreFactory @Inject constructor(
 
             Msg.PasswordNotMatched -> {
                 copy(isRegisterButtonEnabled = false)
+            }
+
+            Msg.ClickedSmsCodeConfirmation -> {
+                copy(isSmsVerifyButtonWasPressed = true)
+            }
+
+            Msg.SmsMatched -> {
+                copy(isSmsOkButtonEnabled = true)
+            }
+            Msg.SmsMatchedNotMatched -> {
+                copy(isSmsOkButtonEnabled = false)
             }
 
         }

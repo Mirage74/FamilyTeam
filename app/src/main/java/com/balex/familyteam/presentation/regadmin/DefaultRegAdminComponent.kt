@@ -56,6 +56,10 @@ class DefaultRegAdminComponent @AssistedInject constructor(
         store.accept(RegAdminStore.Intent.ClickedRegister)
     }
 
+    override fun onClickSmsVerify() {
+        store.accept(RegAdminStore.Intent.ClickedSmsCodeConfirmation)
+    }
+
     override fun onClickEmailOrPhoneButton() {
         store.accept(RegAdminStore.Intent.ClickedEmailOrPhoneButton)
     }
@@ -78,6 +82,10 @@ class DefaultRegAdminComponent @AssistedInject constructor(
 
     override fun onPasswordFieldChanged(currentPasswordText: String) {
         store.accept(RegAdminStore.Intent.PasswordFieldChanged(currentPasswordText))
+    }
+
+    override fun onSmsNumberFieldChanged(currentSmsText: String) {
+        store.accept(RegAdminStore.Intent.SmsNumberFieldChanged(currentSmsText))
     }
 
     @AssistedFactory

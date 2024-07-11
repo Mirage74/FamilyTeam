@@ -1,8 +1,8 @@
 package com.balex.familyteam.domain.repository
 
+import android.app.Activity
 import com.balex.familyteam.domain.entity.Admin
 import com.balex.familyteam.domain.entity.User
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 interface RegLogRepository {
@@ -12,6 +12,8 @@ interface RegLogRepository {
     fun observeUser(): StateFlow<User>
 
     fun observeLanguage(): StateFlow<String>
+
+    fun observeVerifiedStatus(): StateFlow<Boolean>
 
     fun registerAdmin(email: String = "", phone: String = "", password: String)
 
@@ -28,5 +30,9 @@ interface RegLogRepository {
     suspend fun addAdmin(admin: Admin): Result<Unit>
 
     suspend fun registerAndVerifyByEmail(email: String, password: String)
+
+    suspend fun registerAndVerifyByPhone(phoneNumber: String, verificationCode: String, activity: Activity)
+
+
 
 }

@@ -39,6 +39,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.balex.familyteam.LocalLocalizedContext
 import com.balex.familyteam.LocalizedContextProvider
 import com.balex.familyteam.R
@@ -118,7 +119,10 @@ fun ContentScreen(component: RegAdminComponent) {
                             .padding(end = 4.dp)
                             .height(dimensionResource(id = R.dimen.reg_buttons_height).value.dp),
                     ) {
-                        Text(context.getString(R.string.by_email))
+                        Text(
+                            context.getString(R.string.by_email),
+                            fontSize = dimensionResource(id = R.dimen.reg_admin_button_text_size).value.sp
+                        )
                     }
                     Button(
                         enabled = (state.selectedOption != RegistrationOption.PHONE) && (!state.isRegisterButtonWasPressed),
@@ -130,7 +134,10 @@ fun ContentScreen(component: RegAdminComponent) {
                             .padding(start = 4.dp)
                             .height(dimensionResource(id = R.dimen.reg_buttons_height).value.dp),
                     ) {
-                        Text(context.getString(R.string.by_phone))
+                        Text(
+                            context.getString(R.string.by_phone),
+                            fontSize = dimensionResource(id = R.dimen.reg_admin_button_text_size).value.sp
+                        )
                     }
                 }
 
@@ -140,10 +147,14 @@ fun ContentScreen(component: RegAdminComponent) {
                     if (state.selectedOption == RegistrationOption.EMAIL) state.emailOrPhone else ""
                 val phoneText =
                     if (state.selectedOption == RegistrationOption.PHONE) state.emailOrPhone else ""
+                val smsText =
+                    if (state.isRegisterButtonWasPressed) state.smsCode else ""
 
                 val emailColor = if (state.isPasswordEnabled) Color.Unspecified else Color.Red
                 val passwordColor =
                     if (state.isRegisterButtonEnabled) Color.Unspecified else Color.Red
+                val smsColor =
+                    if (state.isSmsOkButtonEnabled) Color.Unspecified else Color.Red
 
                 TextField(
                     value = emailText,
@@ -199,20 +210,65 @@ fun ContentScreen(component: RegAdminComponent) {
                         .padding(vertical = 8.dp)
                 )
 
+                if (state.isRegisterButtonWasPressed && state.selectedOption == RegistrationOption.PHONE) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            TextField(
+                                value = smsText,
+                                onValueChange = {component.onSmsNumberFieldChanged(it)},
+                                label = { Text("Enter code from SMS") },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 8.dp),
+                                textStyle = LocalTextStyle.current.copy(
+                                    color = smsColor
+                                ),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            )
 
-                if (state.isRegError) {
-                    Text("Registration failed")
-                } else {
-                    if (state.isRegisterButtonWasPressed) {
-                        Spacer(modifier = Modifier.height(24.dp))
-                        if (state.selectedOption == RegistrationOption.EMAIL) {
-                            Text("Please verify your email")
-                        } else {
-                            Text("Please verify your phone")
+                            Button(
+                                onClick = {component.onClickSmsVerify()},
+                                enabled = state.isSmsOkButtonEnabled,
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                            ) {
+                                Text("OK")
+                            }
                         }
-
                     }
                 }
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(), // Заполняет всю высоту и ширину экрана
+                    contentAlignment = Alignment.Center // Центрирует содержимое по горизонтали и вертикали
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (state.isRegisterButtonWasPressed) {
+                            Spacer(modifier = Modifier.height(24.dp))
+                            if (state.selectedOption == RegistrationOption.EMAIL) {
+                                Text(
+                                    "Please verify your email",
+                                    fontSize = dimensionResource(id = R.dimen.verify_text_size).value.sp
+                                )
+                            } else {
+                                Text(
+                                    "Please verify your phone",
+                                    fontSize = dimensionResource(id = R.dimen.verify_text_size).value.sp
+                                )
+                            }
+                        }
+                    }
+                }
+
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -226,7 +282,10 @@ fun ContentScreen(component: RegAdminComponent) {
                             .fillMaxWidth()
                             .height(dimensionResource(id = R.dimen.reg_buttons_height).value.dp)
                     ) {
-                        Text(text = context.getString(R.string.reg_button))
+                        Text(
+                            text = context.getString(R.string.reg_button),
+                            fontSize = dimensionResource(id = R.dimen.reg_admin_button_text_size).value.sp
+                        )
                     }
                 } else {
                     Button(
@@ -237,7 +296,10 @@ fun ContentScreen(component: RegAdminComponent) {
                             .fillMaxWidth()
                             .height(dimensionResource(id = R.dimen.reg_buttons_height).value.dp)
                     ) {
-                        Text(text = context.getString(R.string.try_again_button))
+                        Text(
+                            text = context.getString(R.string.try_again_button),
+                            fontSize = dimensionResource(id = R.dimen.reg_admin_button_text_size).value.sp
+                        )
                     }
 
 

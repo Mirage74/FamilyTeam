@@ -10,6 +10,8 @@ interface RegAdminComponent {
 
     fun onClickRegister()
 
+    fun onClickSmsVerify()
+
     fun onClickEmailOrPhoneButton()
 
     fun onClickChangePasswordVisibility()
@@ -19,6 +21,8 @@ interface RegAdminComponent {
     fun onLoginFieldChanged(currentLoginText: String)
 
     fun onPasswordFieldChanged(currentPasswordText: String)
+
+    fun onSmsNumberFieldChanged(currentSmsPasswordText: String)
 
     fun onLanguageChanged(language: String)
 

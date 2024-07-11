@@ -4,6 +4,8 @@
     <dimen name="language_list_text_size">20sp</dimen>
     <dimen name="button_text_size">20sp</dimen>
     <dimen name="hamburger_text_size">20sp</dimen>
+    <dimen name="verify_text_size">28sp</dimen>
+    <dimen name="reg_admin_button_text_size">20sp</dimen>
 
     <dimen name="top_bar_height">48dp</dimen>
     <dimen name="reg_buttons_height">72dp</dimen>
