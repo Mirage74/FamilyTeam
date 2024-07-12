@@ -221,8 +221,9 @@ fun ContentScreen(component: RegAdminComponent) {
                         ) {
                             TextField(
                                 value = smsText,
+                                enabled = !state.isSmsVerifyButtonWasPressed,
                                 onValueChange = {component.onSmsNumberFieldChanged(it)},
-                                label = { Text("Enter code from SMS") },
+                                label = { Text(context.getString(R.string.enter_code_from_sms)) },
                                 modifier = Modifier
                                     .weight(1f)
                                     .padding(end = 8.dp),
@@ -234,18 +235,18 @@ fun ContentScreen(component: RegAdminComponent) {
 
                             Button(
                                 onClick = {component.onClickSmsVerify()},
-                                enabled = state.isSmsOkButtonEnabled,
+                                enabled = state.isSmsOkButtonEnabled && !state.isSmsVerifyButtonWasPressed,
                                 modifier = Modifier.align(Alignment.CenterVertically)
                             ) {
-                                Text("OK")
+                                Text(context.getString(R.string.button_ok))
                             }
                         }
                     }
                 }
                 Box(
                     modifier = Modifier
-                        .fillMaxSize(), // Заполняет всю высоту и ширину экрана
-                    contentAlignment = Alignment.Center // Центрирует содержимое по горизонтали и вертикали
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -256,12 +257,12 @@ fun ContentScreen(component: RegAdminComponent) {
                             Spacer(modifier = Modifier.height(24.dp))
                             if (state.selectedOption == RegistrationOption.EMAIL) {
                                 Text(
-                                    "Please verify your email",
+                                    text = context.getString(R.string.please_verify_email),
                                     fontSize = dimensionResource(id = R.dimen.verify_text_size).value.sp
                                 )
                             } else {
                                 Text(
-                                    "Please verify your phone",
+                                    text = context.getString(R.string.please_verify_phone),
                                     fontSize = dimensionResource(id = R.dimen.verify_text_size).value.sp
                                 )
                             }
@@ -269,6 +270,23 @@ fun ContentScreen(component: RegAdminComponent) {
                     }
                 }
 
+                if (state.isSmsVerifyButtonWasPressed) {
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Button(
+                        onClick = {
+                            component.onClickSendSmsAgain()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(dimensionResource(id = R.dimen.reg_buttons_height).value.dp)
+                    ) {
+                        Text(
+                            text = context.getString(R.string.button_resend_sms),
+                            fontSize = dimensionResource(id = R.dimen.reg_admin_button_text_size).value.sp
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -301,8 +319,6 @@ fun ContentScreen(component: RegAdminComponent) {
                             fontSize = dimensionResource(id = R.dimen.reg_admin_button_text_size).value.sp
                         )
                     }
-
-
                 }
             }
         }

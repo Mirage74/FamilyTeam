@@ -12,4 +12,8 @@
     <string name="password">Mot de passe</string>
     <string name="reg_button">Registre</string>
     <string name="try_again_button">Réessayer</string>
+
+    <string name="enter_code_from_sms">Entrez le code à 6 chiffres du SMS</string>
+    <string name="button_ok">OK</string>
+    <string name="button_resend_sms">Renvoyer le code SMS</string>
 </resources>

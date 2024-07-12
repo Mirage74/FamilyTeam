@@ -12,6 +12,8 @@ interface RegAdminComponent {
 
     fun onClickSmsVerify()
 
+    fun onClickSendSmsAgain()
+
     fun onClickEmailOrPhoneButton()
 
     fun onClickChangePasswordVisibility()

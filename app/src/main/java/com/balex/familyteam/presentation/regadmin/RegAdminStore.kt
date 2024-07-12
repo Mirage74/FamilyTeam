@@ -14,13 +14,13 @@ import com.balex.familyteam.domain.usecase.regLog.AddAdminUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveVerifiedStatusUseCase
 import com.balex.familyteam.domain.usecase.regLog.RegisterAndVerifyByEmailUseCase
-import com.balex.familyteam.domain.usecase.regLog.RegisterAndVerifyByPhoneUseCase
+import com.balex.familyteam.domain.usecase.regLog.ResendVerificationCodeUseCase
 import com.balex.familyteam.domain.usecase.regLog.SaveLanguageUseCase
+import com.balex.familyteam.domain.usecase.regLog.SendSmsVerifyCodeUseCase
+import com.balex.familyteam.domain.usecase.regLog.VerifySmsCodeUseCase
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.Intent
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.Label
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.State
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -33,6 +33,8 @@ interface RegAdminStore : Store<Intent, State, Label> {
         data object ClickedRegister : Intent
 
         data object ClickedSmsCodeConfirmation : Intent
+
+        data object ClickedResendSmsCode : Intent
 
         data object ClickedEmailOrPhoneButton : Intent
 
@@ -88,7 +90,9 @@ class RegAdminStoreFactory @Inject constructor(
     private val saveLanguageUseCase: SaveLanguageUseCase,
     private val addAdminUseCase: AddAdminUseCase,
     private val registerAndVerifyByEmailUseCase: RegisterAndVerifyByEmailUseCase,
-    private val registerAndVerifyByPhoneUseCase: RegisterAndVerifyByPhoneUseCase,
+    private val sendSmsVerifyCodeUseCase: SendSmsVerifyCodeUseCase,
+    private val verifySmsCodeUseCase: VerifySmsCodeUseCase,
+    private val resendVerificationCodeUseCase: ResendVerificationCodeUseCase,
     context: Context
 ) {
     val appContext: Context = context.applicationContext
@@ -192,18 +196,16 @@ class RegAdminStoreFactory @Inject constructor(
 
                 Intent.ClickedRegister -> {
                     dispatch(Msg.ClickedRegister)
-                    CoroutineScope(Dispatchers.Main).launch {
+                    scope.launch {
                         if (getState.invoke().selectedOption == RegistrationOption.EMAIL) {
                             registerAndVerifyByEmailUseCase(
                                 getState().emailOrPhone,
                                 getState().password
                             )
                         } else {
-
                             FamilyApp.currentActivity?.let { activity ->
-                                registerAndVerifyByPhoneUseCase(
+                                sendSmsVerifyCodeUseCase(
                                     getState().emailOrPhone,
-                                    getState().password,
                                     activity
                                 )
                             }
@@ -256,7 +258,21 @@ class RegAdminStoreFactory @Inject constructor(
                 }
 
                 Intent.ClickedSmsCodeConfirmation -> {
+                    scope.launch {
+                        verifySmsCodeUseCase(getState().smsCode, getState().emailOrPhone)
+                    }
                     dispatch(Msg.ClickedSmsCodeConfirmation)
+                }
+
+                Intent.ClickedResendSmsCode -> {
+                    scope.launch {
+                        FamilyApp.currentActivity?.let { activity ->
+                            resendVerificationCodeUseCase(
+                                getState().emailOrPhone,
+                                activity
+                            )
+                        }
+                    }
                 }
 
                 is Intent.SmsNumberFieldChanged -> {
@@ -288,7 +304,7 @@ class RegAdminStoreFactory @Inject constructor(
                             emailOrPhoneNumber = getState().emailOrPhone,
                             isEmailOrPhoneNumberConfirmed = false
                         )
-                        CoroutineScope(Dispatchers.Main).launch {
+                        scope.launch {
                             val resultFirebase = addAdminUseCase(admin)
                             if (resultFirebase.isSuccess) {
                                 //dispatch(Msg.SuccessRegister)

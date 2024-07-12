@@ -52,6 +52,10 @@ class DefaultRegAdminComponent @AssistedInject constructor(
         store.accept(RegAdminStore.Intent.ClickedBack)
     }
 
+    override fun onClickSendSmsAgain() {
+        store.accept(RegAdminStore.Intent.ClickedResendSmsCode)
+    }
+
     override fun onClickRegister() {
         store.accept(RegAdminStore.Intent.ClickedRegister)
     }

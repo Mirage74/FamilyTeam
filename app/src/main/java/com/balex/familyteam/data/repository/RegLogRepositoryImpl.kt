@@ -7,12 +7,10 @@ import android.util.Log
 import com.balex.familyteam.data.datastore.Storage
 import com.balex.familyteam.data.mappers.mapperFirebaseAdminToEntity
 import com.balex.familyteam.domain.entity.Admin
-import com.balex.familyteam.domain.entity.Admins
 import com.balex.familyteam.domain.entity.Language
 import com.balex.familyteam.domain.entity.LanguagesList
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.repository.RegLogRepository
-import com.balex.familyteam.presentation.MainActivity
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
@@ -22,7 +20,6 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -32,16 +29,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-//import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
-//import com.google.api.client.json.JsonFactory
-//import com.google.api.client.json.gson.GsonFactory
-//import com.google.auth.oauth2.GoogleCredentials
+
 
 class RegLogRepositoryImpl @Inject constructor(
     private val context: Context
 ) : RegLogRepository {
+
+    private var _admin = Admin()
+    private val admin: Admin
+        get() = _admin.copy()
 
     private var _user = User()
     private val user: User
@@ -54,16 +53,24 @@ class RegLogRepositoryImpl @Inject constructor(
     private val isCurrentUserNeedRefreshFlow = MutableSharedFlow<Unit>(replay = 1)
     private val isCurrentLanguageNeedRefreshFlow = MutableSharedFlow<Unit>(replay = 1)
     private val isVerifiedStatusNeedRefreshFlow = MutableSharedFlow<Unit>(replay = 1)
+    private val isSmsVerificationErrorNeedRefreshFlow = MutableSharedFlow<Unit>(replay = 1)
 
     private var _isUserMailOrPhoneVerified = false
     private val isUserMailOrPhoneVerified: Boolean
         get() = _isUserMailOrPhoneVerified
+
+    private var _isSmsVerificationError = SMS_VERIFICATION_ERROR_INITIAL
+    private val isSmsVerificationError: String
+        get() = _isSmsVerificationError
 
     private val db = Firebase.firestore
     private val adminsCollection = db.collection(FIREBASE_ADMINS_COLLECTION)
     private val usersCollection = db.collection(FIREBASE_USERS_COLLECTION)
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
+
+    private var storedSmsVerificationId = SMS_VERIFICATION_ID_INITIAL
+    private var resendTokenForSmsVerification : PhoneAuthProvider.ForceResendingToken? = null
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
@@ -135,8 +142,26 @@ class RegLogRepositoryImpl @Inject constructor(
             initialValue = isUserMailOrPhoneVerified
         )
 
-    override fun observeAdmin(): StateFlow<Admin> {
-        TODO("Not yet implemented")
+    override fun observeSmsVerificationError(): StateFlow<String> = flow {
+
+        isSmsVerificationErrorNeedRefreshFlow.emit(Unit)
+
+        isSmsVerificationErrorNeedRefreshFlow.collect {
+            emit(_isSmsVerificationError)
+        }
+    }
+        .stateIn(
+            scope = coroutineScope,
+            started = SharingStarted.Lazily,
+            initialValue = isSmsVerificationError
+        )
+
+    override fun getRepoAdmin(): Admin {
+        return admin
+    }
+
+    override fun getRepoUser(): User {
+        return user
     }
 
     override fun registerAdmin(email: String, phone: String, password: String) {
@@ -176,31 +201,24 @@ class RegLogRepositoryImpl @Inject constructor(
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    // Регистрация успешна
                     val user = auth.currentUser
                     user?.sendEmailVerification()?.addOnCompleteListener { emailVerification ->
                         if (emailVerification.isSuccessful) {
-
                             coroutineScope.launch {
                                 while (!isUserMailOrPhoneVerified) {
                                     user.reload().addOnCompleteListener { reloadTask ->
                                         if (reloadTask.isSuccessful) {
                                             if (user.isEmailVerified) {
-                                                // Пользователь подтвердил почту
                                                 _isUserMailOrPhoneVerified = true
                                                 coroutineScope.launch {
                                                     isVerifiedStatusNeedRefreshFlow.emit(Unit)
                                                 }
-                                                    //        return@addOnCompleteListener
                                             }
                                         }
                                     }
-                                    delay(1000) // Ждем 5 секунд перед следующей проверкой
+                                    delay(1000)
                                 }
                             }
-
-
-
                         }
                     }
 
@@ -214,95 +232,110 @@ class RegLogRepositoryImpl @Inject constructor(
             }
     }
 
-    override suspend fun registerAndVerifyByPhone(phoneNumber: String, verificationCode: String, activity: Activity) {
+    override suspend fun sendSmsVerifyCode(phoneNumber: String, activity: Activity) {
         val auth = Firebase.auth
         val coroutineScope = CoroutineScope(Dispatchers.Main)
 
         val options = PhoneAuthOptions.newBuilder(auth)
-            .setPhoneNumber("+$phoneNumber")       // Номер телефона для верификации
-            .setTimeout(60L, TimeUnit.SECONDS) // Таймаут
-            .setActivity(activity)                 // Activity (требуется для PhoneAuthProvider)
+            .setPhoneNumber("+$phoneNumber")
+            .setTimeout(TIMEOUT_VERIFICATION, TimeUnit.SECONDS)
+            .setActivity(activity)
             .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
                 override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-                    // Верификация завершена
-                    auth.signInWithCredential(credential)
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                // Пользователь успешно зарегистрирован
-                                val user = auth.currentUser
-                                coroutineScope.launch {
-                                    while (!isUserMailOrPhoneVerified) {
-                                        user?.let {
-                                            it.reload().addOnCompleteListener { reloadTask ->
-                                                if (reloadTask.isSuccessful) {
-                                                    // Проверка, если номер телефона подтвержден
-                                                    if (user.phoneNumber == phoneNumber) {
-                                                        _isUserMailOrPhoneVerified = true
-                                                        coroutineScope.launch {
-                                                            isVerifiedStatusNeedRefreshFlow.emit(Unit)
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        delay(1000) // Ждем 1 секунду перед следующей проверкой
-                                    }
-                                }
-                            } else {
-                                // Вход не удался, показать сообщение пользователю
-                                task.exception?.message?.let {
-                                    Log.e("Registration Error", it)
-                                }
-                            }
-                        }
+                    signInWithCredential(credential, phoneNumber, coroutineScope)
                 }
 
                 override fun onVerificationFailed(e: FirebaseException) {
-                    // Верификация не удалась, показать сообщение пользователю
-                    Log.e("Verification Error", e.message ?: "Error")
+                    _isSmsVerificationError = e.message ?: "Error"
+                    coroutineScope.launch {
+                        isSmsVerificationErrorNeedRefreshFlow.emit(Unit)
+                    }
                 }
 
                 override fun onCodeSent(
                     verificationId: String,
                     token: PhoneAuthProvider.ForceResendingToken
                 ) {
-                    // Код отправлен на номер телефона
-                    val credential = PhoneAuthProvider.getCredential(verificationId, verificationCode)
-                    auth.signInWithCredential(credential)
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                // Пользователь успешно зарегистрирован
-                                val user = auth.currentUser
-                                coroutineScope.launch {
-                                    while (!isUserMailOrPhoneVerified) {
-                                        user?.let {
-                                            it.reload().addOnCompleteListener { reloadTask ->
-                                                if (reloadTask.isSuccessful) {
-                                                    // Проверка, если номер телефона подтвержден
-                                                    if (user.phoneNumber == phoneNumber) {
-                                                        _isUserMailOrPhoneVerified = true
-                                                        coroutineScope.launch {
-                                                            isVerifiedStatusNeedRefreshFlow.emit(Unit)
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        delay(1000) // Ждем 1 секунду перед следующей проверкой
-                                    }
-                                }
-                            } else {
-                                // Вход не удался, показать сообщение пользователю
-                                task.exception?.message?.let {
-                                    Log.e("Registration Error", it)
-                                }
-                            }
-                        }
+                    storedSmsVerificationId = verificationId
+                    resendTokenForSmsVerification = token
                 }
             })
             .build()
         PhoneAuthProvider.verifyPhoneNumber(options)
     }
+
+    // Эта функция вызывается после того, как пользователь ввел код верификации
+    override fun verifySmsCode(verificationCode: String, phoneNumber: String) {
+        //val auth = Firebase.auth
+        val coroutineScope = CoroutineScope(Dispatchers.Main)
+        val credential = PhoneAuthProvider.getCredential(storedSmsVerificationId, verificationCode)
+        signInWithCredential(credential, "+$phoneNumber", coroutineScope)
+    }
+
+    private fun signInWithCredential(credential: PhoneAuthCredential, phoneNumber: String, coroutineScope: CoroutineScope) {
+        val auth = Firebase.auth
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    // Пользователь успешно зарегистрирован
+                    val user = auth.currentUser
+                    coroutineScope.launch {
+                        while (!isUserMailOrPhoneVerified) {
+                            user?.let {
+                                it.reload().addOnCompleteListener { reloadTask ->
+                                    if (reloadTask.isSuccessful) {
+                                        // Проверка, если номер телефона подтвержден
+                                        if (user.phoneNumber == phoneNumber) {
+                                            _isUserMailOrPhoneVerified = true
+                                            coroutineScope.launch {
+                                                isVerifiedStatusNeedRefreshFlow.emit(Unit)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            delay(1000) // Ждем 1 секунду перед следующей проверкой
+                        }
+                    }
+                } else {
+                    // Вход не удался, показать сообщение пользователю
+                    task.exception?.message?.let {
+                        Log.e("Registration Error", it)
+                    }
+                }
+            }
+    }
+
+    override fun resendVerificationCode(phoneNumber: String, activity: Activity) {
+        val token: PhoneAuthProvider.ForceResendingToken
+        if (resendTokenForSmsVerification != null) {
+            token = resendTokenForSmsVerification as PhoneAuthProvider.ForceResendingToken
+        } else {
+            throw RuntimeException("resendTokenForSmsVerification is null")
+        }
+
+        val options = PhoneAuthOptions.newBuilder(Firebase.auth)
+            .setPhoneNumber(phoneNumber)
+            .setTimeout(TIMEOUT_VERIFICATION, TimeUnit.SECONDS)
+            .setActivity(activity)
+            .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+                override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+                    signInWithCredential(credential, phoneNumber, coroutineScope)
+                }
+
+                override fun onVerificationFailed(e: FirebaseException) {
+                    _isSmsVerificationError = e.message ?: "Error"
+                    coroutineScope.launch {
+                        isSmsVerificationErrorNeedRefreshFlow.emit(Unit)
+                    }
+                }
+
+            })
+            .setForceResendingToken(token)
+            .build()
+        PhoneAuthProvider.verifyPhoneNumber(options)
+    }
+
 
     override fun saveUser(userLogin: String) {
         Storage.saveUser(context, userLogin)
@@ -364,7 +397,10 @@ class RegLogRepositoryImpl @Inject constructor(
     }
 
     companion object {
+        const val TIMEOUT_VERIFICATION = 60L
         const val FIREBASE_ADMINS_COLLECTION = "admins"
         const val FIREBASE_USERS_COLLECTION = "users"
+        const val SMS_VERIFICATION_ID_INITIAL = "SMS_VERIFICATION_ID_INITIAL"
+        const val SMS_VERIFICATION_ERROR_INITIAL = "SMS_VERIFICATION_ERROR_INITIAL"
     }
 }

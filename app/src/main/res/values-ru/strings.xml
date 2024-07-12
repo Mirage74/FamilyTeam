@@ -12,4 +12,8 @@
     <string name="password">Пароль</string>
     <string name="reg_button">Зарегистрировать</string>
     <string name="try_again_button">Попробовать снова</string>
+
+    <string name="enter_code_from_sms">Введите 6-значный код из СМС</string>
+    <string name="button_ok">OK</string>
+    <string name="button_resend_sms">Выслать код еще раз</string>
 </resources>
