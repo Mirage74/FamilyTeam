@@ -84,6 +84,14 @@ class DefaultRegAdminComponent @AssistedInject constructor(
         store.accept(RegAdminStore.Intent.LoginFieldChanged(currentLoginText))
     }
 
+    override fun onNickNameFieldChanged(currentNickNameText: String) {
+        store.accept(RegAdminStore.Intent.NickNameFieldChanged(currentNickNameText))
+    }
+
+    override fun onDisplayNameFieldChanged(currentDisplayNameText: String) {
+        store.accept(RegAdminStore.Intent.DisplayNameFieldChanged(currentDisplayNameText))
+    }
+
     override fun onPasswordFieldChanged(currentPasswordText: String) {
         store.accept(RegAdminStore.Intent.PasswordFieldChanged(currentPasswordText))
     }

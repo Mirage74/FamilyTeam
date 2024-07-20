@@ -22,9 +22,13 @@ interface RegAdminComponent {
 
     fun onLoginFieldChanged(currentLoginText: String)
 
+    fun onNickNameFieldChanged(currentNickNameText: String)
+
+    fun onDisplayNameFieldChanged(currentDisplayNameText: String)
+
     fun onPasswordFieldChanged(currentPasswordText: String)
 
-    fun onSmsNumberFieldChanged(currentSmsPasswordText: String)
+    fun onSmsNumberFieldChanged(currentSmsText: String)
 
     fun onLanguageChanged(language: String)
 

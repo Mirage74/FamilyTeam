@@ -9,6 +9,7 @@ import com.balex.familyteam.data.mappers.mapperFirebaseAdminToEntity
 import com.balex.familyteam.domain.entity.Admin
 import com.balex.familyteam.domain.entity.Language
 import com.balex.familyteam.domain.entity.LanguagesList
+import com.balex.familyteam.domain.entity.RegistrationOption
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.repository.RegLogRepository
 import com.google.firebase.FirebaseException
@@ -50,14 +51,12 @@ class RegLogRepositoryImpl @Inject constructor(
     private val language: String
         get() = _language
 
+    private var isUserMailOrPhoneVerified = false
+
     private val isCurrentUserNeedRefreshFlow = MutableSharedFlow<Unit>(replay = 1)
     private val isCurrentLanguageNeedRefreshFlow = MutableSharedFlow<Unit>(replay = 1)
-    private val isVerifiedStatusNeedRefreshFlow = MutableSharedFlow<Unit>(replay = 1)
     private val isSmsVerificationErrorNeedRefreshFlow = MutableSharedFlow<Unit>(replay = 1)
 
-    private var _isUserMailOrPhoneVerified = false
-    private val isUserMailOrPhoneVerified: Boolean
-        get() = _isUserMailOrPhoneVerified
 
     private var _isSmsVerificationError = SMS_VERIFICATION_ERROR_INITIAL
     private val isSmsVerificationError: String
@@ -70,12 +69,14 @@ class RegLogRepositoryImpl @Inject constructor(
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     private var storedSmsVerificationId = SMS_VERIFICATION_ID_INITIAL
-    private var resendTokenForSmsVerification : PhoneAuthProvider.ForceResendingToken? = null
+    private var resendTokenForSmsVerification: PhoneAuthProvider.ForceResendingToken? = null
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
     override fun observeUser(): StateFlow<User> = flow {
-        val adminFromStorage = Storage.getUser(context)
+        val userFakeEmailFromStorageInfo = Storage.getUser(context)
+        Log.d("userFakeEmailFromStorageInfo", userFakeEmailFromStorageInfo)
+        val userFakeEmailFromStorage = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
         val phoneLanguageFromStorage = Storage.getLanguage(context)
         val phoneLang =
             if (phoneLanguageFromStorage != Storage.NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES) {
@@ -87,11 +88,14 @@ class RegLogRepositoryImpl @Inject constructor(
                 language
             }
 
-        if (adminFromStorage == Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
+        if (userFakeEmailFromStorage == Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
             val emptyUserNotSaved =
-                User(login = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES, language = phoneLang)
+                User(nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES, language = phoneLang)
             _user = emptyUserNotSaved
         } else {
+            val userFromStorage = extractUserInfoFromFakeEmail(userFakeEmailFromStorage)
+
+            _user = userFromStorage
 
         }
         isCurrentUserNeedRefreshFlow.emit(Unit)
@@ -128,19 +132,6 @@ class RegLogRepositoryImpl @Inject constructor(
             initialValue = language
         )
 
-    override fun observeVerifiedStatus(): StateFlow<Boolean> = flow {
-
-        isVerifiedStatusNeedRefreshFlow.emit(Unit)
-
-        isVerifiedStatusNeedRefreshFlow.collect {
-            emit(isUserMailOrPhoneVerified)
-        }
-    }
-        .stateIn(
-            scope = coroutineScope,
-            started = SharingStarted.Lazily,
-            initialValue = isUserMailOrPhoneVerified
-        )
 
     override fun observeSmsVerificationError(): StateFlow<String> = flow {
 
@@ -160,21 +151,6 @@ class RegLogRepositoryImpl @Inject constructor(
         return admin
     }
 
-    override fun getRepoUser(): User {
-        return user
-    }
-
-    override fun registerAdmin(email: String, phone: String, password: String) {
-        TODO("Not yet implemented")
-    }
-
-    override fun loginAdmin(email: String, phone: String, password: String) {
-        TODO("Not yet implemented")
-    }
-
-    override fun loginUser(email: String, password: String) {
-        TODO("Not yet implemented")
-    }
 
     override fun saveLanguage(language: String) {
         _language = language
@@ -186,63 +162,235 @@ class RegLogRepositoryImpl @Inject constructor(
     }
 
     override suspend fun addAdmin(admin: Admin): Result<Unit> {
-        //val ad = getA()
-
         return try {
             adminsCollection.add(admin).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
-
     }
 
-    override suspend fun registerAndVerifyByEmail(email: String, password: String) {
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val user = auth.currentUser
-                    user?.sendEmailVerification()?.addOnCompleteListener { emailVerification ->
-                        if (emailVerification.isSuccessful) {
-                            coroutineScope.launch {
-                                while (!isUserMailOrPhoneVerified) {
-                                    user.reload().addOnCompleteListener { reloadTask ->
-                                        if (reloadTask.isSuccessful) {
-                                            if (user.isEmailVerified) {
-                                                _isUserMailOrPhoneVerified = true
-                                                coroutineScope.launch {
-                                                    isVerifiedStatusNeedRefreshFlow.emit(Unit)
+    override suspend fun addUser(user: User): Result<Unit> {
+        return try {
+            usersCollection.add(user).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
+    override suspend fun registerAndVerifyByEmail(
+        email: String,
+        nickName: String,
+        displayName: String,
+        password: String
+    ) {
+
+        var user = FirebaseAuth.getInstance().currentUser
+        FirebaseAuth.getInstance().signOut()
+        user = FirebaseAuth.getInstance().currentUser
+        if (user != null) {
+            val userInfo =
+                user.uid + " " + user.displayName + " " + user.email + " " + user.phoneNumber + " " +
+                        user.photoUrl + " " + user.isEmailVerified + " " + user.providerData + " " + user.providerId +
+                        " " + user.metadata + " " + user.multiFactor + " " + user.tenantId
+            Log.d("userInfo", userInfo)
+            if (user.isEmailVerified) {
+                // Email is verified
+                Log.d("EmailVerification", "Email is verified")
+            }
+        } else {
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val authUser = auth.currentUser
+                        authUser?.sendEmailVerification()
+                            ?.addOnCompleteListener { emailVerification ->
+                                if (emailVerification.isSuccessful) {
+                                    coroutineScope.launch {
+                                        while (!isUserMailOrPhoneVerified) {
+                                            authUser.reload().addOnCompleteListener { reloadTask ->
+                                                if (reloadTask.isSuccessful) {
+                                                    if (authUser.isEmailVerified) {
+                                                        regUserWithFakeEmail(
+                                                            email,
+                                                            nickName,
+                                                            displayName,
+                                                            password
+                                                        )
+                                                        isUserMailOrPhoneVerified = true
+                                                    }
                                                 }
                                             }
+                                            delay(1000)
                                         }
                                     }
-                                    delay(1000)
                                 }
+                            }
+                    } else {
+                        task.exception?.message?.let {
+                            Log.e("Registration Error", it)
+                        }
+                    }
+                }
+        }
+    }
+
+    private fun regUserWithFakeEmail(
+        emailOrPhone: String,
+        nickName: String,
+        displayName: String,
+        password: String
+    ) {
+        val fakeEmail = createFakeUserEmail(nickName, emailOrPhone)
+        val registrationOption = if (emailOrPhone.contains("@", true)) {
+            RegistrationOption.EMAIL
+        } else {
+            RegistrationOption.PHONE
+        }
+        auth.createUserWithEmailAndPassword(fakeEmail, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+
+                    auth.signInWithEmailAndPassword(
+                        fakeEmail,
+                        password
+                    ).addOnCompleteListener { signTask ->
+                        if (signTask.isSuccessful) {
+//                            coroutineScope.launch {
+//                                val user = FirebaseAuth.getInstance().currentUser
+                                addAdminAndUserToFirebase(
+                                    registrationOption,
+                                    emailOrPhone,
+                                    nickName,
+                                    displayName,
+                                    password
+                                )
+//                                isCurrentUserNeedRefreshFlow.emit(
+//                                    Unit
+//                                )
+                            //}
+                        } else {
+                            signTask.exception?.message?.let {
+                                Log.e(
+                                    "regUserWithFakeEmail, signTask Error",
+                                    it
+                                )
                             }
                         }
                     }
-
-                    // Вы можете сохранить информацию о пользователе в Firestore или Realtime Database
                 } else {
-                    // Регистрация не удалась, показать сообщение пользователю
                     task.exception?.message?.let {
-                        Log.e("Registration Error", it)
+                        Log.e("regUserWithFakeEmail, Registration Error", it)
                     }
                 }
             }
     }
 
-    override suspend fun sendSmsVerifyCode(phoneNumber: String, activity: Activity) {
+
+    private fun addAdminAndUserToFirebase(
+        registrationOption: RegistrationOption,
+        emailOrPhoneNumber: String,
+        nickName: String,
+        displayName: String,
+        password: String
+    ) {
+        val newAdmin = Admin(
+            registrationOption = registrationOption,
+            emailOrPhoneNumber = emailOrPhoneNumber,
+            isEmailOrPhoneNumberVerified = true
+        )
+        val newUser = User(
+            nickName = nickName,
+            isAdmin = true,
+            adminEmailOrPhone = emailOrPhoneNumber,
+            displayName = displayName,
+            language = language
+        )
+
+        coroutineScope.launch {
+            val resultFirebaseRegAdmin = addAdmin(newAdmin)
+            if (resultFirebaseRegAdmin.isSuccess) {
+                val resultFirebaseRegUser = addUser(newUser)
+                if (resultFirebaseRegUser.isSuccess) {
+                    _admin = newAdmin
+                    _user = newUser
+                    Storage.saveUser(context, createFakeUserEmail(nickName, emailOrPhoneNumber))
+                    Storage.saveUsersPassword(context, password)
+                    Storage.saveLanguage(context, language)
+                    coroutineScope.launch {
+                        isCurrentUserNeedRefreshFlow.emit(Unit)
+                    }
+
+                } else {
+                    Log.d("Error", "Error user")
+                }
+            } else {
+                Log.d("Error", "Error admin")
+            }
+        }
+
+
+    }
+
+    private fun addAUserToFirebase(
+        emailOrPhoneNumber: String,
+        nickName: String,
+        displayName: String,
+        password: String
+    ) {
+        val newUser = User(
+            nickName = nickName,
+            isAdmin = true,
+            adminEmailOrPhone = emailOrPhoneNumber,
+            displayName = displayName,
+            password = password,
+            language = language
+        )
+
+        coroutineScope.launch {
+            val resultFirebaseRegUser = addUser(newUser)
+            if (resultFirebaseRegUser.isSuccess) {
+                _user = newUser
+                Storage.saveUser(context, createFakeUserEmail(nickName, emailOrPhoneNumber))
+                Storage.saveUsersPassword(context, password)
+                Storage.saveLanguage(context, language)
+
+                coroutineScope.launch {
+                    isCurrentUserNeedRefreshFlow.emit(
+                        Unit
+                    )
+                }
+            } else {
+                Log.d("Error", "Error user")
+            }
+
+        }
+
+        coroutineScope.launch {
+            isCurrentUserNeedRefreshFlow.emit(Unit)
+        }
+    }
+
+    override suspend fun sendSmsVerifyCode(
+        phoneNumber: String,
+        nickName: String,
+        displayName: String,
+        password: String,
+        activity: Activity
+    ) {
         val auth = Firebase.auth
         val coroutineScope = CoroutineScope(Dispatchers.Main)
 
         val options = PhoneAuthOptions.newBuilder(auth)
-            .setPhoneNumber("+$phoneNumber")
+            .setPhoneNumber(phoneNumber)
             .setTimeout(TIMEOUT_VERIFICATION, TimeUnit.SECONDS)
             .setActivity(activity)
             .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
                 override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-                    signInWithCredential(credential, phoneNumber, coroutineScope)
+                    signInWithCredential(credential, phoneNumber, nickName, displayName, password)
                 }
 
                 override fun onVerificationFailed(e: FirebaseException) {
@@ -264,41 +412,46 @@ class RegLogRepositoryImpl @Inject constructor(
         PhoneAuthProvider.verifyPhoneNumber(options)
     }
 
-    // Эта функция вызывается после того, как пользователь ввел код верификации
-    override fun verifySmsCode(verificationCode: String, phoneNumber: String) {
-        //val auth = Firebase.auth
-        val coroutineScope = CoroutineScope(Dispatchers.Main)
+    override fun verifySmsCode(
+        verificationCode: String,
+        phoneNumber: String,
+        nickName: String,
+        displayName: String,
+        password: String
+    ) {
         val credential = PhoneAuthProvider.getCredential(storedSmsVerificationId, verificationCode)
-        signInWithCredential(credential, "+$phoneNumber", coroutineScope)
+        signInWithCredential(credential, phoneNumber, nickName, displayName, password)
     }
 
-    private fun signInWithCredential(credential: PhoneAuthCredential, phoneNumber: String, coroutineScope: CoroutineScope) {
+    private fun signInWithCredential(
+        credential: PhoneAuthCredential,
+        phoneNumber: String,
+        nickName: String,
+        displayName: String,
+        password: String
+    ) {
         val auth = Firebase.auth
         auth.signInWithCredential(credential)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    // Пользователь успешно зарегистрирован
                     val user = auth.currentUser
                     coroutineScope.launch {
                         while (!isUserMailOrPhoneVerified) {
                             user?.let {
                                 it.reload().addOnCompleteListener { reloadTask ->
                                     if (reloadTask.isSuccessful) {
-                                        // Проверка, если номер телефона подтвержден
                                         if (user.phoneNumber == phoneNumber) {
-                                            _isUserMailOrPhoneVerified = true
-                                            coroutineScope.launch {
-                                                isVerifiedStatusNeedRefreshFlow.emit(Unit)
-                                            }
+
+                                            regUserWithFakeEmail(phoneNumber, nickName, displayName, password)
+                                            isUserMailOrPhoneVerified = true
                                         }
                                     }
                                 }
                             }
-                            delay(1000) // Ждем 1 секунду перед следующей проверкой
+                            delay(1000)
                         }
                     }
                 } else {
-                    // Вход не удался, показать сообщение пользователю
                     task.exception?.message?.let {
                         Log.e("Registration Error", it)
                     }
@@ -306,7 +459,13 @@ class RegLogRepositoryImpl @Inject constructor(
             }
     }
 
-    override fun resendVerificationCode(phoneNumber: String, activity: Activity) {
+    override fun resendVerificationCode(
+        phoneNumber: String,
+        nickName: String,
+        displayName: String,
+        password: String,
+        activity: Activity
+    ) {
         val token: PhoneAuthProvider.ForceResendingToken
         if (resendTokenForSmsVerification != null) {
             token = resendTokenForSmsVerification as PhoneAuthProvider.ForceResendingToken
@@ -320,7 +479,7 @@ class RegLogRepositoryImpl @Inject constructor(
             .setActivity(activity)
             .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
                 override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-                    signInWithCredential(credential, phoneNumber, coroutineScope)
+                    signInWithCredential(credential, phoneNumber, nickName, displayName, password)
                 }
 
                 override fun onVerificationFailed(e: FirebaseException) {
@@ -337,10 +496,6 @@ class RegLogRepositoryImpl @Inject constructor(
     }
 
 
-    override fun saveUser(userLogin: String) {
-        Storage.saveUser(context, userLogin)
-    }
-
     private fun getCurrentLanguage(context: Context): String {
         val configuration: Configuration = context.resources.configuration
         val locale =
@@ -354,7 +509,7 @@ class RegLogRepositoryImpl @Inject constructor(
         return lang
     }
 
-    fun findAdminByEmailOrPhoneNumber(
+    private fun findAdminByEmailOrPhoneNumber(
         emailOrPhoneNumber: String,
         callback: (DocumentSnapshot?) -> Unit
     ) {
@@ -396,11 +551,35 @@ class RegLogRepositoryImpl @Inject constructor(
         }
     }
 
+    private fun createFakeUserEmail(nick: String, data: String): String {
+        return if (data.contains("@", true)) {
+            "$nick-$data"
+        } else {
+            nick + "-" + data.substring(1) + "@" + FAKE_EMAIL_DOMAIN
+        }
+    }
+
+    private fun extractUserInfoFromFakeEmail(fakeEmail: String): User {
+        if (fakeEmail.endsWith(FAKE_EMAIL_DOMAIN, false)) {
+            val parts = fakeEmail.split("@")
+            val nick = parts[0].split("-").first()
+            val phone = parts[1].split("-").first()
+            return User(nickName = nick, adminEmailOrPhone = phone)
+        } else {
+            val parts = fakeEmail.split("@")
+            val nick = parts[0].split("-").first()
+            return User(nickName = nick, adminEmailOrPhone = parts[1])
+
+        }
+
+    }
+
     companion object {
         const val TIMEOUT_VERIFICATION = 60L
         const val FIREBASE_ADMINS_COLLECTION = "admins"
         const val FIREBASE_USERS_COLLECTION = "users"
         const val SMS_VERIFICATION_ID_INITIAL = "SMS_VERIFICATION_ID_INITIAL"
         const val SMS_VERIFICATION_ERROR_INITIAL = "SMS_VERIFICATION_ERROR_INITIAL"
+        const val FAKE_EMAIL_DOMAIN = "balexvic.com"
     }
 }

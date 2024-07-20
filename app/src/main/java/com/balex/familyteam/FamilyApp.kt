@@ -9,9 +9,7 @@ import com.google.firebase.FirebaseApp
 import java.lang.ref.WeakReference
 
 class FamilyApp : Application() {
-
     lateinit var applicationComponent: ApplicationComponent
-
     override fun onCreate() {
         super.onCreate()
         applicationComponent = DaggerApplicationComponent.factory().create(this)
@@ -21,33 +19,18 @@ class FamilyApp : Application() {
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
                 setCurrentActivity(activity)
             }
-
             override fun onActivityStarted(activity: Activity) {
                 setCurrentActivity(activity)
             }
-
             override fun onActivityResumed(activity: Activity) {
                 setCurrentActivity(activity)
             }
-
-            override fun onActivityPaused(activity: Activity) {
-
-            }
-
-            override fun onActivityStopped(activity: Activity) {
-
-            }
-
-            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
-
-            }
-
-            override fun onActivityDestroyed(activity: Activity) {
-
-            }
+            override fun onActivityPaused(activity: Activity) {}
+            override fun onActivityStopped(activity: Activity) {}
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+            override fun onActivityDestroyed(activity: Activity) {}
         })
     }
-
     companion object {
         private var currentActivityRef: WeakReference<Activity>? = null
 
@@ -58,6 +41,4 @@ class FamilyApp : Application() {
             currentActivityRef = WeakReference(activity)
         }
     }
-
-
 }

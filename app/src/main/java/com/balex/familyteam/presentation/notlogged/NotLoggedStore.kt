@@ -113,7 +113,7 @@ class NotLoggedStoreFactory @Inject constructor(
         override fun invoke() {
             scope.launch {
                 observeUserUseCase().collect {
-                    val login = it.login
+                    val login = it.nickName
                     if (login.isNotEmpty()) {
                         when (login) {
                             NO_USER_SAVED_IN_SHARED_PREFERENCES -> {

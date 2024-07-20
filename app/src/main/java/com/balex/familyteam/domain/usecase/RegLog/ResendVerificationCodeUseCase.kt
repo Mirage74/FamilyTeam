@@ -7,5 +7,6 @@ import javax.inject.Inject
 class ResendVerificationCodeUseCase @Inject constructor(
     private val repository: RegLogRepository
 ) {
-    operator fun invoke(phoneNumber: String, activity: Activity) = repository.resendVerificationCode(phoneNumber, activity)
+    operator fun invoke(phoneNumber: String, nickName: String, displayName: String, password: String, activity: Activity) =
+        repository.resendVerificationCode(phoneNumber, nickName, displayName, password, activity)
 }

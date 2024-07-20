@@ -9,8 +9,10 @@ object Storage {
 
     private const val FILE_NAME = "encrypted_preferences_family_app"
     private const val USER_KEY = "shared_prefs_user_family_app"
+    private const val USER_PASSWORD_KEY = "shared_prefs_user_password_family_app"
     private const val LANGUAGE_KEY = "shared_prefs_language_family_app"
     const val NO_USER_SAVED_IN_SHARED_PREFERENCES = "NO_USER_SAVED_IN_SHARED_PREFERENCES"
+    const val NO_USER_PASSWORD_SAVED_IN_SHARED_PREFERENCES = "NO_USER_PASSWORD_SAVED_IN_SHARED_PREFERENCES"
     const val NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES = "NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES"
 
     private val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
@@ -37,6 +39,19 @@ object Storage {
     fun saveUser(context: Context, userName: String) {
         getEncryptedSharedPreferences(context).edit().apply {
             putString(USER_KEY, userName.trim())
+        }.apply()
+    }
+
+    fun getUsersPassword(context: Context): String {
+        return getEncryptedSharedPreferences(context).getString(
+            USER_PASSWORD_KEY,
+            NO_USER_PASSWORD_SAVED_IN_SHARED_PREFERENCES
+        ).toString().trim()
+    }
+
+    fun saveUsersPassword(context: Context, password: String) {
+        getEncryptedSharedPreferences(context).edit().apply {
+            putString(USER_PASSWORD_KEY, password.trim())
         }.apply()
     }
 

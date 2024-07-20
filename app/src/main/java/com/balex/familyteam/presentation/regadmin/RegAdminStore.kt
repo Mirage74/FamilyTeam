@@ -8,11 +8,12 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.balex.familyteam.FamilyApp
 import com.balex.familyteam.R
-import com.balex.familyteam.domain.entity.Admin
+import com.balex.familyteam.data.datastore.Storage
+import com.balex.familyteam.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
 import com.balex.familyteam.domain.entity.RegistrationOption
-import com.balex.familyteam.domain.usecase.regLog.AddAdminUseCase
+import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
-import com.balex.familyteam.domain.usecase.regLog.ObserveVerifiedStatusUseCase
+import com.balex.familyteam.domain.usecase.regLog.ObserveUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.RegisterAndVerifyByEmailUseCase
 import com.balex.familyteam.domain.usecase.regLog.ResendVerificationCodeUseCase
 import com.balex.familyteam.domain.usecase.regLog.SaveLanguageUseCase
@@ -44,6 +45,10 @@ interface RegAdminStore : Store<Intent, State, Label> {
 
         data class LoginFieldChanged(val currentLoginText: String) : Intent
 
+        data class NickNameFieldChanged(val currentNickNameText: String) : Intent
+
+        data class DisplayNameFieldChanged(val currentDisplayNameText: String) : Intent
+
         data class PasswordFieldChanged(val currentPasswordText: String) : Intent
 
         data class SmsNumberFieldChanged(val currentSmsNumberText: String) : Intent
@@ -56,8 +61,11 @@ interface RegAdminStore : Store<Intent, State, Label> {
         val language: String,
         val selectedOption: RegistrationOption,
         val emailOrPhone: String,
+        val nickName: String,
+        val displayName: String,
         val password: String,
         val smsCode: String,
+        val isNickNameEnabled: Boolean,
         val isPasswordEnabled: Boolean,
         val passwordVisible: Boolean,
         val isRegisterButtonEnabled: Boolean,
@@ -86,9 +94,8 @@ interface RegAdminStore : Store<Intent, State, Label> {
 class RegAdminStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
     private val observeLanguageUseCase: ObserveLanguageUseCase,
-    private val observeVerifiedStatusUseCase: ObserveVerifiedStatusUseCase,
     private val saveLanguageUseCase: SaveLanguageUseCase,
-    private val addAdminUseCase: AddAdminUseCase,
+    private val observeUserUseCase: ObserveUserUseCase,
     private val registerAndVerifyByEmailUseCase: RegisterAndVerifyByEmailUseCase,
     private val sendSmsVerifyCodeUseCase: SendSmsVerifyCodeUseCase,
     private val verifySmsCodeUseCase: VerifySmsCodeUseCase,
@@ -106,6 +113,9 @@ class RegAdminStoreFactory @Inject constructor(
                 "",
                 "",
                 "",
+                "",
+                "",
+                isNickNameEnabled = false,
                 isPasswordEnabled = false,
                 passwordVisible = false,
                 isRegisterButtonWasPressed = false,
@@ -126,7 +136,7 @@ class RegAdminStoreFactory @Inject constructor(
 
         data class LanguageIsCheckedInPreference(val language: String) : Action
 
-        data class VerifiedStatusIsChanged(val isVerified: Boolean) : Action
+        data class UserIsChanged(val user: User) : Action
 
     }
 
@@ -146,6 +156,10 @@ class RegAdminStoreFactory @Inject constructor(
 
         data object EmailOrPhoneNotMatched : Msg
 
+        data object NickNameMatched : Msg
+
+        data object NickNameNotMatched : Msg
+
         data object SmsMatched : Msg
 
         data object SmsMatchedNotMatched : Msg
@@ -155,6 +169,10 @@ class RegAdminStoreFactory @Inject constructor(
         data object PasswordNotMatched : Msg
 
         data class UpdateLoginFieldText(val currentLoginText: String) : Msg
+
+        data class UpdateNickNameFieldText(val currentNickNameText: String) : Msg
+
+        data class UpdateDisplayNameFieldText(val currentDisplayNameText: String) : Msg
 
         data class UpdatePasswordFieldText(val currentPasswordText: String) : Msg
 
@@ -172,8 +190,8 @@ class RegAdminStoreFactory @Inject constructor(
                 }
             }
             scope.launch {
-                observeVerifiedStatusUseCase().collect {
-                    dispatch(Action.VerifiedStatusIsChanged(it))
+                observeUserUseCase().collect {
+                    dispatch(Action.UserIsChanged(it))
                 }
             }
         }
@@ -197,15 +215,21 @@ class RegAdminStoreFactory @Inject constructor(
                 Intent.ClickedRegister -> {
                     dispatch(Msg.ClickedRegister)
                     scope.launch {
-                        if (getState.invoke().selectedOption == RegistrationOption.EMAIL) {
+                        //if (getState.invoke().selectedOption == RegistrationOption.EMAIL) {
+                        if (getState().selectedOption == RegistrationOption.EMAIL) {
                             registerAndVerifyByEmailUseCase(
                                 getState().emailOrPhone,
+                                getState().nickName,
+                                getState().displayName,
                                 getState().password
                             )
                         } else {
                             FamilyApp.currentActivity?.let { activity ->
                                 sendSmsVerifyCodeUseCase(
-                                    getState().emailOrPhone,
+                                    "+" + getState().emailOrPhone,
+                                    getState().nickName,
+                                    getState().displayName,
+                                    getState().password,
                                     activity
                                 )
                             }
@@ -232,7 +256,8 @@ class RegAdminStoreFactory @Inject constructor(
                             dispatch(Msg.EmailOrPhoneNotMatched)
                         }
                     } else {
-                        val text = intent.currentLoginText.replace(Regex(REGEX_PATTERN_NUMBERS), "")
+                        val text =
+                            intent.currentLoginText.replace(Regex(REGEX_PATTERN_NOT_NUMBERS), "")
                         dispatch(Msg.UpdateLoginFieldText(text))
                         if (text.length >= appContext.resources.getInteger(R.integer.min_numbers_in_phone)) {
                             dispatch(Msg.EmailOrPhoneMatched)
@@ -241,6 +266,40 @@ class RegAdminStoreFactory @Inject constructor(
                         }
 
                     }
+                }
+
+                is Intent.NickNameFieldChanged -> {
+                    val text = if (intent.currentNickNameText.length == 1) {
+                        intent.currentNickNameText.replace(Regex(REGEX_PATTERN_NOT_LETTERS), "")
+                    } else {
+                        intent.currentNickNameText.replace(
+                            Regex
+                                (REGEX_PATTERN_NOT_LATIN_LETTERS_NUMBERS_UNDERSCORE), ""
+                        )
+                    }
+
+                    dispatch(Msg.UpdateNickNameFieldText(text))
+                    if (text.length >= appContext.resources.getInteger(R.integer.min_nickName_length)) {
+                        dispatch(Msg.NickNameMatched)
+                    } else {
+                        dispatch(Msg.NickNameNotMatched)
+                    }
+
+                }
+
+                is Intent.DisplayNameFieldChanged -> {
+                    var text = intent.currentDisplayNameText.replace(
+                        Regex(
+                            REGEX_PATTERN_NOT_ANY_LETTERS_NUMBERS_UNDERSCORE
+                        ), ""
+                    )
+                    if (text.length > appContext.resources.getInteger(R.integer.max_displayName_length)) {
+                        text = text.substring(
+                            0,
+                            appContext.resources.getInteger(R.integer.max_displayName_length)
+                        )
+                    }
+                    dispatch(Msg.UpdateDisplayNameFieldText(text))
                 }
 
                 is Intent.PasswordFieldChanged -> {
@@ -259,7 +318,7 @@ class RegAdminStoreFactory @Inject constructor(
 
                 Intent.ClickedSmsCodeConfirmation -> {
                     scope.launch {
-                        verifySmsCodeUseCase(getState().smsCode, getState().emailOrPhone)
+                        verifySmsCodeUseCase(getState().smsCode, "+" + getState().emailOrPhone, getState().nickName, getState().displayName, getState().password)
                     }
                     dispatch(Msg.ClickedSmsCodeConfirmation)
                 }
@@ -268,7 +327,10 @@ class RegAdminStoreFactory @Inject constructor(
                     scope.launch {
                         FamilyApp.currentActivity?.let { activity ->
                             resendVerificationCodeUseCase(
-                                getState().emailOrPhone,
+                                "+" + getState().emailOrPhone,
+                                getState().nickName,
+                                getState().displayName,
+                                getState().password,
                                 activity
                             )
                         }
@@ -276,7 +338,8 @@ class RegAdminStoreFactory @Inject constructor(
                 }
 
                 is Intent.SmsNumberFieldChanged -> {
-                    val text = intent.currentSmsNumberText.replace(Regex(REGEX_PATTERN_NUMBERS), "")
+                    val text =
+                        intent.currentSmsNumberText.replace(Regex(REGEX_PATTERN_NOT_NUMBERS), "")
                     dispatch(Msg.UpdateSmsNumberFieldText(text))
                     if (text.length == appContext.resources.getInteger(R.integer.sms_code_length)) {
                         dispatch(Msg.SmsMatched)
@@ -284,6 +347,7 @@ class RegAdminStoreFactory @Inject constructor(
                         dispatch(Msg.SmsMatchedNotMatched)
                     }
                 }
+
             }
         }
 
@@ -297,21 +361,11 @@ class RegAdminStoreFactory @Inject constructor(
                     dispatch(Msg.UserLanguageChanged(action.language))
                 }
 
-                is Action.VerifiedStatusIsChanged -> {
-                    if (action.isVerified) {
-                        val admin = Admin(
-                            isEmailRegistration = getState().selectedOption == RegistrationOption.EMAIL,
-                            emailOrPhoneNumber = getState().emailOrPhone,
-                            isEmailOrPhoneNumberConfirmed = false
-                        )
-                        scope.launch {
-                            val resultFirebase = addAdminUseCase(admin)
-                            if (resultFirebase.isSuccess) {
-                                //dispatch(Msg.SuccessRegister)
-                                publish(Label.AdminIsRegisteredAndVerified)
-                            }
-                        }
-
+                is Action.UserIsChanged -> {
+                    // TODO:
+                    if (action.user.nickName.length >= appContext.resources.getInteger(R.integer.min_nickName_length)
+                        && (action.user.nickName != NO_USER_SAVED_IN_SHARED_PREFERENCES)) {
+                        publish(Label.AdminIsRegisteredAndVerified)
                     }
                 }
             }
@@ -324,7 +378,12 @@ class RegAdminStoreFactory @Inject constructor(
             Msg.ChangeEmailOrPhoneButton -> {
                 copy(
                     emailOrPhone = "",
+                    nickName = "",
+                    displayName = "",
+                    password = "",
+                    smsCode = "",
                     selectedOption = if (selectedOption == RegistrationOption.EMAIL) RegistrationOption.PHONE else RegistrationOption.EMAIL,
+                    isNickNameEnabled = false,
                     isPasswordEnabled = false,
                     isRegisterButtonEnabled = false
                 )
@@ -338,7 +397,11 @@ class RegAdminStoreFactory @Inject constructor(
                 copy(
                     selectedOption = RegistrationOption.EMAIL,
                     emailOrPhone = "",
+                    nickName = "",
+                    displayName = "",
                     password = "",
+                    smsCode = "",
+                    isNickNameEnabled = false,
                     isPasswordEnabled = false,
                     passwordVisible = false,
                     isRegisterButtonWasPressed = false,
@@ -350,6 +413,14 @@ class RegAdminStoreFactory @Inject constructor(
 
             is Msg.UpdateLoginFieldText -> {
                 copy(emailOrPhone = msg.currentLoginText)
+            }
+
+            is Msg.UpdateNickNameFieldText -> {
+                copy(nickName = msg.currentNickNameText)
+            }
+
+            is Msg.UpdateDisplayNameFieldText -> {
+                copy(displayName = msg.currentDisplayNameText)
             }
 
             is Msg.UpdatePasswordFieldText -> {
@@ -371,10 +442,18 @@ class RegAdminStoreFactory @Inject constructor(
             }
 
             Msg.EmailOrPhoneMatched -> {
-                copy(isPasswordEnabled = true)
+                copy(isNickNameEnabled = true)
             }
 
             Msg.EmailOrPhoneNotMatched -> {
+                copy(isNickNameEnabled = false)
+            }
+
+            Msg.NickNameMatched -> {
+                copy(isPasswordEnabled = true)
+            }
+
+            Msg.NickNameNotMatched -> {
                 copy(isPasswordEnabled = false)
             }
 
@@ -393,15 +472,18 @@ class RegAdminStoreFactory @Inject constructor(
             Msg.SmsMatched -> {
                 copy(isSmsOkButtonEnabled = true)
             }
+
             Msg.SmsMatchedNotMatched -> {
                 copy(isSmsOkButtonEnabled = false)
             }
-
         }
     }
 
     companion object {
         const val REGEX_PATTERN_EMAIL = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}\$"
-        const val REGEX_PATTERN_NUMBERS = "[^\\d]"
+        const val REGEX_PATTERN_NOT_NUMBERS = "[^\\d]"
+        const val REGEX_PATTERN_NOT_LETTERS = "[^a-zA-Z]"
+        const val REGEX_PATTERN_NOT_LATIN_LETTERS_NUMBERS_UNDERSCORE = "[^a-zA-Z0-9_]"
+        const val REGEX_PATTERN_NOT_ANY_LETTERS_NUMBERS_UNDERSCORE = """[^\p{L}\p{Nd}_]"""
     }
 }

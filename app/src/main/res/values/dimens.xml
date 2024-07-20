@@ -8,5 +8,5 @@
     <dimen name="reg_admin_button_text_size">16sp</dimen>
 
     <dimen name="top_bar_height">48dp</dimen>
-    <dimen name="reg_buttons_height">72dp</dimen>
+    <dimen name="reg_buttons_height">48dp</dimen>
 </resources>

@@ -10,36 +10,30 @@ interface RegLogRepository {
 
     fun getRepoAdmin(): Admin
 
-    fun getRepoUser(): User
-
     fun getCurrentLanguage(): String
 
     fun observeUser(): StateFlow<User>
 
     fun observeLanguage(): StateFlow<String>
 
-    fun observeVerifiedStatus(): StateFlow<Boolean>
-
     fun observeSmsVerificationError(): StateFlow<String>
-
-    fun registerAdmin(email: String = "", phone: String = "", password: String)
-
-    fun loginAdmin(email: String = "", phone: String = "", password: String)
-
-    fun loginUser(email: String, password: String)
-
-    fun saveUser(userLogin: String)
 
     fun saveLanguage(language: String)
 
-    fun verifySmsCode(verificationCode: String, phoneNumber: String)
+    fun verifySmsCode(verificationCode: String,
+                      phoneNumber: String,
+                      nickName: String,
+                      displayName: String,
+                      password: String)
 
-    fun resendVerificationCode(phoneNumber: String, activity: Activity)
+    fun resendVerificationCode(phoneNumber: String,  nickName: String, displayName: String, password: String, activity: Activity)
 
     suspend fun addAdmin(admin: Admin): Result<Unit>
 
-    suspend fun registerAndVerifyByEmail(email: String, password: String)
+    suspend fun addUser(user: User): Result<Unit>
 
-    suspend fun sendSmsVerifyCode(phoneNumber: String, activity: Activity)
+    suspend fun registerAndVerifyByEmail(email: String, nickName: String, displayName: String, password: String)
+
+    suspend fun sendSmsVerifyCode(phoneNumber: String,  nickName: String, displayName: String, password: String, activity: Activity)
 
 }

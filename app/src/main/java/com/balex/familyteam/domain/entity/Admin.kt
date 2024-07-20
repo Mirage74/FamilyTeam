@@ -5,7 +5,7 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class Admin(
-    val isEmailRegistration: Boolean = true,
+    val registrationOption: RegistrationOption = RegistrationOption.EMAIL,
     val emailOrPhoneNumber: String = "",
-    val isEmailOrPhoneNumberConfirmed: Boolean = false
+    val isEmailOrPhoneNumberVerified: Boolean = false
 ): Parcelable
