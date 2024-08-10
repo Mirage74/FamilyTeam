@@ -1,18 +1,17 @@
 package com.balex.familyteam.presentation.regadmin
 
+import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
 import kotlinx.coroutines.flow.StateFlow
 
 interface RegAdminComponent {
+
+    val phoneFirebaseRepository: PhoneFirebaseRepository
 
     val model: StateFlow<RegAdminStore.State>
 
     fun onClickBack()
 
     fun onClickRegister()
-
-    fun onClickSmsVerify()
-
-    fun onClickSendSmsAgain()
 
     fun onClickEmailOrPhoneButton()
 

@@ -6,19 +6,14 @@ import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
-import com.balex.familyteam.FamilyApp
 import com.balex.familyteam.R
-import com.balex.familyteam.data.datastore.Storage
 import com.balex.familyteam.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
 import com.balex.familyteam.domain.entity.RegistrationOption
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.RegisterAndVerifyByEmailUseCase
-import com.balex.familyteam.domain.usecase.regLog.ResendVerificationCodeUseCase
 import com.balex.familyteam.domain.usecase.regLog.SaveLanguageUseCase
-import com.balex.familyteam.domain.usecase.regLog.SendSmsVerifyCodeUseCase
-import com.balex.familyteam.domain.usecase.regLog.VerifySmsCodeUseCase
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.Intent
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.Label
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.State
@@ -33,9 +28,9 @@ interface RegAdminStore : Store<Intent, State, Label> {
 
         data object ClickedRegister : Intent
 
-        data object ClickedSmsCodeConfirmation : Intent
+        //data object ClickedSmsCodeConfirmation : Intent
 
-        data object ClickedResendSmsCode : Intent
+        //data object ClickedResendSmsCode : Intent
 
         data object ClickedEmailOrPhoneButton : Intent
 
@@ -97,9 +92,8 @@ class RegAdminStoreFactory @Inject constructor(
     private val saveLanguageUseCase: SaveLanguageUseCase,
     private val observeUserUseCase: ObserveUserUseCase,
     private val registerAndVerifyByEmailUseCase: RegisterAndVerifyByEmailUseCase,
-    private val sendSmsVerifyCodeUseCase: SendSmsVerifyCodeUseCase,
-    private val verifySmsCodeUseCase: VerifySmsCodeUseCase,
-    private val resendVerificationCodeUseCase: ResendVerificationCodeUseCase,
+    //private val sendSmsVerifyCodeUseCase: SendSmsVerifyCodeUseCase
+    //private val resendVerificationCodeUseCase: ResendVerificationCodeUseCase,
     context: Context
 ) {
     val appContext: Context = context.applicationContext
@@ -215,7 +209,6 @@ class RegAdminStoreFactory @Inject constructor(
                 Intent.ClickedRegister -> {
                     dispatch(Msg.ClickedRegister)
                     scope.launch {
-                        //if (getState.invoke().selectedOption == RegistrationOption.EMAIL) {
                         if (getState().selectedOption == RegistrationOption.EMAIL) {
                             registerAndVerifyByEmailUseCase(
                                 getState().emailOrPhone,
@@ -224,15 +217,15 @@ class RegAdminStoreFactory @Inject constructor(
                                 getState().password
                             )
                         } else {
-                            FamilyApp.currentActivity?.let { activity ->
-                                sendSmsVerifyCodeUseCase(
-                                    "+" + getState().emailOrPhone,
-                                    getState().nickName,
-                                    getState().displayName,
-                                    getState().password,
-                                    activity
-                                )
-                            }
+//                            FamilyApp.currentActivity?.let { activity ->
+//                                sendSmsVerifyCodeUseCase(
+//                                    "+" + getState().emailOrPhone,
+//                                    getState().nickName,
+//                                    getState().displayName,
+//                                    getState().password,
+//                                    activity
+//                                )
+//                            }
 
                         }
 
@@ -316,26 +309,26 @@ class RegAdminStoreFactory @Inject constructor(
                     dispatch(Msg.UserLanguageChanged(intent.language))
                 }
 
-                Intent.ClickedSmsCodeConfirmation -> {
-                    scope.launch {
-                        verifySmsCodeUseCase(getState().smsCode, "+" + getState().emailOrPhone, getState().nickName, getState().displayName, getState().password)
-                    }
-                    dispatch(Msg.ClickedSmsCodeConfirmation)
-                }
+//                Intent.ClickedSmsCodeConfirmation -> {
+//                    scope.launch {
+//                        verifySmsCodeUseCase(getState().smsCode, "+" + getState().emailOrPhone, getState().nickName, getState().displayName, getState().password)
+//                    }
+//                    dispatch(Msg.ClickedSmsCodeConfirmation)
+//                }
 
-                Intent.ClickedResendSmsCode -> {
-                    scope.launch {
-                        FamilyApp.currentActivity?.let { activity ->
-                            resendVerificationCodeUseCase(
-                                "+" + getState().emailOrPhone,
-                                getState().nickName,
-                                getState().displayName,
-                                getState().password,
-                                activity
-                            )
-                        }
-                    }
-                }
+//                Intent.ClickedResendSmsCode -> {
+//                    scope.launch {
+//                        FamilyApp.currentActivity?.let { activity ->
+//                            resendVerificationCodeUseCase(
+//                                "+" + getState().emailOrPhone,
+//                                getState().nickName,
+//                                getState().displayName,
+//                                getState().password,
+//                                activity
+//                            )
+//                        }
+//                    }
+//                }
 
                 is Intent.SmsNumberFieldChanged -> {
                     val text =

@@ -11,16 +11,34 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.balex.familyteam.R
+import com.balex.familyteam.domain.entity.RegistrationOption
+import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
+import com.balex.familyteam.presentation.MainActivity
 import com.balex.familyteam.presentation.regadmin.RegAdminComponent
 import com.balex.familyteam.presentation.regadmin.RegAdminStore
 
 @Composable
-fun RegisterOrTryAgainButton(state: RegAdminStore.State, component: RegAdminComponent, context: Context) {
+fun RegisterOrTryAgainButton(
+    state: RegAdminStore.State,
+    component: RegAdminComponent,
+    context: Context,
+    activity: MainActivity
+) {
     if (!state.isRegisterButtonWasPressed) {
         Button(
             enabled = state.isPasswordEnabled && state.isRegisterButtonEnabled,
             onClick = {
-                component.onClickRegister()
+                if (state.selectedOption == RegistrationOption.EMAIL) {
+                    component.onClickRegister()
+                } else {
+                    component.phoneFirebaseRepository.sendSmsVerifyCode("+" + state.emailOrPhone,
+                        state.nickName,
+                        state.displayName,
+                        state.password,
+                        activity)
+                    component.onClickRegister()
+                }
+
             },
             modifier = Modifier
                 .fillMaxWidth()

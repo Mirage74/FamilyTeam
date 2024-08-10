@@ -7,6 +7,6 @@ import javax.inject.Inject
 class SendSmsVerifyCodeUseCase @Inject constructor(
     private val repository: RegLogRepository
 ) {
-    suspend operator fun invoke(phoneNumber: String,  nickName: String, displayName: String, password: String, activity: Activity) =
-        repository.sendSmsVerifyCode(phoneNumber, nickName, displayName, password, activity)
+    //suspend operator fun invoke(phoneNumber: String,  nickName: String, displayName: String, password: String, activity: Activity) =
+        //repository.sendSmsVerifyCode(phoneNumber, nickName, displayName, password, activity)
 }

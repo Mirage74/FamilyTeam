@@ -8,6 +8,7 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.balex.familyteam.presentation.onetask.OneTaskStore.Intent
 import com.balex.familyteam.presentation.onetask.OneTaskStore.Label
 import com.balex.familyteam.presentation.onetask.OneTaskStore.State
+import javax.inject.Inject
 
 interface OneTaskStore : Store<Intent, State, Label> {
 
@@ -20,7 +21,7 @@ interface OneTaskStore : Store<Intent, State, Label> {
     }
 }
 
-class OneTaskStoreFactory(
+class OneTaskStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory
 ) {
 

@@ -1,16 +1,15 @@
-package com.balex.familyteam.presentation.loginuser
+package com.balex.familyteam.presentation.loggeduser.adminpanel
 
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
-import com.balex.familyteam.presentation.loginuser.LoginUserStore.Intent
-import com.balex.familyteam.presentation.loginuser.LoginUserStore.Label
-import com.balex.familyteam.presentation.loginuser.LoginUserStore.State
-import javax.inject.Inject
+import com.balex.familyteam.presentation.loggeduser.adminpanel.AdminPanelStore.Intent
+import com.balex.familyteam.presentation.loggeduser.adminpanel.AdminPanelStore.Label
+import com.balex.familyteam.presentation.loggeduser.adminpanel.AdminPanelStore.State
 
-interface LoginUserStore : Store<Intent, State, Label> {
+interface AdminPanelStore : Store<Intent, State, Label> {
 
     sealed interface Intent {
     }
@@ -21,13 +20,13 @@ interface LoginUserStore : Store<Intent, State, Label> {
     }
 }
 
-class LoginUserStoreFactory @Inject constructor(
+class AdminPanelStoreFactory(
     private val storeFactory: StoreFactory
 ) {
 
-    fun create(): LoginUserStore =
-        object : LoginUserStore, Store<Intent, State, Label> by storeFactory.create(
-            name = "LoginUserStore",
+    fun create(): AdminPanelStore =
+        object : AdminPanelStore, Store<Intent, State, Label> by storeFactory.create(
+            name = "AdminPanelStore",
             initialState = State(Unit),
             bootstrapper = BootstrapperImpl(),
             executorFactory = ::ExecutorImpl,

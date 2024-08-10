@@ -6,7 +6,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
-class DefaultAboutComponent  @AssistedInject constructor(
+class DefaultAboutComponent @AssistedInject constructor(
     private val storeFactory: AboutStoreFactory,
     @Assisted("componentContext") componentContext: ComponentContext
 ) : AboutComponent, ComponentContext by componentContext {

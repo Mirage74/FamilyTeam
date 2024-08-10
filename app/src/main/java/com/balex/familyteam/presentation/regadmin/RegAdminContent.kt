@@ -20,13 +20,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.balex.familyteam.LocalLocalizedContext
 import com.balex.familyteam.LocalizedContextProvider
 import com.balex.familyteam.R
 import com.balex.familyteam.domain.entity.RegistrationOption
+import com.balex.familyteam.presentation.MainActivity
 import com.balex.familyteam.presentation.TopAppBarOnlyLanguage
 import com.balex.familyteam.presentation.regadmin.content.ChooseEmailOrPhoneButton
 import com.balex.familyteam.presentation.regadmin.content.CodeSmsTextField
@@ -40,23 +39,29 @@ import com.balex.familyteam.presentation.regadmin.content.ResendSmsButton
 import com.balex.familyteam.presentation.regadmin.content.VerifyEmailOrPhoneText
 import com.balex.familyteam.presentation.rememberImeState
 
+const val SMS_VERIFICATION_ID_INITIAL = "SMS_VERIFICATION_ID_INITIAL"
+
 @Composable
-fun RegAdminContent(component: RegAdminComponent) {
+fun RegAdminContent(component: RegAdminComponent, activity: MainActivity) {
 
     val state by component.model.collectAsState()
 
     LocalizedContextProvider(languageCode = state.language.lowercase()) {
         when (state.regAdminState) {
             RegAdminStore.State.RegAdminState.Content -> {
-                ContentScreen(component)
+                ContentScreen(component, activity)
             }
         }
     }
+
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun ContentScreen(component: RegAdminComponent) {
+fun ContentScreen(
+    component: RegAdminComponent,
+    activity: MainActivity
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -66,6 +71,7 @@ fun ContentScreen(component: RegAdminComponent) {
         val state by component.model.collectAsState()
         val imeState = rememberImeState()
         val scrollState = rememberScrollState()
+
 
         LaunchedEffect(key1 = imeState.value) {
             if (imeState.value) {
@@ -110,12 +116,14 @@ fun ContentScreen(component: RegAdminComponent) {
 
                 if (state.isRegisterButtonWasPressed && state.selectedOption == RegistrationOption.PHONE) {
                     Spacer(modifier = Modifier.height(24.dp))
-                    ResendSmsButton(component, context)
+                    ResendSmsButton(state, component.phoneFirebaseRepository, context, activity)
                 }
                 Spacer(modifier = Modifier.height(24.dp))
-                RegisterOrTryAgainButton(state, component, context)
+                RegisterOrTryAgainButton(state, component, context, activity)
             }
         }
     }
 }
+
+
 

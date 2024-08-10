@@ -5,7 +5,7 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 class ToDoList (
-    val thingsToDoShared: List<String> = listOf(),
-    val thingsToDoPrivate: List<String> = listOf(),
+    val thingsToDoShared: ExternalTasks = ExternalTasks(listOf()),
+    val thingsToDoPrivate: PrivateTasks = PrivateTasks(listOf()),
     val listToShop: List<String> = listOf()
 ): Parcelable

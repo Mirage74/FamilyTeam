@@ -6,6 +6,9 @@ import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
 import com.balex.familyteam.domain.entity.Language
+import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
+import com.balex.familyteam.domain.usecase.regLog.EmitUserNeedRefreshUseCase
+import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
 import com.balex.familyteam.extensions.componentScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -13,9 +16,11 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Scope
 
 class DefaultRegAdminComponent @AssistedInject constructor(
     private val storeFactory: RegAdminStoreFactory,
+    override val phoneFirebaseRepository: PhoneFirebaseRepository,
     @Assisted("onBackClicked") private val onBackClicked: () -> Unit,
     @Assisted("onAdminRegisteredAndVerified") private val onAdminRegisteredAndVerified: () -> Unit,
     @Assisted("componentContext") componentContext: ComponentContext
@@ -30,7 +35,6 @@ class DefaultRegAdminComponent @AssistedInject constructor(
         scope.launch {
             store.labels.collect {
                 when (it) {
-
                     RegAdminStore.Label.AdminIsRegisteredAndVerified -> {
                         onAdminRegisteredAndVerified()
                     }
@@ -52,17 +56,11 @@ class DefaultRegAdminComponent @AssistedInject constructor(
         store.accept(RegAdminStore.Intent.ClickedBack)
     }
 
-    override fun onClickSendSmsAgain() {
-        store.accept(RegAdminStore.Intent.ClickedResendSmsCode)
-    }
 
     override fun onClickRegister() {
         store.accept(RegAdminStore.Intent.ClickedRegister)
     }
 
-    override fun onClickSmsVerify() {
-        store.accept(RegAdminStore.Intent.ClickedSmsCodeConfirmation)
-    }
 
     override fun onClickEmailOrPhoneButton() {
         store.accept(RegAdminStore.Intent.ClickedEmailOrPhoneButton)
@@ -100,6 +98,7 @@ class DefaultRegAdminComponent @AssistedInject constructor(
         store.accept(RegAdminStore.Intent.SmsNumberFieldChanged(currentSmsText))
     }
 
+
     @AssistedFactory
     interface Factory {
 
@@ -109,5 +108,7 @@ class DefaultRegAdminComponent @AssistedInject constructor(
             @Assisted("componentContext") componentContext: ComponentContext
         ): DefaultRegAdminComponent
     }
+
+
 }
 

@@ -2,6 +2,8 @@ package com.balex.familyteam.presentation.root
 
 import com.arkivanov.decompose.extensions.compose.jetpack.stack.Children
 import androidx.compose.runtime.Composable
+import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
+import com.balex.familyteam.presentation.MainActivity
 import com.balex.familyteam.presentation.about.AboutContent
 import com.balex.familyteam.presentation.loggeduser.LoggedUserContent
 import com.balex.familyteam.presentation.loginadmin.LoginAdminContent
@@ -11,7 +13,7 @@ import com.balex.familyteam.presentation.regadmin.RegAdminContent
 import com.balex.familyteam.presentation.ui.theme.FamilyTeamTheme
 
 @Composable
-fun RootContent(component: RootComponent) {
+fun RootContent(component: RootComponent, activity: MainActivity) {
     FamilyTeamTheme {
         Children(
             stack = component.stack
@@ -22,7 +24,7 @@ fun RootContent(component: RootComponent) {
                 }
 
                 is RootComponent.Child.RegAdmin -> {
-                    RegAdminContent(component = instance.component)
+                    RegAdminContent(component = instance.component, activity = activity)
                 }
 
                 is RootComponent.Child.LoginAdmin -> {

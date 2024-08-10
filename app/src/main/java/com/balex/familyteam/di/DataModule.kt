@@ -4,8 +4,10 @@ import com.balex.familyteam.data.repository.AdminRepositoryImpl
 import com.balex.familyteam.data.repository.RegLogRepositoryImpl
 import com.balex.familyteam.data.repository.UserRepositoryImpl
 import com.balex.familyteam.domain.repository.AdminRepository
+import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
 import com.balex.familyteam.domain.repository.RegLogRepository
 import com.balex.familyteam.domain.repository.UserRepository
+import com.balex.familyteam.presentation.regadmin.PhoneFirebaseRepositoryImpl
 import dagger.Binds
 import dagger.Module
 
@@ -20,5 +22,8 @@ interface DataModule {
 
     @[ApplicationScope Binds]
     fun bindUserRepository(impl: UserRepositoryImpl): UserRepository
+
+    @[ApplicationScope Binds]
+    fun bindPhoneFirebaseRepository(impl: PhoneFirebaseRepositoryImpl): PhoneFirebaseRepository
 
 }

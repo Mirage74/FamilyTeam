@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.balex.familyteam.R
+import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
 import com.balex.familyteam.presentation.regadmin.RegAdminComponent
 import com.balex.familyteam.presentation.regadmin.RegAdminStore
 
@@ -50,7 +51,7 @@ fun CodeSmsTextField(state: RegAdminStore.State, component: RegAdminComponent, c
             )
 
             Button(
-                onClick = { component.onClickSmsVerify() },
+                onClick = { component.phoneFirebaseRepository.verifySmsCode(state.smsCode, "+" + state.emailOrPhone, state.nickName, state.displayName, state.password) },
                 enabled = state.isSmsOkButtonEnabled && !state.isSmsVerifyButtonWasPressed,
                 modifier = Modifier.align(Alignment.CenterVertically)
             ) {

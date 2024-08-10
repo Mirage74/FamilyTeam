@@ -2,10 +2,26 @@ package com.balex.familyteam.data.repository
 
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.repository.UserRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
+import com.balex.familyteam.domain.usecase.regLog.ObserveUserUseCase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class UserRepositoryImpl : UserRepository {
-    override val user: StateFlow<User>
-        get() = TODO("Not yet implemented")
+class UserRepositoryImpl @Inject constructor(
+    private val observeUserUseCase: ObserveUserUseCase
+): UserRepository {
+
+    init {
+        CoroutineScope(Dispatchers.Default).launch {
+            observeUserUseCase().collect {
+                user = it
+            }
+        }
+    }
+    private var user = User()
+
+    override fun getUser(): User {
+        return user
+    }
 }

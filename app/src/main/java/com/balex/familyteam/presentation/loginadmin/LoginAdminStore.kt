@@ -8,6 +8,7 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.balex.familyteam.presentation.loginadmin.LoginAdminStore.Intent
 import com.balex.familyteam.presentation.loginadmin.LoginAdminStore.Label
 import com.balex.familyteam.presentation.loginadmin.LoginAdminStore.State
+import javax.inject.Inject
 
 interface LoginAdminStore : Store<Intent, State, Label> {
 
@@ -20,7 +21,7 @@ interface LoginAdminStore : Store<Intent, State, Label> {
     }
 }
 
-class LoginAdminStoreFactory(
+class LoginAdminStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory
 ) {
 

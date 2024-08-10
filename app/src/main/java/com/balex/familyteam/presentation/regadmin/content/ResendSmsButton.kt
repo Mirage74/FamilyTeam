@@ -11,13 +11,22 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.balex.familyteam.R
+import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
+import com.balex.familyteam.presentation.MainActivity
 import com.balex.familyteam.presentation.regadmin.RegAdminComponent
+import com.balex.familyteam.presentation.regadmin.RegAdminStore
 
 @Composable
-fun ResendSmsButton(component: RegAdminComponent, context: Context) {
+fun ResendSmsButton(state: RegAdminStore.State, phoneFirebaseRepository: PhoneFirebaseRepository,
+                    context: Context, activity: MainActivity) {
     Button(
         onClick = {
-            component.onClickSendSmsAgain()
+            //component.onClickSendSmsAgain()
+            phoneFirebaseRepository.resendVerificationCode("+" + state.emailOrPhone,
+                state.nickName,
+                state.displayName,
+                state.password,
+                activity)
         },
         modifier = Modifier
             .fillMaxWidth()
