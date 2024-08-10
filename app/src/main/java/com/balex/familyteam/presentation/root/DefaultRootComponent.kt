@@ -2,17 +2,10 @@ package com.balex.familyteam.presentation.root
 
 
 import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.decompose.router.stack.ChildStack
-import com.arkivanov.decompose.router.stack.StackNavigation
-import com.arkivanov.decompose.router.stack.childStack
-import com.arkivanov.decompose.router.stack.pop
-import com.arkivanov.decompose.router.stack.push
-import com.arkivanov.decompose.router.stack.replaceAll
+import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.parcelable.Parcelize
-import com.arkivanov.essenty.parcelable.Parcelable
+import com.arkivanov.decompose.router.stack.webhistory.WebHistoryController
 import com.balex.familyteam.presentation.about.DefaultAboutComponent
-import com.balex.familyteam.presentation.loggeduser.DefaultLoggedUserComponent
 import com.balex.familyteam.presentation.loginadmin.DefaultLoginAdminComponent
 import com.balex.familyteam.presentation.loginuser.DefaultLoginUserComponent
 import com.balex.familyteam.presentation.notlogged.DefaultNotLoggedComponent
@@ -20,26 +13,45 @@ import com.balex.familyteam.presentation.regadmin.DefaultRegAdminComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.serialization.Serializable
+import com.arkivanov.decompose.router.stack.ChildStack
+import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.push
+import com.arkivanov.decompose.router.stack.replaceAll
+import com.balex.familyteam.presentation.loggeduser.DefaultLoggedUserComponent
 
 
-
-class DefaultRootComponent @AssistedInject constructor(
+class DefaultRootComponent @OptIn(ExperimentalDecomposeApi::class)
+@AssistedInject constructor(
     private val notLoggedComponentFactory: DefaultNotLoggedComponent.Factory,
     private val regAdminComponentFactory: DefaultRegAdminComponent.Factory,
-    //private val loggedUserComponentFactory: DefaultLoggedUserComponent.Factory,
+    private val loggedUserComponentFactory: DefaultLoggedUserComponent.Factory,
     private val aboutComponentFactory: DefaultAboutComponent.Factory,
     private val loginUserComponent: DefaultLoginUserComponent.Factory,
     private val loginAdminComponent: DefaultLoginAdminComponent.Factory,
+    deepLink: DeepLink = DeepLink.None,
+    webHistoryController: WebHistoryController? = null,
     @Assisted("componentContext") componentContext: ComponentContext
 ) : RootComponent, ComponentContext by componentContext {
 
-    private val navigation = StackNavigation<Config>()
-    override val stack: Value<ChildStack<*, RootComponent.Child>> = childStack(
-        source = navigation,
-        initialConfiguration = Config.NotLogged,
-        handleBackButton = true,
+    private val nav = StackNavigation<Config>()
+
+    @OptIn(ExperimentalDecomposeApi::class)
+    private val _stack =
+        childStack(
+        source = nav,
+        serializer = Config.serializer(),
+            initialStack = { getInitialStack(webHistoryPaths = webHistoryController?.historyPaths, deepLink = deepLink) },
+
+            handleBackButton = true,
         childFactory = ::child
     )
+
+
+
+    override val stack: Value<ChildStack<*, RootComponent.Child>> = _stack
 
     private fun child(
         config: Config, componentContext: ComponentContext
@@ -48,7 +60,7 @@ class DefaultRootComponent @AssistedInject constructor(
             is Config.NotLogged -> {
                 val component = notLoggedComponentFactory.create(
                     onRegAdminClicked = {
-                        navigation.push(Config.RegAdmin)
+                        nav.push(Config.RegAdmin)
                     },
                     onLoginAdminClicked = {
 
@@ -60,7 +72,7 @@ class DefaultRootComponent @AssistedInject constructor(
 
                     },
                     onAbout = {
-                        navigation.push(Config.About)
+                        nav.push(Config.About)
                     },
                     componentContext = componentContext
                 )
@@ -70,10 +82,10 @@ class DefaultRootComponent @AssistedInject constructor(
             Config.RegAdmin -> {
                 val component = regAdminComponentFactory.create(
                     onAdminRegisteredAndVerified = {
-                        navigation.replaceAll(Config.LoggedUser)
+                        nav.replaceAll(Config.LoggedUser)
                     },
                     onBackClicked = {
-                        navigation.pop()
+                        nav.pop()
                     },
                     componentContext = componentContext
                 )
@@ -114,26 +126,92 @@ class DefaultRootComponent @AssistedInject constructor(
         }
     }
 
-    sealed interface Config : Parcelable {
 
-        @Parcelize
+    init {
+        @OptIn(ExperimentalDecomposeApi::class)
+        webHistoryController?.attach(
+            navigator = nav,
+            //serializer = Config.serializer(),
+            stack = _stack,
+            getPath = ::getPathForConfig,
+            getConfiguration = ::getConfigForPath,
+        )
+    }
+
+
+
+    private companion object {
+        private const val WEB_PATH_NOT_LOGGED = "not-logged"
+        private const val WEB_PATH_REG_ADMIN = "reg-admin"
+        private const val WEB_PATH_LOGIN_ADMIN = "login-admin"
+        private const val WEB_PATH_LOGIN_USER = "login-user"
+        private const val WEB_PATH_LOGGED_USER = "logged-user"
+        private const val WEB_PATH_ABOUT = "about"
+
+        private fun getInitialStack(webHistoryPaths: List<String>?, deepLink: DeepLink): List<Config> =
+            webHistoryPaths
+                ?.takeUnless(List<*>::isEmpty)
+                ?.map(::getConfigForPath)
+                ?: getInitialStack(deepLink)
+
+        private fun getInitialStack(deepLink: DeepLink): List<Config> =
+            when (deepLink) {
+                is DeepLink.None -> listOf(Config.NotLogged)
+                is DeepLink.Web -> listOf(Config.NotLogged, getConfigForPath(deepLink.path)).distinct()
+            }
+
+
+        private fun getPathForConfig(config: Config): String =
+            when (config) {
+                Config.NotLogged -> "/$WEB_PATH_NOT_LOGGED"
+                Config.RegAdmin -> "/$WEB_PATH_REG_ADMIN"
+                Config.LoginAdmin -> "/$WEB_PATH_LOGIN_ADMIN"
+                Config.LoginUser -> "/$WEB_PATH_LOGIN_USER"
+                Config.About -> "/$WEB_PATH_ABOUT"
+                Config.LoggedUser -> "/$WEB_PATH_LOGGED_USER"
+            }
+
+        private fun getConfigForPath(path: String): Config =
+            when (path.removePrefix("/")) {
+                WEB_PATH_NOT_LOGGED -> Config.NotLogged
+                WEB_PATH_REG_ADMIN -> Config.RegAdmin
+                WEB_PATH_LOGIN_ADMIN -> Config.LoginAdmin
+                WEB_PATH_LOGIN_USER -> Config.LoginUser
+                WEB_PATH_ABOUT -> Config.About
+                WEB_PATH_LOGGED_USER -> Config.LoggedUser
+                else -> {
+                    Config.NotLogged
+                }
+            }
+    }
+
+
+    @Serializable
+    sealed interface Config {
+
+        @Serializable
         data object NotLogged : Config
 
-        @Parcelize
+        @Serializable
         data object RegAdmin : Config
 
-        @Parcelize
+        @Serializable
         data object LoginAdmin : Config
 
-        @Parcelize
+        @Serializable
         data object LoginUser : Config
 
-        @Parcelize
+        @Serializable
         data object LoggedUser : Config
 
-        @Parcelize
+        @Serializable
         data object About : Config
 
+    }
+
+    sealed interface DeepLink {
+        data object None : DeepLink
+        class Web(val path: String) : DeepLink
     }
 
     @AssistedFactory
@@ -142,4 +220,7 @@ class DefaultRootComponent @AssistedInject constructor(
             @Assisted("componentContext") componentContext: ComponentContext
         ): DefaultRootComponent
     }
+
+
+
 }

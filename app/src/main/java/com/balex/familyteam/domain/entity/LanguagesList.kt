@@ -1,9 +1,8 @@
 package com.balex.familyteam.domain.entity
 
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.Serializable
 
-@Parcelize
+@Serializable
 data class LanguagesList(
     val languages: List<Language> = listOf(
         Language("en", "English"),
@@ -13,4 +12,4 @@ data class LanguagesList(
         Language("es", "Español"),
         Language("ru", "Русский")
     )
-): Parcelable
+)

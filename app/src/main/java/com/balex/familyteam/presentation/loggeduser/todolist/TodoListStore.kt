@@ -8,6 +8,7 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.balex.familyteam.presentation.loggeduser.todolist.TodoListStore.Intent
 import com.balex.familyteam.presentation.loggeduser.todolist.TodoListStore.Label
 import com.balex.familyteam.presentation.loggeduser.todolist.TodoListStore.State
+import javax.inject.Inject
 
 interface TodoListStore : Store<Intent, State, Label> {
 
@@ -20,7 +21,7 @@ interface TodoListStore : Store<Intent, State, Label> {
     }
 }
 
-class TodoListStoreFactory(
+class TodoListStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory
 ) {
 

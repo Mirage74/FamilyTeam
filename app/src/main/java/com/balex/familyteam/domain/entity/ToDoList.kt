@@ -1,11 +1,10 @@
 package com.balex.familyteam.domain.entity
 
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.Serializable
 
-@Parcelize
+@Serializable
 class ToDoList (
     val thingsToDoShared: ExternalTasks = ExternalTasks(listOf()),
     val thingsToDoPrivate: PrivateTasks = PrivateTasks(listOf()),
     val listToShop: List<String> = listOf()
-): Parcelable
+)

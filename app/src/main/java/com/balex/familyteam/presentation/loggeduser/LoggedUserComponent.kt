@@ -1,35 +1,51 @@
 package com.balex.familyteam.presentation.loggeduser
 
+import com.arkivanov.decompose.Child
 import com.arkivanov.decompose.value.Value
 import com.balex.familyteam.presentation.loggeduser.adminpanel.AdminPanelComponent
 import com.balex.familyteam.presentation.loggeduser.shoplist.ShopListComponent
 import com.balex.familyteam.presentation.loggeduser.todolist.TodoListComponent
-import kotlinx.coroutines.flow.StateFlow
+
 
 interface LoggedUserComponent {
 
-    //val children: Value<Children>
 
+    val children: Value<Children>
 
-    sealed interface Children {
+    data class Children (
 
-        data class TodoList(val component: TodoListComponent) : Children
+        val todoList: Child.Created<*, TodoListComponent>,
 
-        data class ShopList(val component: ShopListComponent) : Children
+        val shopList: Child.Created<*, ShopListComponent>,
 
-        data class AdminPanel(val component: AdminPanelComponent) : Children
+        val adminPanel: Child.Created<*, AdminPanelComponent>,
 
-    }
+    )
 
+//    fun onSwitchToPagerClicked()
+//    fun onSwitchToCarouselClicked()
+//    fun onForwardClicked()
+//    fun onBackwardClicked()
+
+//    sealed interface Children<T, U, V, W> {
+//
+//        data class TodoList(val component: TodoListComponent) : Children<Any?, Any?, Any?, Any?>
+//
+//        data class ShopList(val component: ShopListComponent) : Children<Any?, Any?, Any?, Any?>
+//
+//        data class AdminPanel(val component: AdminPanelComponent) : Children<Any?, Any?, Any?, Any?>
+//
+//    }
+//
 //    class Children<out C : Any, out T : Any>(
 //        val items: List<Child.Created<C, T>>,
 //        val index: Int,
-//        val mode: Mode,
+//        val mode: Mode
 //    )
-
-    enum class Mode {
-        CAROUSEL, PAGER
-    }
+//
+//    enum class Mode {
+//        CAROUSEL, PAGER
+//    }
 
     //val model: StateFlow<LoggedUserStore.State>
 

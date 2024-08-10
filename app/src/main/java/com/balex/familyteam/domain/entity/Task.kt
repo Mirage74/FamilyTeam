@@ -1,11 +1,12 @@
 package com.balex.familyteam.domain.entity
 
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 import java.util.Calendar
 
-@Parcelize
+@Serializable
 data class Task(
     val description: String,
+    @Contextual
     val cutoffTime: Calendar
-) : Parcelable
+)

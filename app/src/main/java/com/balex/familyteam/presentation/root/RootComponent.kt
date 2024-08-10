@@ -2,7 +2,6 @@ package com.balex.familyteam.presentation.root
 
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
-import com.balex.familyteam.presentation.MainActivity
 import com.balex.familyteam.presentation.about.AboutComponent
 import com.balex.familyteam.presentation.loggeduser.LoggedUserComponent
 import com.balex.familyteam.presentation.loginadmin.LoginAdminComponent

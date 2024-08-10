@@ -1,9 +1,8 @@
 package com.balex.familyteam.domain.entity
 
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.Serializable
 
-@Parcelize
+@Serializable
 data class ExternalTasks(
     val externalTasks: List<ExternalTask>
-) : Parcelable
+)

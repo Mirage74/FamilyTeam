@@ -8,6 +8,7 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.balex.familyteam.presentation.loggeduser.adminpanel.AdminPanelStore.Intent
 import com.balex.familyteam.presentation.loggeduser.adminpanel.AdminPanelStore.Label
 import com.balex.familyteam.presentation.loggeduser.adminpanel.AdminPanelStore.State
+import javax.inject.Inject
 
 interface AdminPanelStore : Store<Intent, State, Label> {
 
@@ -20,7 +21,7 @@ interface AdminPanelStore : Store<Intent, State, Label> {
     }
 }
 
-class AdminPanelStoreFactory(
+class AdminPanelStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory
 ) {
 

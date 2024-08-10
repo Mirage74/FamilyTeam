@@ -1,8 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.compose.compiler)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.parcelize)
     id("com.google.gms.google-services")
     kotlin("plugin.serialization") version "2.0.10"
 }
@@ -99,6 +99,9 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.reaktive)
+
+    implementation(libs.kotlinx.serialization.core)
+    implementation(libs.kotlinx.serialization.json)
 
 
     testImplementation(libs.junit)

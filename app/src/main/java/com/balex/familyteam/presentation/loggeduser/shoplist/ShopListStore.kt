@@ -8,6 +8,7 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.balex.familyteam.presentation.loggeduser.shoplist.ShopListStore.Intent
 import com.balex.familyteam.presentation.loggeduser.shoplist.ShopListStore.Label
 import com.balex.familyteam.presentation.loggeduser.shoplist.ShopListStore.State
+import javax.inject.Inject
 
 interface ShopListStore : Store<Intent, State, Label> {
 
@@ -20,7 +21,7 @@ interface ShopListStore : Store<Intent, State, Label> {
     }
 }
 
-class ShopListStoreFactory(
+class ShopListStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory
 ) {
 
