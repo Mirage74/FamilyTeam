@@ -2,6 +2,7 @@ package com.balex.familyteam.presentation.root
 
 import androidx.compose.runtime.Composable
 import com.arkivanov.decompose.router.stack.active
+import com.arkivanov.decompose.extensions.compose.jetpack.stack.Children
 import com.balex.familyteam.presentation.MainActivity
 import com.balex.familyteam.presentation.about.AboutContent
 import com.balex.familyteam.presentation.loggeduser.LoggedUserContent
@@ -14,32 +15,34 @@ import com.balex.familyteam.presentation.ui.theme.FamilyTeamTheme
 @Composable
 fun RootContent(component: RootComponent, activity: MainActivity) {
     FamilyTeamTheme {
-
-        when (val child = component.stack.active.instance) {
+        Children(
+            stack = component.stack
+        ) {
+            when (val instance = it.instance) {
                 is RootComponent.Child.NotLogged -> {
-                    NotLoggedContent(component = child.component)
+                    NotLoggedContent(component = instance.component)
                 }
 
                 is RootComponent.Child.RegAdmin -> {
-                    RegAdminContent(component = child.component, activity = activity)
+                    RegAdminContent(component = instance.component, activity = activity)
                 }
 
                 is RootComponent.Child.LoginAdmin -> {
-                    LoginAdminContent(component = child.component)
+                    LoginAdminContent(component = instance.component)
                 }
-                
+
                 is RootComponent.Child.LoginUser -> {
-                    LoginUserContent(component = child.component)
+                    LoginUserContent(component = instance.component)
                 }
-                
+
                 is RootComponent.Child.LoggedUser -> {
-                    LoggedUserContent(component = child.component)
+                    LoggedUserContent(component = instance.component)
                 }
 
                 is RootComponent.Child.About -> {
-                    AboutContent(component = child.component)
+                    AboutContent(component = instance.component)
                 }
             }
-
+        }
     }
 }

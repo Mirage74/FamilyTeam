@@ -10,6 +10,7 @@ import com.balex.familyteam.presentation.loginadmin.DefaultLoginAdminComponent
 import com.balex.familyteam.presentation.loginuser.DefaultLoginUserComponent
 import com.balex.familyteam.presentation.notlogged.DefaultNotLoggedComponent
 import com.balex.familyteam.presentation.regadmin.DefaultRegAdminComponent
+import com.balex.familyteam.presentation.root.RootComponent.Child
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -18,98 +19,86 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.popTo
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.balex.familyteam.presentation.loggeduser.DefaultLoggedUserComponent
 
 
-class DefaultRootComponent @OptIn(ExperimentalDecomposeApi::class)
-@AssistedInject constructor(
+class DefaultRootComponent @OptIn(ExperimentalDecomposeApi::class) @AssistedInject constructor(
     private val notLoggedComponentFactory: DefaultNotLoggedComponent.Factory,
     private val regAdminComponentFactory: DefaultRegAdminComponent.Factory,
     private val loggedUserComponentFactory: DefaultLoggedUserComponent.Factory,
     private val aboutComponentFactory: DefaultAboutComponent.Factory,
     private val loginUserComponent: DefaultLoginUserComponent.Factory,
     private val loginAdminComponent: DefaultLoginAdminComponent.Factory,
-    deepLink: DeepLink = DeepLink.None,
-    webHistoryController: WebHistoryController? = null,
     @Assisted("componentContext") componentContext: ComponentContext
 ) : RootComponent, ComponentContext by componentContext {
 
-    private val nav = StackNavigation<Config>()
+    private val navigation = StackNavigation<Config>()
 
-    @OptIn(ExperimentalDecomposeApi::class)
-    private val _stack =
-        childStack(
-        source = nav,
+    private val _stack = childStack(
+        source = navigation,
         serializer = Config.serializer(),
-            initialStack = { getInitialStack(webHistoryPaths = webHistoryController?.historyPaths, deepLink = deepLink) },
-
-            handleBackButton = true,
+        initialConfiguration = Config.NotLogged,
+        handleBackButton = true,
         childFactory = ::child
     )
 
 
-
-    override val stack: Value<ChildStack<*, RootComponent.Child>> = _stack
+    override val stack: Value<ChildStack<*, Child>> = _stack
 
     private fun child(
-        config: Config, componentContext: ComponentContext
-    ): RootComponent.Child {
+        config: Config, childComponentContext: ComponentContext
+    ): Child {
         return when (config) {
             is Config.NotLogged -> {
-                val component = notLoggedComponentFactory.create(
-                    onRegAdminClicked = {
-                        nav.push(Config.RegAdmin)
-                    },
-                    onLoginAdminClicked = {
+                val component = notLoggedComponentFactory.create(onRegAdminClicked = {
+                    navigation.push(Config.RegAdmin)
+                }, onLoginAdminClicked = {
 
-                    },
-                    onLoginUserClicked = {
+                }, onLoginUserClicked = {
 
-                    },
-                    onUserIsLogged = {
+                }, onUserIsLogged = {
 
-                    },
-                    onAbout = {
-                        nav.push(Config.About)
-                    },
-                    componentContext = componentContext
+                }, onAbout = {
+                    navigation.push(Config.About)
+                }, componentContext = childComponentContext
                 )
-                RootComponent.Child.NotLogged(component)
+                Child.NotLogged(component)
             }
 
             Config.RegAdmin -> {
-                val component = regAdminComponentFactory.create(
-                    onAdminRegisteredAndVerified = {
-                        nav.replaceAll(Config.LoggedUser)
-                    },
-                    onBackClicked = {
-                        nav.pop()
-                    },
-                    componentContext = componentContext
+                val component = regAdminComponentFactory.create(onAdminRegisteredAndVerified = {
+                    navigation.replaceAll(Config.LoggedUser)
+                }, onBackClicked = {
+                    navigation.pop()
+                }, componentContext = childComponentContext
                 )
-                RootComponent.Child.RegAdmin(component)
+                Child.RegAdmin(component)
             }
 
             Config.LoginAdmin -> {
                 val component = loginAdminComponent.create(
-                    componentContext = componentContext
+                    componentContext = childComponentContext
                 )
-                RootComponent.Child.LoginAdmin(component)
+                Child.LoginAdmin(component)
             }
+
             Config.LoginUser -> {
                 val component = loginUserComponent.create(
-                    componentContext = componentContext
+                    componentContext = childComponentContext
                 )
-                RootComponent.Child.LoginUser(component)
+                Child.LoginUser(component)
             }
+
             Config.About -> {
                 val component = aboutComponentFactory.create(
-                    componentContext = componentContext
+                    componentContext = childComponentContext
                 )
-                RootComponent.Child.About(component)
+                Child.About(component)
             }
+
             is Config.LoggedUser -> {
 //                val component = loggedUserComponentFactory.create(
 //                    onTodoListClicked = {},
@@ -119,72 +108,22 @@ class DefaultRootComponent @OptIn(ExperimentalDecomposeApi::class)
 //                )
 //                RootComponent.Child.LoggedUser(component)
                 val component = aboutComponentFactory.create(
-                    componentContext = componentContext
+                    componentContext = childComponentContext
                 )
-                RootComponent.Child.About(component)
+                Child.About(component)
             }
         }
     }
 
+//    private fun notLoggedComponent(componentContext: ComponentContext): NotLoggedComponent =
+//        DefaultMainComponent(
+//            componentContext = componentContext,
+//            onShowWelcome = { navigation.push(Config.Welcome) },
+//        )
 
-    init {
-        @OptIn(ExperimentalDecomposeApi::class)
-        webHistoryController?.attach(
-            navigator = nav,
-            //serializer = Config.serializer(),
-            stack = _stack,
-            getPath = ::getPathForConfig,
-            getConfiguration = ::getConfigForPath,
-        )
+    override fun onBackClicked(toIndex: Int) {
+        navigation.popTo(index = toIndex)
     }
-
-
-
-    private companion object {
-        private const val WEB_PATH_NOT_LOGGED = "not-logged"
-        private const val WEB_PATH_REG_ADMIN = "reg-admin"
-        private const val WEB_PATH_LOGIN_ADMIN = "login-admin"
-        private const val WEB_PATH_LOGIN_USER = "login-user"
-        private const val WEB_PATH_LOGGED_USER = "logged-user"
-        private const val WEB_PATH_ABOUT = "about"
-
-        private fun getInitialStack(webHistoryPaths: List<String>?, deepLink: DeepLink): List<Config> =
-            webHistoryPaths
-                ?.takeUnless(List<*>::isEmpty)
-                ?.map(::getConfigForPath)
-                ?: getInitialStack(deepLink)
-
-        private fun getInitialStack(deepLink: DeepLink): List<Config> =
-            when (deepLink) {
-                is DeepLink.None -> listOf(Config.NotLogged)
-                is DeepLink.Web -> listOf(Config.NotLogged, getConfigForPath(deepLink.path)).distinct()
-            }
-
-
-        private fun getPathForConfig(config: Config): String =
-            when (config) {
-                Config.NotLogged -> "/$WEB_PATH_NOT_LOGGED"
-                Config.RegAdmin -> "/$WEB_PATH_REG_ADMIN"
-                Config.LoginAdmin -> "/$WEB_PATH_LOGIN_ADMIN"
-                Config.LoginUser -> "/$WEB_PATH_LOGIN_USER"
-                Config.About -> "/$WEB_PATH_ABOUT"
-                Config.LoggedUser -> "/$WEB_PATH_LOGGED_USER"
-            }
-
-        private fun getConfigForPath(path: String): Config =
-            when (path.removePrefix("/")) {
-                WEB_PATH_NOT_LOGGED -> Config.NotLogged
-                WEB_PATH_REG_ADMIN -> Config.RegAdmin
-                WEB_PATH_LOGIN_ADMIN -> Config.LoginAdmin
-                WEB_PATH_LOGIN_USER -> Config.LoginUser
-                WEB_PATH_ABOUT -> Config.About
-                WEB_PATH_LOGGED_USER -> Config.LoggedUser
-                else -> {
-                    Config.NotLogged
-                }
-            }
-    }
-
 
     @Serializable
     sealed interface Config {
@@ -209,18 +148,12 @@ class DefaultRootComponent @OptIn(ExperimentalDecomposeApi::class)
 
     }
 
-    sealed interface DeepLink {
-        data object None : DeepLink
-        class Web(val path: String) : DeepLink
-    }
-
     @AssistedFactory
     interface Factory {
         fun create(
             @Assisted("componentContext") componentContext: ComponentContext
         ): DefaultRootComponent
     }
-
 
 
 }
