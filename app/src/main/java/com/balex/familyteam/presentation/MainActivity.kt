@@ -4,14 +4,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.arkivanov.decompose.defaultComponentContext
-import com.balex.familyteam.FamilyApp
 import com.balex.familyteam.appComponent
-import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
 import com.balex.familyteam.presentation.root.DefaultRootComponent
 import com.balex.familyteam.presentation.root.RootContent
 import javax.inject.Inject
 
-//val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
 class MainActivity : ComponentActivity() {
 

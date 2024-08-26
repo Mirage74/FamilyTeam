@@ -19,13 +19,12 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
-import com.arkivanov.decompose.router.stack.popTo
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.balex.familyteam.presentation.loggeduser.DefaultLoggedUserComponent
 
 
-class DefaultRootComponent @OptIn(ExperimentalDecomposeApi::class) @AssistedInject constructor(
+class DefaultRootComponent @AssistedInject constructor(
     private val notLoggedComponentFactory: DefaultNotLoggedComponent.Factory,
     private val regAdminComponentFactory: DefaultRegAdminComponent.Factory,
     private val loggedUserComponentFactory: DefaultLoggedUserComponent.Factory,
@@ -52,7 +51,7 @@ class DefaultRootComponent @OptIn(ExperimentalDecomposeApi::class) @AssistedInje
         config: Config, childComponentContext: ComponentContext
     ): Child {
         return when (config) {
-            is Config.NotLogged -> {
+             Config.NotLogged -> {
                 val component = notLoggedComponentFactory.create(onRegAdminClicked = {
                     navigation.push(Config.RegAdmin)
                 }, onLoginAdminClicked = {
@@ -60,6 +59,7 @@ class DefaultRootComponent @OptIn(ExperimentalDecomposeApi::class) @AssistedInje
                 }, onLoginUserClicked = {
 
                 }, onUserIsLogged = {
+                    navigation.replaceAll(Config.LoggedUser)
 
                 }, onAbout = {
                     navigation.push(Config.About)
@@ -100,17 +100,13 @@ class DefaultRootComponent @OptIn(ExperimentalDecomposeApi::class) @AssistedInje
             }
 
             is Config.LoggedUser -> {
-//                val component = loggedUserComponentFactory.create(
+                val component = loggedUserComponentFactory.create(
 //                    onTodoListClicked = {},
 //                    onShopListClicked = {},
 //                    onAdminPanelClicked = {},
-//                    componentContext = componentContext
-//                )
-//                RootComponent.Child.LoggedUser(component)
-                val component = aboutComponentFactory.create(
                     componentContext = childComponentContext
                 )
-                Child.About(component)
+                Child.LoggedUser(component)
             }
         }
     }
@@ -121,9 +117,9 @@ class DefaultRootComponent @OptIn(ExperimentalDecomposeApi::class) @AssistedInje
 //            onShowWelcome = { navigation.push(Config.Welcome) },
 //        )
 
-    override fun onBackClicked(toIndex: Int) {
-        navigation.popTo(index = toIndex)
-    }
+//    override fun onBackClicked(toIndex: Int) {
+//        navigation.popTo(index = toIndex)
+//    }
 
     @Serializable
     sealed interface Config {
@@ -154,6 +150,4 @@ class DefaultRootComponent @OptIn(ExperimentalDecomposeApi::class) @AssistedInje
             @Assisted("componentContext") componentContext: ComponentContext
         ): DefaultRootComponent
     }
-
-
 }

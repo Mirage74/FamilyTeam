@@ -1,6 +1,6 @@
 [versions]
 agp = "8.5.2"
-firebaseBom = "33.1.2"
+firebaseBom = "33.2.0"
 firebaseDatabase = "21.0.0"
 kotlin = "2.0.10"
 coreKtx = "1.13.1"
@@ -11,7 +11,7 @@ kotlinxSerializationCore = "1.7.1"
 kotlinxSerializationJson = "1.7.1"
 lifecycleRuntimeKtx = "2.8.4"
 activityCompose = "1.9.1"
-composeBom = "2024.06.00"
+composeBom = "2024.08.00"
 loggingInterceptor = "4.11.0"
 mvikotlin = "3.2.1"
 decompose = "2.2.3"
@@ -24,8 +24,9 @@ ksp = "2.0.10-1.0.24"
 dagger = "2.48.1"
 glide = "1.0.0-beta01"
 retrofit = "2.9.0"
-firebaseMessagingKtx = "24.0.0"
+firebaseMessagingKtx = "24.0.1"
 securityCrypto = "1.0.0"
+material = "1.6.8"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -51,12 +52,16 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerializationCore" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "loggingInterceptor" }
+androidx-material = { module = "androidx.compose.material:material", version.ref = "material" }
+
+decompose-core = { group = "com.arkivanov.decompose", name = "decompose", version.ref = "decompose" }
+decompose-jetpack = { group = "com.arkivanov.decompose", name = "extensions-compose-jetpack", version.ref = "ext-compose-jetpack" }
 mvikotlin-core = { group = "com.arkivanov.mvikotlin", name = "mvikotlin", version.ref = "mvikotlin" }
 mvikotlin-logging = { module = "com.arkivanov.mvikotlin:mvikotlin-logging", version.ref = "mvikotlinLogging" }
 mvikotlin-main = { group = "com.arkivanov.mvikotlin", name = "mvikotlin-main", version.ref = "mvikotlin" }
 mvikotlin-coroutines = { group = "com.arkivanov.mvikotlin", name = "mvikotlin-extensions-coroutines", version.ref = "mvikotlin" }
-decompose-core = { group = "com.arkivanov.decompose", name = "decompose", version.ref = "decompose" }
-decompose-jetpack = { group = "com.arkivanov.decompose", name = "extensions-compose-jetpack", version.ref = "ext-compose-jetpack" }
+
+
 reaktive = { module = "com.badoo.reaktive:reaktive", version.ref = "reaktive" }
 room-core = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }

@@ -2,7 +2,6 @@ package com.balex.familyteam
 
 import android.app.Application
 import android.content.Context
-import android.util.Log
 import com.balex.familyteam.di.ApplicationComponent
 import com.balex.familyteam.di.DaggerApplicationComponent
 import com.google.firebase.FirebaseApp

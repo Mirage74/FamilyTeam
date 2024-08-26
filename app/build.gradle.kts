@@ -65,6 +65,8 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
+    implementation(libs.androidx.material)
+
     implementation(libs.mvikotlin.main)
     implementation(libs.mvikotlin.core)
     implementation(libs.mvikotlin.coroutines)
@@ -97,7 +99,6 @@ dependencies {
 
     implementation (libs.androidx.navigation.compose)
 
-    implementation(libs.kotlinx.serialization.json)
     implementation(libs.reaktive)
 
     implementation(libs.kotlinx.serialization.core)

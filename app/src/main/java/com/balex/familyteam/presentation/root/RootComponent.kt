@@ -13,7 +13,7 @@ import com.balex.familyteam.presentation.regadmin.RegAdminComponent
 interface RootComponent {
     val stack: Value<ChildStack<*, Child>>
 
-    fun onBackClicked(toIndex: Int)
+    //fun onBackClicked(toIndex: Int)
 
     sealed interface Child {
 

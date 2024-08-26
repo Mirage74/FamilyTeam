@@ -1,7 +1,6 @@
 package com.balex.familyteam.di
 
 import android.content.Context
-import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
 import com.balex.familyteam.presentation.MainActivity
 import com.balex.familyteam.presentation.regadmin.DefaultRegAdminComponent
 import dagger.BindsInstance

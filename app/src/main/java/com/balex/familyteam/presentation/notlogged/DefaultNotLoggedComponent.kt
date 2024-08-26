@@ -38,7 +38,7 @@ class DefaultNotLoggedComponent  @AssistedInject constructor(
             store.labels.collect {
                 when (it) {
 
-                    is NotLoggedStore.Label.ClickedRegisterAdmin -> {
+                    NotLoggedStore.Label.ClickedRegisterAdmin -> {
                         //Log.d("NotLoggedComponent", "ClickedRegisterAdmin")
                         onRegAdminClicked()
                     }

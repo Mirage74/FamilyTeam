@@ -70,7 +70,8 @@ class RegLogRepositoryImpl @Inject constructor(
     override fun observeUser(): StateFlow<User> = flow {
         val userFakeEmailFromStorageInfo = Storage.getUser(context)
         Log.d("userFakeEmailFromStorageInfo", userFakeEmailFromStorageInfo)
-        val userFakeEmailFromStorage = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
+        //val userFakeEmailFromStorage = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
+        val userFakeEmailFromStorage = Storage.getUser(context)
         val phoneLanguageFromStorage = Storage.getLanguage(context)
         val phoneLang =
             if (phoneLanguageFromStorage != Storage.NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES) {

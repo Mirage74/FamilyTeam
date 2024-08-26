@@ -9,7 +9,7 @@ interface RegAdminComponent {
 
     val model: StateFlow<RegAdminStore.State>
 
-    fun onClickBack()
+    //fun onClickBack()
 
     fun onClickRegister()
 

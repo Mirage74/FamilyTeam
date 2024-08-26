@@ -54,6 +54,6 @@ class AboutStoreFactory @Inject constructor(
     }
 
     private object ReducerImpl : Reducer<State, Msg> {
-        override fun State.reduce(message: Msg): State = State(Unit)
+        override fun State.reduce(msg: Msg): State = State(Unit)
     }
 }
