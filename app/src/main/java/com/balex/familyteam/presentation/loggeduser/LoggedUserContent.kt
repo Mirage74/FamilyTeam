@@ -1,8 +1,12 @@
 package com.balex.familyteam.presentation.loggeduser
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
@@ -27,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.balex.familyteam.domain.entity.ExternalTasks
 import com.balex.familyteam.domain.entity.MenuItems
 import com.balex.familyteam.domain.entity.PrivateTasks
@@ -85,7 +91,12 @@ fun LoggedUserScreen(component: LoggedUserComponent, state: LoggedUserStore.Stat
                     BottomNavigationItem(
                         selected = state.activeBottomItem == PagesNames.TodoList,
                         onClick = { component.onNavigateToBottomItem(PagesNames.TodoList) },
-                        icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "To-Do List") },
+                        icon = {
+                            Icon(
+                                Icons.AutoMirrored.Filled.List,
+                                contentDescription = "To-Do List"
+                            )
+                        },
                         label = { Text("To-Do List") },
                         selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
                         unselectedContentColor = androidx.compose.material.MaterialTheme.colors.onSecondary
@@ -93,10 +104,16 @@ fun LoggedUserScreen(component: LoggedUserComponent, state: LoggedUserStore.Stat
                     BottomNavigationItem(
                         selected = state.activeBottomItem == PagesNames.ShopList,
                         onClick = { component.onNavigateToBottomItem(PagesNames.ShopList) },
-                        icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Shop List") },
+                        icon = {
+                            Icon(
+                                Icons.Default.ShoppingCart,
+                                contentDescription = "Shop List"
+                            )
+                        },
                         label = { Text("Shop List") },
                         selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
-                        unselectedContentColor = androidx.compose.material.MaterialTheme.colors.onSecondary                    )
+                        unselectedContentColor = androidx.compose.material.MaterialTheme.colors.onSecondary
+                    )
                     BottomNavigationItem(
                         selected = state.activeBottomItem == PagesNames.AdminPanel,
                         onClick = { component.onNavigateToBottomItem(PagesNames.AdminPanel) },
@@ -114,13 +131,14 @@ fun LoggedUserScreen(component: LoggedUserComponent, state: LoggedUserStore.Stat
             ) {
                 when (state.activeBottomItem) {
                     PagesNames.TodoList -> TodoListContent(
-                        thingsToDoShared = state.todoList.thingsToDoShared,
-                        thingsToDoPrivate = state.todoList.thingsToDoPrivate,
+                        state = state,
                         paddingValues = paddingValues
                     )
+
                     PagesNames.ShopList -> ShopListContent(
                         listToShop = state.todoList.listToShop
                     )
+
                     PagesNames.AdminPanel -> AdminPanelContent()
                 }
             }
@@ -129,26 +147,55 @@ fun LoggedUserScreen(component: LoggedUserComponent, state: LoggedUserStore.Stat
 }
 
 @Composable
-fun TodoListContent(thingsToDoShared: ExternalTasks, thingsToDoPrivate: PrivateTasks, paddingValues: PaddingValues) {
-    LazyColumn (
-        modifier = Modifier.padding(paddingValues),
+fun TodoListContent(
+    state: LoggedUserStore.State,
+    paddingValues: PaddingValues
+) {
+    val displayName = state.user.displayName.ifEmpty { state.user.nickName }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 64.dp),
+        verticalArrangement = Arrangement.SpaceEvenly
     ) {
-        items(thingsToDoShared.externalTasks) { task ->
-            Text(text = "Shared Task: ${task.task.description}")
+        Text(
+            text = "Hello, $displayName!",
+            style = MaterialTheme.typography.headlineMedium
+        )
+        Button(
+            onClick = { },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp)
+        ) {
+            Text(
+                text = "Add Todo Item"
+            )
         }
-        items(thingsToDoPrivate.privateTasks) { task ->
-            Text(text = "Private Task: ${task.description}")
+        LazyColumn(
+            modifier = Modifier.padding(paddingValues),
+        ) {
+            items(state.todoList.thingsToDoShared.externalTasks) { task ->
+                Text(text = "Shared Task: ${task.task.description}")
+            }
+            items(state.todoList.thingsToDoPrivate.privateTasks) { task ->
+                Text(text = "Private Task: ${task.description}")
+            }
         }
     }
 }
 
 @Composable
 fun ShopListContent(listToShop: List<String>) {
+
     LazyColumn {
         items(listToShop) { item ->
             Text(text = "Shop Item: $item")
         }
     }
+
+
 }
 
 @Composable

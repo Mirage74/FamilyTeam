@@ -67,6 +67,13 @@ class RegLogRepositoryImpl @Inject constructor(
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
+    override fun setLoggedUser(user: User) {
+        _user = user
+        coroutineScope.launch {
+            isCurrentUserNeedRefreshFlow.emit(Unit)
+        }
+    }
+
     override fun observeUser(): StateFlow<User> = flow {
         val userFakeEmailFromStorageInfo = Storage.getUser(context)
         Log.d("userFakeEmailFromStorageInfo", userFakeEmailFromStorageInfo)

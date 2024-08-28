@@ -1,14 +1,21 @@
 package com.balex.familyteam.presentation.loggeduser
 
+import android.content.Context
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
+import com.balex.familyteam.R
+import com.balex.familyteam.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
 import com.balex.familyteam.domain.entity.ToDoList
+import com.balex.familyteam.domain.entity.User
+import com.balex.familyteam.domain.usecase.regLog.ObserveUserUseCase
+import com.balex.familyteam.domain.usecase.user.GetUserUseCase
 import com.balex.familyteam.presentation.loggeduser.LoggedUserStore.Intent
 import com.balex.familyteam.presentation.loggeduser.LoggedUserStore.Label
 import com.balex.familyteam.presentation.loggeduser.LoggedUserStore.State
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 interface LoggedUserStore : Store<Intent, State, Label> {
@@ -22,6 +29,7 @@ interface LoggedUserStore : Store<Intent, State, Label> {
     }
 
     data class State(
+        val user: User,
         val language: String,
         val activeBottomItem: PagesNames,
         val todoList: ToDoList,
@@ -42,19 +50,26 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 }
 
 class LoggedUserStoreFactory @Inject constructor(
-    private val storeFactory: StoreFactory
+    private val getUserUseCase: GetUserUseCase,
+    private val observeUserUseCase: ObserveUserUseCase,
+    private val storeFactory: StoreFactory,
+    context: Context
 ) {
+
+    val appContext: Context = context.applicationContext
 
     fun create(language: String): LoggedUserStore =
         object : LoggedUserStore, Store<Intent, State, Label> by storeFactory.create(
             name = "LoggedUserStore",
-            initialState = State(language, PagesNames.TodoList, ToDoList(), State.LoggedUserState.Initial),
+            initialState = State(getUserUseCase(), language, PagesNames.TodoList, ToDoList(), State.LoggedUserState.Initial),
             bootstrapper = BootstrapperImpl(),
             executorFactory = ::ExecutorImpl,
             reducer = ReducerImpl
         ) {}
 
     private sealed interface Action {
+
+        data class UserIsChanged(val user: User) : Action
 
         data class LanguageIsChanged(val language: String) : Action
 
@@ -64,6 +79,8 @@ class LoggedUserStoreFactory @Inject constructor(
 
     private sealed interface Msg {
 
+        data class UserIsChanged(val user: User) : Msg
+
         data class LanguageIsChanged(val language: String) : Msg
 
         data class PageIsChanged(val page: PagesNames) : Msg
@@ -72,6 +89,11 @@ class LoggedUserStoreFactory @Inject constructor(
 
     private inner class BootstrapperImpl : CoroutineBootstrapper<Action>() {
         override fun invoke() {
+            scope.launch {
+                observeUserUseCase().collect {
+                    dispatch(Action.UserIsChanged(it))
+                }
+            }
         }
     }
 
@@ -90,6 +112,13 @@ class LoggedUserStoreFactory @Inject constructor(
         override fun executeAction(action: Action, getState: () -> State) {
             when (action) {
 
+                is Action.UserIsChanged -> {
+                    if (action.user.nickName.length >= appContext.resources.getInteger(R.integer.min_nickName_length)
+                        && (action.user.nickName != NO_USER_SAVED_IN_SHARED_PREFERENCES)) {
+                        dispatch(Msg.UserIsChanged(action.user))
+                    }
+                }
+
                 is Action.LanguageIsChanged -> {
                     dispatch(Msg.LanguageIsChanged(action.language))
                 }
@@ -105,6 +134,10 @@ class LoggedUserStoreFactory @Inject constructor(
     private object ReducerImpl : Reducer<State, Msg> {
         override fun State.reduce(msg: Msg): State =
             when (msg) {
+
+                is Msg.UserIsChanged -> {
+                    copy(user = msg.user)
+                }
 
                 is Msg.LanguageIsChanged -> {
                     copy(language = msg.language)

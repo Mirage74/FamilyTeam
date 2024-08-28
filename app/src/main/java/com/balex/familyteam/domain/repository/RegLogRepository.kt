@@ -13,6 +13,8 @@ interface RegLogRepository {
                         displayName: String,
                         password: String)
 
+    fun setLoggedUser(user: User)
+
     fun getCurrentLanguage(): String
 
     fun observeUser(): StateFlow<User>
