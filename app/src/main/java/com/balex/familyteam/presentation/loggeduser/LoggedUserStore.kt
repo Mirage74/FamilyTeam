@@ -10,8 +10,8 @@ import com.balex.familyteam.R
 import com.balex.familyteam.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
 import com.balex.familyteam.domain.entity.ToDoList
 import com.balex.familyteam.domain.entity.User
+import com.balex.familyteam.domain.usecase.regLog.GetUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveUserUseCase
-import com.balex.familyteam.domain.usecase.user.GetUserUseCase
 import com.balex.familyteam.presentation.loggeduser.LoggedUserStore.Intent
 import com.balex.familyteam.presentation.loggeduser.LoggedUserStore.Label
 import com.balex.familyteam.presentation.loggeduser.LoggedUserStore.State

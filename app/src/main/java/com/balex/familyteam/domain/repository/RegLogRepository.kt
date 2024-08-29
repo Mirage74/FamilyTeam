@@ -8,12 +8,14 @@ interface RegLogRepository {
 
     fun getRepoAdmin(): Admin
 
-    fun setAdminAndUser(emailOrPhone: String,
-                        nickName: String,
-                        displayName: String,
-                        password: String)
+    fun getRepoUser(): User
 
-    fun setLoggedUser(user: User)
+    fun setAdminAndUser(
+        emailOrPhone: String,
+        nickName: String,
+        displayName: String,
+        password: String
+    )
 
     fun getCurrentLanguage(): String
 
@@ -37,7 +39,14 @@ interface RegLogRepository {
 
     suspend fun addUser(user: User): Result<Unit>
 
-    suspend fun registerAndVerifyByEmail(email: String, nickName: String, displayName: String, password: String)
+    fun signToFirebaseInWithEmailAndPassword()
+
+    suspend fun registerAndVerifyByEmail(
+        email: String,
+        nickName: String,
+        displayName: String,
+        password: String
+    )
 
     suspend fun emitUserNeedRefresh()
 

@@ -11,7 +11,7 @@ import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.SaveLanguageUseCase
-import com.balex.familyteam.domain.usecase.regLog.SetLoggedUserUseCase
+import com.balex.familyteam.domain.usecase.regLog.SignInWithEmailAndPasswordUseCase
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore.Intent
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore.Label
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore.State
@@ -68,8 +68,8 @@ interface NotLoggedStore : Store<Intent, State, Label> {
 
 class NotLoggedStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
-    private val setLoggedUserUseCase: SetLoggedUserUseCase,
     private val observeUserUseCase: ObserveUserUseCase,
+    private val signInWithEmailAndPasswordUseCase: SignInWithEmailAndPasswordUseCase,
     private val observeLanguageUseCase: ObserveLanguageUseCase,
     private val saveLanguageUseCase: SaveLanguageUseCase,
     private val getLanguageUseCase: GetLanguageUseCase
@@ -125,7 +125,7 @@ class NotLoggedStoreFactory @Inject constructor(
                                 dispatch(Action.UserExistInPreferenceButErrorLoadingUserData)
                             }
                             else -> {
-                                setLoggedUserUseCase(it)
+                                signInWithEmailAndPasswordUseCase()
                                 dispatch(Action.UserExistInPreferenceAndLoadedUserData)
                             }
                         }

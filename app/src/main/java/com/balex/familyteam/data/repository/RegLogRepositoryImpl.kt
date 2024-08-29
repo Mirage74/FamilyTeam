@@ -30,6 +30,7 @@ import javax.inject.Inject
 
 
 class RegLogRepositoryImpl @Inject constructor(
+
     private val context: Context
 ) : RegLogRepository {
 
@@ -67,17 +68,8 @@ class RegLogRepositoryImpl @Inject constructor(
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
-    override fun setLoggedUser(user: User) {
-        _user = user
-        coroutineScope.launch {
-            isCurrentUserNeedRefreshFlow.emit(Unit)
-        }
-    }
-
     override fun observeUser(): StateFlow<User> = flow {
-        val userFakeEmailFromStorageInfo = Storage.getUser(context)
-        Log.d("userFakeEmailFromStorageInfo", userFakeEmailFromStorageInfo)
-        //val userFakeEmailFromStorage = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
+        //Storage.clearPreferences(context)
         val userFakeEmailFromStorage = Storage.getUser(context)
         val phoneLanguageFromStorage = Storage.getLanguage(context)
         val phoneLang =
@@ -153,6 +145,9 @@ class RegLogRepositoryImpl @Inject constructor(
         return admin
     }
 
+    override fun getRepoUser(): User {
+        return user
+    }
 
     override fun saveLanguage(language: String) {
         _language = language
@@ -181,6 +176,37 @@ class RegLogRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun signToFirebaseInWithEmailAndPassword() {
+        val fakeEmail = createFakeUserEmail(user.nickName, user.adminEmailOrPhone)
+
+        FirebaseAuth.getInstance().signOut()
+        auth.signInWithEmailAndPassword(fakeEmail, user.password)
+            .addOnCompleteListener { signTask ->
+                if (signTask.isSuccessful) {
+                    findUserByEmailInFirebase(fakeEmail, user.nickName) { document ->
+                        if (document != null) {
+                            document.toObject(User::class.java)?.let {
+                                _user = it
+                                val t = 6
+                            }
+                            coroutineScope.launch {
+                                isCurrentUserNeedRefreshFlow.emit(Unit)
+                            }
+                        } else {
+                            //Storage.clearPreferences(context)
+                            throw RuntimeException("No user with email $fakeEmail, nickName ${user.nickName} found in Firebase")
+                        }
+                    }
+                } else {
+                    signTask.exception?.message?.let {
+                        //Storage.clearPreferences(context)
+                        throw RuntimeException("signInWithEmailAndPassword, signTask Error: $it")
+                    }
+                }
+            }
+
+
+    }
 
     override suspend fun registerAndVerifyByEmail(
         email: String,
@@ -188,19 +214,7 @@ class RegLogRepositoryImpl @Inject constructor(
         displayName: String,
         password: String
     ) {
-
-        //var user = FirebaseAuth.getInstance().currentUser
         FirebaseAuth.getInstance().signOut()
-//        user = FirebaseAuth.getInstance().currentUser
-//        if (user != null) {
-//            val userInfo =
-//                user.uid + " " + user.displayName + " " + user.email + " " + user.phoneNumber + " " + user.isEmailVerified
-//            Log.d("userInfo", userInfo)
-//            if (user.isEmailVerified) {
-//                // Email is verified
-//                Log.d("EmailVerification", "Email is verified")
-//            }
-//        }
 
         findUserByEmailInFirebase(email, nickName) { document ->
             if (document != null) {
@@ -264,11 +278,8 @@ class RegLogRepositoryImpl @Inject constructor(
                                     Log.e("Registration Error", it)
                                 }
                             }
-
                         }
                     }
-
-
             }
         }
     }
@@ -294,19 +305,14 @@ class RegLogRepositoryImpl @Inject constructor(
                         password
                     ).addOnCompleteListener { signTask ->
                         if (signTask.isSuccessful) {
-//                            coroutineScope.launch {
-//                                val user = FirebaseAuth.getInstance().currentUser
                             addAdminAndUserToFirebase(
                                 registrationOption,
                                 emailOrPhone,
+                                //createFakeUserEmail(nickName, emailOrPhone),
                                 nickName,
                                 displayName,
                                 password
                             )
-//                                isCurrentUserNeedRefreshFlow.emit(
-//                                    Unit
-//                                )
-                            //}
                         } else {
                             signTask.exception?.message?.let {
                                 Log.e(
@@ -354,7 +360,8 @@ class RegLogRepositoryImpl @Inject constructor(
         val newUser = User(
             nickName = nickName,
             isAdmin = true,
-            adminEmailOrPhone = emailOrPhoneNumber,
+            //adminEmailOrPhone = emailOrPhoneNumber,
+            adminEmailOrPhone = createFakeUserEmail(nickName, emailOrPhoneNumber),
             displayName = displayName,
             language = language,
             password = password
@@ -427,9 +434,9 @@ class RegLogRepositoryImpl @Inject constructor(
 
     private fun createFakeUserEmail(nick: String, data: String): String {
         return if (data.contains("@", true)) {
-            "$nick-$data"
+            "$nick-$data".trim()
         } else {
-            nick + "-" + data.substring(1) + "@" + FAKE_EMAIL_DOMAIN
+            nick + "-" + data.substring(1) + "@" + FAKE_EMAIL_DOMAIN.trim()
         }
     }
 
@@ -438,11 +445,21 @@ class RegLogRepositoryImpl @Inject constructor(
             val parts = fakeEmail.split("@")
             val nick = parts[0].split("-").first()
             val phone = parts[1].split("-").first()
-            return User(nickName = nick, adminEmailOrPhone = phone)
+            return User(
+                nickName = nick,
+                adminEmailOrPhone = phone,
+                password = Storage.getUsersPassword(context)
+            )
         } else {
             val parts = fakeEmail.split("@")
             val nick = parts[0].split("-").first()
-            return User(nickName = nick, adminEmailOrPhone = parts[1])
+            val indexSplitter = parts[0].indexOf("-")
+            val mailBeforeAt = parts[0].substring(indexSplitter + 1)
+            return User(
+                nickName = nick,
+                adminEmailOrPhone = mailBeforeAt + "@" + parts[1],
+                password = Storage.getUsersPassword(context)
+            )
 
         }
 
@@ -455,5 +472,8 @@ class RegLogRepositoryImpl @Inject constructor(
 
         const val SMS_VERIFICATION_ERROR_INITIAL = "SMS_VERIFICATION_ERROR_INITIAL"
         const val FAKE_EMAIL_DOMAIN = "balexvic.com"
+
+        const val USERNAME_OR_PASSWORD_IN_REPO_NOT_MATCH_USERNAME_IN_PREFERENCES =
+            "USERNAME_OR_PASSWORD_IN_REPO_NOT_MATCH_USERNAME_IN_PREFERENCES"
     }
 }

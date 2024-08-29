@@ -4,5 +4,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ExternalTasks(
-    val externalTasks: List<ExternalTask>
+    val externalTasks: List<ExternalTask> = listOf()
 )

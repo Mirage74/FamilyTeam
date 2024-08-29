@@ -14,7 +14,6 @@ import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.RegisterAndVerifyByEmailUseCase
 import com.balex.familyteam.domain.usecase.regLog.SaveLanguageUseCase
-import com.balex.familyteam.domain.usecase.regLog.SetLoggedUserUseCase
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.Intent
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.Label
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.State

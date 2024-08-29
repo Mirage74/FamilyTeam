@@ -67,4 +67,13 @@ object Storage {
             putString(LANGUAGE_KEY, language.trim())
         }.apply()
     }
+
+    fun clearPreferences(context: Context) {
+        getEncryptedSharedPreferences(context).edit().apply {
+            putString(USER_KEY, NO_USER_SAVED_IN_SHARED_PREFERENCES)
+            putString(USER_PASSWORD_KEY, NO_USER_PASSWORD_SAVED_IN_SHARED_PREFERENCES)
+            putString(LANGUAGE_KEY, NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES)
+        }.apply()
+    }
+
 }
