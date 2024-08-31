@@ -9,6 +9,8 @@ data class User(
     val nickName: String = "",
     @SerializedName("isAdmin")
     val isAdmin: Boolean = false,
+    @SerializedName("fakeEmail")
+    val fakeEmail: String = DEFAULT_FAKE_EMAIL,
     @SerializedName("adminEmailOrPhone")
     val adminEmailOrPhone: String = "",
     @SerializedName("displayName")
@@ -22,6 +24,7 @@ data class User(
 ) {
     companion object {
         const val ERROR_LOADING_USER_DATA_FROM_FIREBASE = "ERROR_LOADING_USER_DATA_FROM_FIREBASE"
+        const val DEFAULT_FAKE_EMAIL = "DEFAULT_FAKE_EMAIL"
     }
 }
 

@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.res.Configuration
 import android.util.Log
 import com.balex.familyteam.data.datastore.Storage
-import com.balex.familyteam.data.mappers.mapperFirebaseAdminToEntity
 import com.balex.familyteam.domain.entity.Admin
 import com.balex.familyteam.domain.entity.Language
 import com.balex.familyteam.domain.entity.LanguagesList
@@ -34,19 +33,11 @@ class RegLogRepositoryImpl @Inject constructor(
     private val context: Context
 ) : RegLogRepository {
 
-    private val TAG = "RegLogRepositoryImpl"
+    private var admin = Admin()
 
-    private var _admin = Admin()
-    private val admin: Admin
-        get() = _admin.copy()
+    private var user = User()
 
-    private var _user = User()
-    private val user: User
-        get() = _user.copy()
-
-    private var _language = Language.DEFAULT_LANGUAGE.symbol
-    private val language: String
-        get() = _language
+    private var language = Language.DEFAULT_LANGUAGE.symbol
 
     private var isUserMailOrPhoneVerified = false
 
@@ -74,22 +65,22 @@ class RegLogRepositoryImpl @Inject constructor(
         val phoneLanguageFromStorage = Storage.getLanguage(context)
         val phoneLang =
             if (phoneLanguageFromStorage != Storage.NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES) {
-                _language = phoneLanguageFromStorage
+                language = phoneLanguageFromStorage
                 isCurrentLanguageNeedRefreshFlow.emit(Unit)
                 phoneLanguageFromStorage
             } else {
-                _language = getCurrentLanguage(context)
+                language = getCurrentLanguage(context)
                 language
             }
 
         if (userFakeEmailFromStorage == Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
             val emptyUserNotSaved =
                 User(nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES, language = phoneLang)
-            _user = emptyUserNotSaved
+            user = emptyUserNotSaved
         } else {
             val userFromStorage = extractUserInfoFromFakeEmail(userFakeEmailFromStorage)
 
-            _user = userFromStorage
+            user = userFromStorage
 
         }
         isCurrentUserNeedRefreshFlow.emit(Unit)
@@ -108,12 +99,12 @@ class RegLogRepositoryImpl @Inject constructor(
         val phoneLanguageFromStorage = Storage.getLanguage(context)
         val phoneLang =
             if (phoneLanguageFromStorage != Storage.NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES) {
-                _language = phoneLanguageFromStorage
+                language = phoneLanguageFromStorage
                 phoneLanguageFromStorage
             } else {
                 getCurrentLanguage(context)
             }
-        _language = phoneLang
+        language = phoneLang
         isCurrentLanguageNeedRefreshFlow.emit(Unit)
 
         isCurrentLanguageNeedRefreshFlow.collect {
@@ -150,7 +141,7 @@ class RegLogRepositoryImpl @Inject constructor(
     }
 
     override fun saveLanguage(language: String) {
-        _language = language
+        this.language = language
         Storage.saveLanguage(context, language)
     }
 
@@ -169,7 +160,12 @@ class RegLogRepositoryImpl @Inject constructor(
 
     override suspend fun addUser(user: User): Result<Unit> {
         return try {
-            usersCollection.add(user).await()
+            val newUser = if (user.fakeEmail == User.DEFAULT_FAKE_EMAIL) {
+                user.copy(fakeEmail = createFakeUserEmail(user.nickName, user.adminEmailOrPhone))
+            } else {
+                user
+            }
+            usersCollection.add(newUser).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -186,8 +182,7 @@ class RegLogRepositoryImpl @Inject constructor(
                     findUserByEmailInFirebase(fakeEmail, user.nickName) { document ->
                         if (document != null) {
                             document.toObject(User::class.java)?.let {
-                                _user = it
-                                val t = 6
+                                user = it
                             }
                             coroutineScope.launch {
                                 isCurrentUserNeedRefreshFlow.emit(Unit)
@@ -218,26 +213,18 @@ class RegLogRepositoryImpl @Inject constructor(
 
         findUserByEmailInFirebase(email, nickName) { document ->
             if (document != null) {
-                Log.d(TAG, "user already exist in USERS, $document")
-                var user = User()
+                var newUser = User()
                 document.toObject(User::class.java)?.let {
-                    user = it
+                    newUser = it
                 }
                 val newAdmin = Admin(
                     registrationOption = RegistrationOption.EMAIL,
-                    emailOrPhoneNumber = user.adminEmailOrPhone,
+                    emailOrPhoneNumber = newUser.adminEmailOrPhone,
                     isEmailOrPhoneNumberVerified = true
                 )
-                val newUser = User(
-                    nickName = nickName,
-                    isAdmin = true,
-                    adminEmailOrPhone = user.adminEmailOrPhone,
-                    displayName = displayName,
-                    language = language,
-                    password = password
-                )
-                _admin = newAdmin
-                _user = newUser
+
+                admin = newAdmin
+                user = newUser
                 coroutineScope.launch {
                     isCurrentUserNeedRefreshFlow.emit(Unit)
                 }
@@ -272,10 +259,10 @@ class RegLogRepositoryImpl @Inject constructor(
                                 }
                         } else {
                             if (task.exception is FirebaseAuthUserCollisionException) {
-                                Log.e(TAG, "user already exist in AUTH, but not in USERS")
+                                throw RuntimeException("registerAndVerifyByEmail: $USER_ALREADY_EXIST_IN_AUTH_BUT_NOT_IN_USERS")
                             } else {
                                 task.exception?.message?.let {
-                                    Log.e("Registration Error", it)
+                                    throw RuntimeException("registerAndVerifyByEmail: $REGISTRATION_ERROR: $it")
                                 }
                             }
                         }
@@ -360,8 +347,8 @@ class RegLogRepositoryImpl @Inject constructor(
         val newUser = User(
             nickName = nickName,
             isAdmin = true,
-            //adminEmailOrPhone = emailOrPhoneNumber,
-            adminEmailOrPhone = createFakeUserEmail(nickName, emailOrPhoneNumber),
+            fakeEmail = createFakeUserEmail(nickName, emailOrPhoneNumber),
+            adminEmailOrPhone = emailOrPhoneNumber,
             displayName = displayName,
             language = language,
             password = password
@@ -373,17 +360,17 @@ class RegLogRepositoryImpl @Inject constructor(
             if (resultFirebaseRegAdmin.isSuccess) {
                 val resultFirebaseRegUser = addUser(newUser)
                 if (resultFirebaseRegUser.isSuccess) {
-                    _admin = newAdmin
-                    _user = newUser
+                    admin = newAdmin
+                    user = newUser
                     Storage.saveUser(context, createFakeUserEmail(nickName, emailOrPhoneNumber))
                     Storage.saveUsersPassword(context, password)
                     Storage.saveLanguage(context, language)
                     isCurrentUserNeedRefreshFlow.emit(Unit)
                 } else {
-                    Log.d("Error", "Error user")
+                    throw RuntimeException("addAdminAndUserToFirebase: $ERROR_ADD_USER_TO_FIREBASE")
                 }
             } else {
-                Log.d("Error", "Error admin")
+                throw RuntimeException("addAdminAndUserToFirebase: $ERROR_ADD_ADMIN_TO_FIREBASE")
             }
         }
     }
@@ -415,7 +402,7 @@ class RegLogRepositoryImpl @Inject constructor(
         callback: (DocumentSnapshot?) -> Unit
     ) {
         usersCollection
-            .whereEqualTo("adminEmailOrPhone", email)
+            .whereEqualTo("fakeEmail", email)
             .whereEqualTo("nickName", nickName)
             .get()
             .addOnSuccessListener { documents ->
@@ -434,9 +421,9 @@ class RegLogRepositoryImpl @Inject constructor(
 
     private fun createFakeUserEmail(nick: String, data: String): String {
         return if (data.contains("@", true)) {
-            "$nick-$data".trim()
+            "$nick-$data".lowercase().trim()
         } else {
-            nick + "-" + data.substring(1) + "@" + FAKE_EMAIL_DOMAIN.trim()
+            nick + "-" + data.substring(1) + "@" + FAKE_EMAIL_DOMAIN.lowercase().trim()
         }
     }
 
@@ -447,6 +434,7 @@ class RegLogRepositoryImpl @Inject constructor(
             val phone = parts[1].split("-").first()
             return User(
                 nickName = nick,
+                fakeEmail = fakeEmail,
                 adminEmailOrPhone = phone,
                 password = Storage.getUsersPassword(context)
             )
@@ -457,6 +445,7 @@ class RegLogRepositoryImpl @Inject constructor(
             val mailBeforeAt = parts[0].substring(indexSplitter + 1)
             return User(
                 nickName = nick,
+                fakeEmail = fakeEmail,
                 adminEmailOrPhone = mailBeforeAt + "@" + parts[1],
                 password = Storage.getUsersPassword(context)
             )
@@ -473,7 +462,9 @@ class RegLogRepositoryImpl @Inject constructor(
         const val SMS_VERIFICATION_ERROR_INITIAL = "SMS_VERIFICATION_ERROR_INITIAL"
         const val FAKE_EMAIL_DOMAIN = "balexvic.com"
 
-        const val USERNAME_OR_PASSWORD_IN_REPO_NOT_MATCH_USERNAME_IN_PREFERENCES =
-            "USERNAME_OR_PASSWORD_IN_REPO_NOT_MATCH_USERNAME_IN_PREFERENCES"
+        const val ERROR_ADD_USER_TO_FIREBASE = "ERROR_ADD_USER_TO_FIREBASE"
+        const val ERROR_ADD_ADMIN_TO_FIREBASE = "ERROR_ADD_ADMIN_TO_FIREBASE"
+        const val USER_ALREADY_EXIST_IN_AUTH_BUT_NOT_IN_USERS = "user already exist in AUTH, but not in USERS"
+        const val REGISTRATION_ERROR = "Registration Error"
     }
 }

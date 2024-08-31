@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable
 enum class PagesNames {
     TodoList,
     ShopList,
+    MyTasksForOtherUsers,
     AdminPanel
 }

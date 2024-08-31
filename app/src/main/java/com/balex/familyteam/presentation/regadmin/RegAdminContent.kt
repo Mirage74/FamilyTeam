@@ -51,8 +51,6 @@ fun RegAdminContent(component: RegAdminComponent, activity: MainActivity) {
             RegAdminStore.State.RegAdminState.Content -> {
                 ContentScreen(component, activity)
             }
-
-
         }
     }
 

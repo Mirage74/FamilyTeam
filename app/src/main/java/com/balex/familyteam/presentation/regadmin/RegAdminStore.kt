@@ -28,10 +28,6 @@ interface RegAdminStore : Store<Intent, State, Label> {
 
         data object ClickedRegister : Intent
 
-        //data object ClickedSmsCodeConfirmation : Intent
-
-        //data object ClickedResendSmsCode : Intent
-
         data object ClickedEmailOrPhoneButton : Intent
 
         data object ClickedChangePasswordVisibility : Intent
@@ -92,8 +88,6 @@ class RegAdminStoreFactory @Inject constructor(
     private val saveLanguageUseCase: SaveLanguageUseCase,
     private val observeUserUseCase: ObserveUserUseCase,
     private val registerAndVerifyByEmailUseCase: RegisterAndVerifyByEmailUseCase,
-    //private val sendSmsVerifyCodeUseCase: SendSmsVerifyCodeUseCase
-    //private val resendVerificationCodeUseCase: ResendVerificationCodeUseCase,
     context: Context
 ) {
     val appContext: Context = context.applicationContext
@@ -207,7 +201,6 @@ class RegAdminStoreFactory @Inject constructor(
                 }
 
                 Intent.ClickedRegister -> {
-                    dispatch(Msg.ClickedRegister)
                     scope.launch {
                         if (getState().selectedOption == RegistrationOption.EMAIL) {
                             registerAndVerifyByEmailUseCase(
@@ -217,20 +210,11 @@ class RegAdminStoreFactory @Inject constructor(
                                 getState().password
                             )
                         } else {
-//                            FamilyApp.currentActivity?.let { activity ->
-//                                sendSmsVerifyCodeUseCase(
-//                                    "+" + getState().emailOrPhone,
-//                                    getState().nickName,
-//                                    getState().displayName,
-//                                    getState().password,
-//                                    activity
-//                                )
-//                            }
-
+                            throw RuntimeException(SELECTED_OPTION_ILLEGAL_VALUE)
                         }
 
                     }
-
+                    dispatch(Msg.ClickedRegister)
                 }
 
                 Intent.ClickedTryAgain -> {
@@ -308,27 +292,6 @@ class RegAdminStoreFactory @Inject constructor(
                     saveLanguageUseCase(intent.language)
                     dispatch(Msg.UserLanguageChanged(intent.language))
                 }
-
-//                Intent.ClickedSmsCodeConfirmation -> {
-//                    scope.launch {
-//                        verifySmsCodeUseCase(getState().smsCode, "+" + getState().emailOrPhone, getState().nickName, getState().displayName, getState().password)
-//                    }
-//                    dispatch(Msg.ClickedSmsCodeConfirmation)
-//                }
-
-//                Intent.ClickedResendSmsCode -> {
-//                    scope.launch {
-//                        FamilyApp.currentActivity?.let { activity ->
-//                            resendVerificationCodeUseCase(
-//                                "+" + getState().emailOrPhone,
-//                                getState().nickName,
-//                                getState().displayName,
-//                                getState().password,
-//                                activity
-//                            )
-//                        }
-//                    }
-//                }
 
                 is Intent.SmsNumberFieldChanged -> {
                     val text =
@@ -477,5 +440,7 @@ class RegAdminStoreFactory @Inject constructor(
         const val REGEX_PATTERN_NOT_LETTERS = "[^a-zA-Z]"
         const val REGEX_PATTERN_NOT_LATIN_LETTERS_NUMBERS_UNDERSCORE = "[^a-zA-Z0-9_]"
         const val REGEX_PATTERN_NOT_ANY_LETTERS_NUMBERS_UNDERSCORE = """[^\p{L}\p{Nd}_]"""
+
+        const val SELECTED_OPTION_ILLEGAL_VALUE = "RegAdminStore, ExecutorImpl - getState().selectedOption must == RegistrationOption.EMAIL"
     }
 }
