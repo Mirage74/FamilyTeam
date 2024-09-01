@@ -7,6 +7,7 @@ import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
 import com.balex.familyteam.domain.entity.Language
+import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
 import com.balex.familyteam.extensions.componentScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -15,10 +16,10 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class DefaultNotLoggedComponent  @AssistedInject constructor(
+class DefaultNotLoggedComponent @AssistedInject constructor(
     private val storeFactory: NotLoggedStoreFactory,
+    private val getLanguageUseCase: GetLanguageUseCase,
     @Assisted("onRegAdminClicked") private val onRegAdminClicked: () -> Unit,
-    @Assisted("onLoginAdminClicked") private val onLoginAdminClicked: () -> Unit,
     @Assisted("onLoginUserClicked") private val onLoginUserClicked: () -> Unit,
     @Assisted("onUserIsLogged") private val onUserIsLogged: () -> Unit,
     @Assisted("onAbout") private val onAbout: () -> Unit,
@@ -26,7 +27,8 @@ class DefaultNotLoggedComponent  @AssistedInject constructor(
 ) : NotLoggedComponent, ComponentContext by componentContext {
 
 
-    private val store = instanceKeeper.getStore { storeFactory.create(Language.DEFAULT_LANGUAGE.symbol) }
+    private val store =
+        instanceKeeper.getStore { storeFactory.create(getLanguageUseCase()) }
     private val scope = componentScope()
 
     init {
@@ -43,10 +45,6 @@ class DefaultNotLoggedComponent  @AssistedInject constructor(
                         onRegAdminClicked()
                     }
 
-                    NotLoggedStore.Label.ClickedLoginAdmin -> {
-                        Log.d("NotLoggedComponent", "ClickedLoginAdmin")
-                        onLoginAdminClicked()
-                    }
                     NotLoggedStore.Label.ClickedLoginUser -> {
                         Log.d("NotLoggedComponent", "ClickedLoginUser")
                         onLoginUserClicked()
@@ -66,8 +64,6 @@ class DefaultNotLoggedComponent  @AssistedInject constructor(
     }
 
 
-
-
     @OptIn(ExperimentalCoroutinesApi::class)
     override val model: StateFlow<NotLoggedStore.State> = store.stateFlow
 
@@ -79,20 +75,16 @@ class DefaultNotLoggedComponent  @AssistedInject constructor(
         store.accept(NotLoggedStore.Intent.ClickedRegisterAdmin)
     }
 
-    override fun onClickLoginAdmin() {
-        store.accept(NotLoggedStore.Intent.ClickedLoginAdmin)
-    }
-
     override fun onClickLoginUser() {
         store.accept(NotLoggedStore.Intent.ClickedLoginUser)
     }
 
-    override fun onLanguageChanged(language: String) {
-        store.accept(NotLoggedStore.Intent.ClickedChangeLanguage(language))
-    }
-
     override fun onClickAbout() {
         store.accept(NotLoggedStore.Intent.ClickedAbout)
+    }
+
+    override fun onLanguageChanged(language: String) {
+        store.accept(NotLoggedStore.Intent.ClickedChangeLanguage(language))
     }
 
     @AssistedFactory
@@ -100,7 +92,6 @@ class DefaultNotLoggedComponent  @AssistedInject constructor(
 
         fun create(
             @Assisted("onRegAdminClicked") onRegAdminClicked: () -> Unit,
-            @Assisted("onLoginAdminClicked") onLoginAdminClicked: () -> Unit,
             @Assisted("onLoginUserClicked") onLoginUserClicked: () -> Unit,
             @Assisted("onUserIsLogged") onUserIsLogged: () -> Unit,
             @Assisted("onAbout") onAbout: () -> Unit,

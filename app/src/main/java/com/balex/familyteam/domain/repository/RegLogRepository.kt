@@ -19,6 +19,8 @@ interface RegLogRepository {
 
     fun getCurrentLanguage(): String
 
+    fun setUserAsVerified()
+
     fun observeUser(): StateFlow<User>
 
     fun observeLanguage(): StateFlow<String>
@@ -35,13 +37,16 @@ interface RegLogRepository {
     )
 
 
-    suspend fun addAdmin(admin: Admin): Result<Unit>
+    suspend fun addAdminToCollection(admin: Admin): Result<Unit>
 
-    suspend fun addUser(user: User): Result<Unit>
+    suspend fun addUserToCollection(user: User): Result<Unit>
 
-    fun signToFirebaseInWithEmailAndPassword()
+    fun signRepoCurrentUserToFirebaseInWithEmailAndPassword()
 
-    suspend fun registerAndVerifyByEmail(
+    fun loginToFirebaseAndLoadUserData(adminEmailOrPhone: String, nickName: String, password: String)
+
+
+     fun registerAndVerifyByEmail(
         email: String,
         nickName: String,
         displayName: String,

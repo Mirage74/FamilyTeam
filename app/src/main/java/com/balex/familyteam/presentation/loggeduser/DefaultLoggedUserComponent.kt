@@ -1,24 +1,47 @@
 package com.balex.familyteam.presentation.loggeduser
 
 import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
+import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
 import com.balex.familyteam.domain.entity.Language
+import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
 import com.balex.familyteam.extensions.componentScope
+import com.balex.familyteam.presentation.notlogged.NotLoggedStore
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 
 class DefaultLoggedUserComponent @AssistedInject constructor(
     private val storeFactory: LoggedUserStoreFactory,
+    private val getLanguageUseCase: GetLanguageUseCase,
+    @Assisted("onAbout") private val onAbout: () -> Unit,
     @Assisted("componentContext") componentContext: ComponentContext
 ) : LoggedUserComponent, ComponentContext by componentContext {
 
-    private val store = instanceKeeper.getStore { storeFactory.create(Language.DEFAULT_LANGUAGE.symbol) }
+    private val store =
+        instanceKeeper.getStore { storeFactory.create(getLanguageUseCase()) }
     private val scope = componentScope()
+
+    init {
+        lifecycle.doOnResume {
+            onRefreshLanguage()
+        }
+        scope.launch {
+            store.labels.collect {
+                when (it) {
+                    LoggedUserStore.Label.ClickedAbout -> {
+                        onAbout()
+                    }
+                }
+            }
+        }
+    }
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -34,9 +57,6 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         store.accept(LoggedUserStore.Intent.ClickedRemoveUserFromFirebase(nickName))
     }
 
-    override fun onLanguageChanged(language: String) {
-        store.accept(LoggedUserStore.Intent.ClickedChangeLanguage(language))
-    }
 
     override fun onNavigateToBottomItem(page: PagesNames) {
         store.accept(LoggedUserStore.Intent.ChangePage(page))
@@ -78,10 +98,23 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         store.accept(LoggedUserStore.Intent.ClickedChangePasswordVisibility)
     }
 
+    override fun onClickAbout() {
+        store.accept(LoggedUserStore.Intent.ClickedAbout)
+    }
+
+    override fun onRefreshLanguage() {
+        store.accept(LoggedUserStore.Intent.RefreshLanguage)
+    }
+
+    override fun onLanguageChanged(language: String) {
+        store.accept(LoggedUserStore.Intent.ClickedChangeLanguage(language))
+    }
+
     @AssistedFactory
     interface Factory {
 
         fun create(
+            @Assisted("onAbout") onAbout: () -> Unit,
             @Assisted("componentContext") componentContext: ComponentContext
         ): DefaultLoggedUserComponent
     }

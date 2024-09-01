@@ -22,8 +22,6 @@ interface NotLoggedStore : Store<Intent, State, Label> {
 
     sealed interface Intent {
 
-        data object ClickedLoginAdmin : Intent
-
         data object ClickedRegisterAdmin : Intent
 
         data object ClickedLoginUser : Intent
@@ -55,8 +53,6 @@ interface NotLoggedStore : Store<Intent, State, Label> {
 
         data object UserIsLogged : Label
 
-        data object ClickedLoginAdmin : Label
-
         data object ClickedRegisterAdmin : Label
 
         data object ClickedLoginUser : Label
@@ -86,16 +82,13 @@ class NotLoggedStoreFactory @Inject constructor(
 
     private sealed interface Action {
 
-        data class LanguageIsChanged(val language: String) : Action
-
-        data class LanguageIsCheckedInPreference (val language: String): Action
-
         data object UserNotExistInPreference : Action
 
         data object UserExistInPreferenceAndLoadedUserData: Action
 
         data object UserExistInPreferenceButErrorLoadingUserData : Action
 
+        data class LanguageIsChanged(val language: String) : Action
 
     }
 
@@ -106,8 +99,6 @@ class NotLoggedStoreFactory @Inject constructor(
         data object UserIsNotExistInPreference : Msg
 
         data object UserExistInPreferenceButErrorLoadingUserData : Msg
-
-        data class UserLanguageChanged(val language: String) : Msg
 
     }
 
@@ -147,10 +138,6 @@ class NotLoggedStoreFactory @Inject constructor(
         override fun executeIntent(intent: Intent, getState: () -> State) {
             when (intent) {
 
-                Intent.ClickedLoginAdmin -> {
-                    publish(Label.ClickedLoginAdmin)
-                }
-
                 Intent.ClickedRegisterAdmin -> {
                     publish(Label.ClickedRegisterAdmin)
                 }
@@ -159,17 +146,17 @@ class NotLoggedStoreFactory @Inject constructor(
                     publish(Label.ClickedLoginUser)
                 }
 
-                is Intent.ClickedChangeLanguage -> {
-                    saveLanguageUseCase(intent.language)
-                    dispatch(Msg.UserLanguageChanged(intent.language))
-                }
-
                 Intent.ClickedAbout -> {
                     publish(Label.ClickedAbout)
                 }
 
                 Intent.RefreshLanguage -> {
                     dispatch(Msg.RefreshLanguage(getLanguageUseCase()))
+                }
+
+                is Intent.ClickedChangeLanguage -> {
+                    saveLanguageUseCase(intent.language)
+                    dispatch(Msg.RefreshLanguage(intent.language))
                 }
             }
         }
@@ -190,12 +177,9 @@ class NotLoggedStoreFactory @Inject constructor(
                 }
 
                 is Action.LanguageIsChanged -> {
-                    dispatch(Msg.UserLanguageChanged(action.language))
+                    dispatch(Msg.RefreshLanguage(action.language))
                 }
 
-                is Action.LanguageIsCheckedInPreference -> {
-                    dispatch(Msg.UserLanguageChanged(action.language))
-                }
             }
         }
     }
@@ -209,10 +193,6 @@ class NotLoggedStoreFactory @Inject constructor(
 
             Msg.UserExistInPreferenceButErrorLoadingUserData -> {
                 copy(logChooseState = State.LogChooseState.ErrorLoadingUserData)
-            }
-
-            is Msg.UserLanguageChanged -> {
-                copy(language = msg.language)
             }
 
             is Msg.RefreshLanguage -> {

@@ -2,14 +2,17 @@ package com.balex.familyteam.presentation.regadmin
 
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.backhandler.BackHandler
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
 import com.balex.familyteam.domain.entity.Language
 import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
 import com.balex.familyteam.domain.usecase.regLog.EmitUserNeedRefreshUseCase
+import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
 import com.balex.familyteam.extensions.componentScope
+import com.balex.familyteam.presentation.loggeduser.LoggedUserStore
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -20,21 +23,32 @@ import javax.inject.Scope
 
 class DefaultRegAdminComponent @AssistedInject constructor(
     private val storeFactory: RegAdminStoreFactory,
+    private val getLanguageUseCase: GetLanguageUseCase,
     override val phoneFirebaseRepository: PhoneFirebaseRepository,
+    @Assisted("onAbout") private val onAbout: () -> Unit,
     @Assisted("onBackClicked") private val onBackClicked: () -> Unit,
     @Assisted("onAdminRegisteredAndVerified") private val onAdminRegisteredAndVerified: () -> Unit,
     @Assisted("componentContext") componentContext: ComponentContext
 ) : RegAdminComponent, ComponentContext by componentContext {
 
-    private val store = instanceKeeper.getStore { storeFactory.create(Language.DEFAULT_LANGUAGE.symbol) }
+    private val store = instanceKeeper.getStore { storeFactory.create(getLanguageUseCase()) }
 
     private val scope = componentScope()
 
     init {
 
+        lifecycle.doOnResume {
+            onRefreshLanguage()
+        }
+
         scope.launch {
             store.labels.collect {
                 when (it) {
+
+                    RegAdminStore.Label.ClickedAbout -> {
+
+                    }
+
                     RegAdminStore.Label.AdminIsRegisteredAndVerified -> {
                         onAdminRegisteredAndVerified()
                     }
@@ -70,10 +84,6 @@ class DefaultRegAdminComponent @AssistedInject constructor(
         store.accept(RegAdminStore.Intent.ClickedChangePasswordVisibility)
     }
 
-    override fun onLanguageChanged(language: String) {
-        store.accept(RegAdminStore.Intent.ClickedChangeLanguage(language))
-    }
-
     override fun onClickTryAgain() {
         store.accept(RegAdminStore.Intent.ClickedTryAgain)
     }
@@ -98,11 +108,23 @@ class DefaultRegAdminComponent @AssistedInject constructor(
         store.accept(RegAdminStore.Intent.SmsNumberFieldChanged(currentSmsText))
     }
 
+    override fun onClickAbout() {
+        store.accept(RegAdminStore.Intent.ClickedAbout)
+    }
+
+    override fun onRefreshLanguage() {
+        store.accept(RegAdminStore.Intent.RefreshLanguage)
+    }
+
+    override fun onLanguageChanged(language: String) {
+        store.accept(RegAdminStore.Intent.ClickedChangeLanguage(language))
+    }
 
     @AssistedFactory
     interface Factory {
 
         fun create(
+            @Assisted("onAbout") onAbout: () -> Unit,
             @Assisted("onBackClicked") onBackClicked: () -> Unit,
             @Assisted("onAdminRegisteredAndVerified") onAdminRegisteredAndVerified: () -> Unit,
             @Assisted("componentContext") componentContext: ComponentContext

@@ -191,7 +191,7 @@ fun ThreeButtonsScreen(
 
         val context = LocalLocalizedContext.current
         val regAdmText = context.getString(R.string.reg_adm)
-        val logAdmText = context.getString(R.string.log_adm)
+        //val logAdmText = context.getString(R.string.log_adm)
         val logUserText = context.getString(R.string.log_user)
         val textSize = dimensionResource(id = R.dimen.button_text_size).value.sp
 
@@ -209,21 +209,21 @@ fun ThreeButtonsScreen(
                 overflow = TextOverflow.Ellipsis
             )
         }
-        Button(
-            onClick = { component.onClickLoginAdmin() },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp),
-            enabled = isEnabled
-        ) {
-            Text(
-                fontSize = textSize,
-                text = logAdmText,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-
-            )
-        }
+//        Button(
+//            onClick = { component.onClickLoginAdmin() },
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(150.dp),
+//            enabled = isEnabled
+//        ) {
+//            Text(
+//                fontSize = textSize,
+//                text = logAdmText,
+//                maxLines = 1,
+//                overflow = TextOverflow.Ellipsis
+//
+//            )
+//        }
         Button(
             onClick = { component.onClickLoginUser() },
             modifier = Modifier

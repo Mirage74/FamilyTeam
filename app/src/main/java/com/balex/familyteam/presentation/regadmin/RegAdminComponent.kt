@@ -27,6 +27,10 @@ interface RegAdminComponent {
 
     fun onSmsNumberFieldChanged(currentSmsText: String)
 
+    fun onClickAbout()
+
+    fun onRefreshLanguage()
+
     fun onLanguageChanged(language: String)
 
 }

@@ -151,10 +151,23 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                     icon = {
                         Icon(
                             Icons.AutoMirrored.Filled.List,
-                            contentDescription = "To-Do List"
+                            contentDescription = "To-Do list"
                         )
                     },
-                    label = { Text("To-Do List") },
+                    label = { Text("My") },
+                    selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
+                    unselectedContentColor = androidx.compose.material.MaterialTheme.colors.onSecondary
+                )
+                BottomNavigationItem(
+                    selected = state.activeBottomItem == PagesNames.MyTasksForOtherUsers,
+                    onClick = { component.onNavigateToBottomItem(PagesNames.MyTasksForOtherUsers) },
+                    icon = {
+                        Icon(
+                            Icons.AutoMirrored.Filled.List,
+                            contentDescription = "Tasks to other"
+                        )
+                    },
+                    label = { Text("Others") },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
                     unselectedContentColor = androidx.compose.material.MaterialTheme.colors.onSecondary
                 )
@@ -164,18 +177,18 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                     icon = {
                         Icon(
                             Icons.Default.ShoppingCart,
-                            contentDescription = "Shop List"
+                            contentDescription = "Shop list"
                         )
                     },
-                    label = { Text("Shop List") },
+                    label = { Text("Shop") },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
                     unselectedContentColor = androidx.compose.material.MaterialTheme.colors.onSecondary
                 )
                 BottomNavigationItem(
                     selected = state.activeBottomItem == PagesNames.AdminPanel,
                     onClick = { component.onNavigateToBottomItem(PagesNames.AdminPanel) },
-                    icon = { Icon(Icons.Default.Settings, contentDescription = "Admin Panel") },
-                    label = { Text("Admin Panel") },
+                    icon = { Icon(Icons.Default.Settings, contentDescription = "Admin panel") },
+                    label = { Text("Admin") },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
                     unselectedContentColor = androidx.compose.material.MaterialTheme.colors.onSecondary
                 )
@@ -203,7 +216,6 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                     component = component,
                     state = state,
                     paddingValues = paddingValues
-
                 )
 
                 PagesNames.AdminPanel -> AdminPanelContent(
@@ -305,27 +317,32 @@ fun AdminPanelContent(
         val context = LocalLocalizedContext.current
 
         Text(text = "Admin Page")
-        Button(
-            onClick = { component.onAdminPageCreateNewUserClicked() },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp)
-        ) {
-            Text(
-                text = "Create new user"
-            )
+        if (!state.isEditUsersListClicked) {
+            Button(
+                onClick = { component.onAdminPageCreateNewUserClicked() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp)
+            ) {
+                Text(
+                    text = "Create new user"
+                )
+            }
         }
 
-        Button(
-            onClick = { },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp)
-        ) {
-            Text(
-                text = "Edit user's list"
-            )
+        if (!state.isCreateNewUserClicked) {
+            Button(
+                onClick = { },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp)
+            ) {
+                Text(
+                    text = "Edit user's list"
+                )
+            }
         }
+
 
         if (state.isCreateNewUserClicked) {
             NickNameTextField(state, component, context)

@@ -10,6 +10,7 @@ import com.balex.familyteam.R
 import com.balex.familyteam.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
 import com.balex.familyteam.domain.entity.RegistrationOption
 import com.balex.familyteam.domain.entity.User
+import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.RegisterAndVerifyByEmailUseCase
@@ -44,6 +45,10 @@ interface RegAdminStore : Store<Intent, State, Label> {
 
         data class SmsNumberFieldChanged(val currentSmsNumberText: String) : Intent
 
+        data object ClickedAbout : Intent
+
+        data object RefreshLanguage : Intent
+
         data class ClickedChangeLanguage(val language: String) : Intent
 
     }
@@ -75,6 +80,8 @@ interface RegAdminStore : Store<Intent, State, Label> {
 
     sealed interface Label {
 
+        data object ClickedAbout : Label
+
         data object AdminIsRegisteredAndVerified : Label
 
         data object ClickedBack : Label
@@ -84,6 +91,7 @@ interface RegAdminStore : Store<Intent, State, Label> {
 
 class RegAdminStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
+    private val getLanguageUseCase: GetLanguageUseCase,
     private val observeLanguageUseCase: ObserveLanguageUseCase,
     private val saveLanguageUseCase: SaveLanguageUseCase,
     private val observeUserUseCase: ObserveUserUseCase,
@@ -121,8 +129,6 @@ class RegAdminStoreFactory @Inject constructor(
     private sealed interface Action {
 
         data class LanguageIsChanged(val language: String) : Action
-
-        data class LanguageIsCheckedInPreference(val language: String) : Action
 
         data class UserIsChanged(val user: User) : Action
 
@@ -166,7 +172,7 @@ class RegAdminStoreFactory @Inject constructor(
 
         data class UpdateSmsNumberFieldText(val currentSmsNumberText: String) : Msg
 
-        data class UserLanguageChanged(val language: String) : Msg
+        data class LanguageIsChanged(val language: String) : Msg
 
     }
 
@@ -210,7 +216,7 @@ class RegAdminStoreFactory @Inject constructor(
                                 getState().password
                             )
                         } else {
-                            throw RuntimeException(SELECTED_OPTION_ILLEGAL_VALUE)
+                            //throw RuntimeException(SELECTED_OPTION_ILLEGAL_VALUE)
                         }
 
                     }
@@ -288,11 +294,6 @@ class RegAdminStoreFactory @Inject constructor(
                     }
                 }
 
-                is Intent.ClickedChangeLanguage -> {
-                    saveLanguageUseCase(intent.language)
-                    dispatch(Msg.UserLanguageChanged(intent.language))
-                }
-
                 is Intent.SmsNumberFieldChanged -> {
                     val text =
                         intent.currentSmsNumberText.replace(Regex(REGEX_PATTERN_NOT_NUMBERS), "")
@@ -304,17 +305,26 @@ class RegAdminStoreFactory @Inject constructor(
                     }
                 }
 
+                Intent.ClickedAbout -> {
+                    publish(Label.ClickedAbout)
+                }
+
+                Intent.RefreshLanguage -> {
+                    dispatch(Msg.LanguageIsChanged(getLanguageUseCase()))
+                }
+
+                is Intent.ClickedChangeLanguage -> {
+                    saveLanguageUseCase(intent.language)
+                    dispatch(Msg.LanguageIsChanged(intent.language))
+                }
+
             }
         }
 
         override fun executeAction(action: Action, getState: () -> State) {
             when (action) {
                 is Action.LanguageIsChanged -> {
-                    dispatch(Msg.UserLanguageChanged(action.language))
-                }
-
-                is Action.LanguageIsCheckedInPreference -> {
-                    dispatch(Msg.UserLanguageChanged(action.language))
+                    dispatch(Msg.LanguageIsChanged(action.language))
                 }
 
                 is Action.UserIsChanged -> {
@@ -386,7 +396,7 @@ class RegAdminStoreFactory @Inject constructor(
                 copy(smsCode = msg.currentSmsNumberText)
             }
 
-            is Msg.UserLanguageChanged -> {
+            is Msg.LanguageIsChanged -> {
                 copy(language = msg.language)
             }
 

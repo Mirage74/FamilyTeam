@@ -2,11 +2,15 @@ package com.balex.familyteam.presentation.root
 
 
 import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.decompose.ExperimentalDecomposeApi
+import com.arkivanov.decompose.router.stack.ChildStack
+import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.push
+import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.decompose.router.stack.webhistory.WebHistoryController
 import com.balex.familyteam.presentation.about.DefaultAboutComponent
-import com.balex.familyteam.presentation.loginadmin.DefaultLoginAdminComponent
+import com.balex.familyteam.presentation.loggeduser.DefaultLoggedUserComponent
 import com.balex.familyteam.presentation.loginuser.DefaultLoginUserComponent
 import com.balex.familyteam.presentation.notlogged.DefaultNotLoggedComponent
 import com.balex.familyteam.presentation.regadmin.DefaultRegAdminComponent
@@ -15,13 +19,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.serialization.Serializable
-import com.arkivanov.decompose.router.stack.ChildStack
-import com.arkivanov.decompose.router.stack.StackNavigation
-import com.arkivanov.decompose.router.stack.childStack
-import com.arkivanov.decompose.router.stack.pop
-import com.arkivanov.decompose.router.stack.push
-import com.arkivanov.decompose.router.stack.replaceAll
-import com.balex.familyteam.presentation.loggeduser.DefaultLoggedUserComponent
 
 
 class DefaultRootComponent @AssistedInject constructor(
@@ -30,7 +27,6 @@ class DefaultRootComponent @AssistedInject constructor(
     private val loggedUserComponentFactory: DefaultLoggedUserComponent.Factory,
     private val aboutComponentFactory: DefaultAboutComponent.Factory,
     private val loginUserComponent: DefaultLoginUserComponent.Factory,
-    private val loginAdminComponent: DefaultLoginAdminComponent.Factory,
     @Assisted("componentContext") componentContext: ComponentContext
 ) : RootComponent, ComponentContext by componentContext {
 
@@ -51,11 +47,9 @@ class DefaultRootComponent @AssistedInject constructor(
         config: Config, childComponentContext: ComponentContext
     ): Child {
         return when (config) {
-             Config.NotLogged -> {
+            Config.NotLogged -> {
                 val component = notLoggedComponentFactory.create(onRegAdminClicked = {
                     navigation.push(Config.RegAdmin)
-                }, onLoginAdminClicked = {
-
                 }, onLoginUserClicked = {
 
                 }, onUserIsLogged = {
@@ -69,24 +63,24 @@ class DefaultRootComponent @AssistedInject constructor(
             }
 
             Config.RegAdmin -> {
-                val component = regAdminComponentFactory.create(onAdminRegisteredAndVerified = {
+                val component = regAdminComponentFactory.create(
+                    onAdminRegisteredAndVerified = {
                     navigation.replaceAll(Config.LoggedUser)
-                }, onBackClicked = {
-                    navigation.pop()
-                }, componentContext = childComponentContext
+                }, onAbout = {
+                    navigation.push(Config.About)
+                },
+                    onBackClicked = {
+                        navigation.pop()
+                    }, componentContext = childComponentContext
                 )
                 Child.RegAdmin(component)
             }
 
-            Config.LoginAdmin -> {
-                val component = loginAdminComponent.create(
-                    componentContext = childComponentContext
-                )
-                Child.LoginAdmin(component)
-            }
-
             Config.LoginUser -> {
                 val component = loginUserComponent.create(
+                    onAbout = {
+                        navigation.push(Config.About)
+                    },
                     componentContext = childComponentContext
                 )
                 Child.LoginUser(component)
@@ -101,9 +95,9 @@ class DefaultRootComponent @AssistedInject constructor(
 
             is Config.LoggedUser -> {
                 val component = loggedUserComponentFactory.create(
-//                    onTodoListClicked = {},
-//                    onShopListClicked = {},
-//                    onAdminPanelClicked = {},
+                    onAbout = {
+                        navigation.push(Config.About)
+                    },
                     componentContext = childComponentContext
                 )
                 Child.LoggedUser(component)
@@ -111,11 +105,6 @@ class DefaultRootComponent @AssistedInject constructor(
         }
     }
 
-//    private fun notLoggedComponent(componentContext: ComponentContext): NotLoggedComponent =
-//        DefaultMainComponent(
-//            componentContext = componentContext,
-//            onShowWelcome = { navigation.push(Config.Welcome) },
-//        )
 
 //    override fun onBackClicked(toIndex: Int) {
 //        navigation.popTo(index = toIndex)
@@ -129,9 +118,6 @@ class DefaultRootComponent @AssistedInject constructor(
 
         @Serializable
         data object RegAdmin : Config
-
-        @Serializable
-        data object LoginAdmin : Config
 
         @Serializable
         data object LoginUser : Config

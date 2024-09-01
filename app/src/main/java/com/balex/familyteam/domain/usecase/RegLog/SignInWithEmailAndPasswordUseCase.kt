@@ -6,5 +6,5 @@ import javax.inject.Inject
 class SignInWithEmailAndPasswordUseCase @Inject constructor(
     private val repository: RegLogRepository
 ) {
-    operator fun invoke() = repository.signToFirebaseInWithEmailAndPassword()
+    operator fun invoke() = repository.signRepoCurrentUserToFirebaseInWithEmailAndPassword()
 }

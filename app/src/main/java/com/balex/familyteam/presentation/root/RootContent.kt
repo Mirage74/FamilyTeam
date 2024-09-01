@@ -5,7 +5,6 @@ import com.arkivanov.decompose.extensions.compose.jetpack.stack.Children
 import com.balex.familyteam.presentation.MainActivity
 import com.balex.familyteam.presentation.about.AboutContent
 import com.balex.familyteam.presentation.loggeduser.LoggedUserContent
-import com.balex.familyteam.presentation.loginadmin.LoginAdminContent
 import com.balex.familyteam.presentation.loginuser.LoginUserContent
 import com.balex.familyteam.presentation.notlogged.NotLoggedContent
 import com.balex.familyteam.presentation.regadmin.RegAdminContent
@@ -24,10 +23,6 @@ fun RootContent(component: RootComponent, activity: MainActivity) {
 
                 is RootComponent.Child.RegAdmin -> {
                     RegAdminContent(component = instance.component, activity = activity)
-                }
-
-                is RootComponent.Child.LoginAdmin -> {
-                    LoginAdminContent(component = instance.component)
                 }
 
                 is RootComponent.Child.LoginUser -> {

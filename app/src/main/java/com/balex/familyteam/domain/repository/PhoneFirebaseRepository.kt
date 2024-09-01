@@ -1,6 +1,5 @@
 package com.balex.familyteam.domain.repository
 
-import com.balex.familyteam.domain.usecase.regLog.EmitUserNeedRefreshUseCase
 import com.balex.familyteam.presentation.MainActivity
 
 interface PhoneFirebaseRepository {

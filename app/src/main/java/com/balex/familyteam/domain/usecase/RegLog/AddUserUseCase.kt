@@ -7,5 +7,5 @@ import javax.inject.Inject
 class AddUserUseCase @Inject constructor(
     private val repository: RegLogRepository
 ) {
-    suspend operator fun invoke(user: User) = repository.addUser(user)
+    suspend operator fun invoke(user: User) = repository.addUserToCollection(user)
 }

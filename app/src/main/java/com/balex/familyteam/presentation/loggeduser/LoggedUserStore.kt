@@ -29,7 +29,6 @@ import com.balex.familyteam.presentation.loggeduser.LoggedUserStore.State
 import com.balex.familyteam.presentation.regadmin.RegAdminStoreFactory.Companion.REGEX_PATTERN_NOT_ANY_LETTERS_NUMBERS_UNDERSCORE
 import com.balex.familyteam.presentation.regadmin.RegAdminStoreFactory.Companion.REGEX_PATTERN_NOT_LATIN_LETTERS_NUMBERS_UNDERSCORE
 import com.balex.familyteam.presentation.regadmin.RegAdminStoreFactory.Companion.REGEX_PATTERN_NOT_LETTERS
-
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -47,8 +46,6 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 
         data class ClickedRemoveUserFromFirebase(val nickName: String) : Intent
 
-        data class ClickedChangeLanguage(val language: String) : Intent
-
         data class ChangePage(val page: PagesNames) : Intent
 
         data class NickNameFieldChanged(val currentNickNameText: String) : Intent
@@ -58,6 +55,12 @@ interface LoggedUserStore : Store<Intent, State, Label> {
         data class PasswordFieldChanged(val currentPasswordText: String) : Intent
 
         data object ClickedChangePasswordVisibility : Intent
+
+        data object ClickedAbout : Intent
+
+        data object RefreshLanguage : Intent
+
+        data class ClickedChangeLanguage(val language: String) : Intent
 
     }
 
@@ -90,6 +93,9 @@ interface LoggedUserStore : Store<Intent, State, Label> {
     }
 
     sealed interface Label {
+
+        data object ClickedAbout : Label
+
     }
 }
 
@@ -149,12 +155,11 @@ class LoggedUserStoreFactory @Inject constructor(
 
         data class ShopListIsChanged(val shopList: List<String>) : Action
 
-        data class MyTasksForOtherUsersListIsChanged(val myTasksForOtherUsersList: ExternalTasks) :
-            Action
-
-        data class LanguageIsChanged(val language: String) : Action
+        data class MyTasksForOtherUsersListIsChanged(val myTasksForOtherUsersList: ExternalTasks) : Action
 
         data class PageIsChanged(val page: PagesNames) : Action
+
+        data class LanguageIsChanged(val language: String) : Action
 
     }
 
@@ -172,8 +177,6 @@ class LoggedUserStoreFactory @Inject constructor(
 
         data class MyTasksForOtherUsersListIsChanged(val myTasksForOtherUsersList: ExternalTasks) :
             Msg
-
-        data class LanguageIsChanged(val language: String) : Msg
 
         data class PageIsChanged(val page: PagesNames) : Msg
 
@@ -200,6 +203,8 @@ class LoggedUserStoreFactory @Inject constructor(
         data object PasswordMatched : Msg
 
         data object PasswordNotMatched : Msg
+
+        data class LanguageIsChanged(val language: String) : Msg
 
     }
 
@@ -266,7 +271,7 @@ class LoggedUserStoreFactory @Inject constructor(
                                 password = getState().password,
                                 adminEmailOrPhone = getState().user.adminEmailOrPhone,
 
-                            )
+                                )
                         )
                     }
                     dispatch(Msg.ButtonRegisterNewUserInFirebaseClicked)
@@ -278,12 +283,6 @@ class LoggedUserStoreFactory @Inject constructor(
 
                 Intent.ClickedEditUsersList -> TODO()
                 is Intent.ClickedRemoveUserFromFirebase -> TODO()
-
-
-                is Intent.ClickedChangeLanguage -> {
-                    saveLanguageUseCase(intent.language)
-                    dispatch(Msg.LanguageIsChanged(intent.language))
-                }
 
                 is Intent.ChangePage -> {
                     dispatch(Msg.PageIsChanged(intent.page))
@@ -333,8 +332,21 @@ class LoggedUserStoreFactory @Inject constructor(
                     } else {
                         dispatch(Msg.PasswordNotMatched)
                     }
-
                 }
+
+                is Intent.ClickedAbout -> {
+                    publish(Label.ClickedAbout)
+                }
+
+                Intent.RefreshLanguage -> {
+                    dispatch(Msg.LanguageIsChanged(getState().language))
+                }
+
+                is Intent.ClickedChangeLanguage -> {
+                    saveLanguageUseCase(intent.language)
+                    dispatch(Msg.LanguageIsChanged(intent.language))
+                }
+
             }
         }
 

@@ -8,13 +8,11 @@ interface NotLoggedComponent {
 
     fun onClickRegAdmin()
 
-    fun onClickLoginAdmin()
-
     fun onClickLoginUser()
-
-    fun onLanguageChanged(language: String)
 
     fun onClickAbout()
 
     fun onRefreshLanguage()
+
+    fun onLanguageChanged(language: String)
 }

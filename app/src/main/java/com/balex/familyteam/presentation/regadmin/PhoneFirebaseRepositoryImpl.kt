@@ -8,6 +8,7 @@ import com.balex.familyteam.data.repository.RegLogRepositoryImpl.Companion.TIMEO
 import com.balex.familyteam.domain.usecase.regLog.EmitUserNeedRefreshUseCase
 import com.balex.familyteam.domain.usecase.regLog.RegUserWithFakeEmailUseCase
 import com.balex.familyteam.domain.usecase.regLog.SetAdminAndUserUseCase
+import com.balex.familyteam.domain.usecase.regLog.SetUserAsVerifiedUseCase
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
@@ -23,6 +24,7 @@ import javax.inject.Inject
 class PhoneFirebaseRepositoryImpl @Inject constructor(
     private val setAdminAndUserUseCase: SetAdminAndUserUseCase,
     private val regUserWithFakeEmailUseCase: RegUserWithFakeEmailUseCase,
+    private val setUserAsVerifiedUseCase: SetUserAsVerifiedUseCase,
     private val emitUserNeedRefreshUseCase: EmitUserNeedRefreshUseCase
 ) : PhoneFirebaseRepository {
 
@@ -39,7 +41,7 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
         activity: MainActivity
     ) {
         val auth = Firebase.auth
-        val coroutineScope = CoroutineScope(Dispatchers.Main)
+        //val coroutineScope = CoroutineScope(Dispatchers.Main)
 
         val options = PhoneAuthOptions.newBuilder(auth)
             .setPhoneNumber(phoneNumber)
@@ -146,6 +148,7 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
                                                 displayName,
                                                 password
                                             )
+                                            setUserAsVerifiedUseCase()
                                             emitUserNeedRefreshUseCase
                                             isUserMailOrPhoneVerified = true
                                         }

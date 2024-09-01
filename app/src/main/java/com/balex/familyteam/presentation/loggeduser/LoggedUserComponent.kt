@@ -6,14 +6,11 @@ interface LoggedUserComponent {
 
     val model: StateFlow<LoggedUserStore.State>
 
-
     fun onClickEditUsersList()
 
     fun onClickRemoveUserFromFirebase(nickName: String)
 
     fun onNavigateToBottomItem(page: PagesNames)
-
-    fun onLanguageChanged(language: String)
 
     fun onAdminPageCreateNewUserClicked()
 
@@ -32,5 +29,11 @@ interface LoggedUserComponent {
     fun onPasswordFieldChanged(currentPasswordText: String)
 
     fun onClickChangePasswordVisibility()
+
+    fun onClickAbout()
+
+    fun onRefreshLanguage()
+
+    fun onLanguageChanged(language: String)
 
 }
