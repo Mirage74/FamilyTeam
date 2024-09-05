@@ -6,9 +6,9 @@ import javax.inject.Inject
 class RegUserWithFakeEmailUseCase @Inject constructor(
     private val repository: RegLogRepository
 ) {
-    operator fun invoke(emailOrPhone: String,
-                        nickName: String,
-                        displayName: String,
-                        password: String) =
+    suspend operator fun invoke(emailOrPhone: String,
+                                nickName: String,
+                                displayName: String,
+                                password: String) =
         repository.regUserWithFakeEmail(emailOrPhone, nickName, displayName, password)
 }

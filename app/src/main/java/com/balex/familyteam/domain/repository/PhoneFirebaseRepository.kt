@@ -4,7 +4,7 @@ import com.balex.familyteam.presentation.MainActivity
 
 interface PhoneFirebaseRepository {
 
-    fun sendSmsVerifyCode(
+    suspend fun sendSmsVerifyCode(
         phoneNumber: String,
         nickName: String,
         displayName: String,
@@ -12,7 +12,7 @@ interface PhoneFirebaseRepository {
         activity: MainActivity
     )
 
-    fun resendVerificationCode(
+    suspend fun resendVerificationCode(
         phoneNumber: String,
         nickName: String,
         displayName: String,
@@ -20,7 +20,7 @@ interface PhoneFirebaseRepository {
         activity: MainActivity
     )
 
-    fun verifySmsCode(
+    suspend fun verifySmsCode(
         verificationCode: String,
         phoneNumber: String,
         nickName: String,

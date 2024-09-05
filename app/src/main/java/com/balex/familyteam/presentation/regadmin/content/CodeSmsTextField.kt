@@ -20,6 +20,9 @@ import com.balex.familyteam.R
 import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
 import com.balex.familyteam.presentation.regadmin.RegAdminComponent
 import com.balex.familyteam.presentation.regadmin.RegAdminStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun CodeSmsTextField(state: RegAdminStore.State, component: RegAdminComponent, context: Context) {
@@ -33,6 +36,7 @@ fun CodeSmsTextField(state: RegAdminStore.State, component: RegAdminComponent, c
             .fillMaxWidth()
             .padding(vertical = 8.dp)
     ) {
+        val coroutineScope = CoroutineScope(Dispatchers.Default)
         Row(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -51,7 +55,17 @@ fun CodeSmsTextField(state: RegAdminStore.State, component: RegAdminComponent, c
             )
 
             Button(
-                onClick = { component.phoneFirebaseRepository.verifySmsCode(state.smsCode, "+" + state.emailOrPhone, state.nickName, state.displayName, state.password) },
+                onClick = {
+                    coroutineScope.launch {
+                        component.phoneFirebaseRepository.verifySmsCode(
+                            state.smsCode,
+                            "+" + state.emailOrPhone,
+                            state.nickName,
+                            state.displayName,
+                            state.password
+                        )
+                    }
+                },
                 enabled = state.isSmsOkButtonEnabled && !state.isSmsVerifyButtonWasPressed,
                 modifier = Modifier.align(Alignment.CenterVertically)
             ) {

@@ -8,7 +8,7 @@ interface RegLogRepository {
 
     fun getRepoUser(): User
 
-    fun setAdminAndUser(
+    suspend fun setAdminAndUser(
         emailOrPhone: String,
         nickName: String,
         displayName: String,
@@ -27,7 +27,7 @@ interface RegLogRepository {
 
     fun saveLanguage(language: String)
 
-    fun regUserWithFakeEmail(
+    suspend fun regUserWithFakeEmail(
         emailOrPhone: String,
         nickName: String,
         displayName: String,

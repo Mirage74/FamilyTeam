@@ -16,6 +16,9 @@ import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
 import com.balex.familyteam.presentation.MainActivity
 import com.balex.familyteam.presentation.regadmin.RegAdminComponent
 import com.balex.familyteam.presentation.regadmin.RegAdminStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun RegisterOrTryAgainButton(
@@ -24,6 +27,7 @@ fun RegisterOrTryAgainButton(
     context: Context,
     activity: MainActivity
 ) {
+    val coroutineScope = CoroutineScope(Dispatchers.Default)
     if (!state.isRegisterButtonWasPressed) {
         Button(
             enabled = state.isPasswordEnabled && state.isRegisterButtonEnabled,
@@ -31,11 +35,15 @@ fun RegisterOrTryAgainButton(
                 if (state.selectedOption == RegistrationOption.EMAIL) {
                     component.onClickRegister()
                 } else {
-                    component.phoneFirebaseRepository.sendSmsVerifyCode("+" + state.emailOrPhone,
-                        state.nickName,
-                        state.displayName,
-                        state.password,
-                        activity)
+                    coroutineScope.launch {
+                        component.phoneFirebaseRepository.sendSmsVerifyCode(
+                            "+" + state.emailOrPhone,
+                            state.nickName,
+                            state.displayName,
+                            state.password,
+                            activity
+                        )
+                    }
                     component.onClickRegister()
                 }
 

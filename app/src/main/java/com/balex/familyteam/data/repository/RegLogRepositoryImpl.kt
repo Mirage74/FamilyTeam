@@ -12,6 +12,7 @@ import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.repository.RegLogRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 
 class RegLogRepositoryImpl @Inject constructor(
@@ -151,7 +153,10 @@ class RegLogRepositoryImpl @Inject constructor(
 
     override suspend fun addAdminToCollection(admin: Admin): Result<Unit> {
         return try {
-            adminsCollection.add(admin).await()
+            val adminDocument = adminsCollection.document("Balex")
+            //adminsCollection.add(admin).await()
+            adminDocument.set(admin).await()
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -166,7 +171,9 @@ class RegLogRepositoryImpl @Inject constructor(
                 user
             }
             //registerAuthUser(newUser)
-            val r = usersCollection.add(newUser).await()
+            val userSubCollection = usersCollection.document("admin@mail.com").collection(user.nickName)
+            //usersCollection.add(newUser).await()
+            userSubCollection.add(newUser).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -207,59 +214,20 @@ class RegLogRepositoryImpl @Inject constructor(
         }
     }
 
-//    override fun loginToFirebaseAndLoadUserData(
-//        adminEmailOrPhone: String,
-//        nickName: String,
-//        password: String
-//    ) {
-//        val fakeEmail = createFakeUserEmail(nickName, adminEmailOrPhone)
-//
-//        FirebaseAuth.getInstance().signOut()
-//        auth.signInWithEmailAndPassword(fakeEmail, password)
-//            .addOnCompleteListener { signTask ->
-//                if (signTask.isSuccessful) {
-//                    findUserByEmailInFirebase(fakeEmail, nickName) { document ->
-//                        if (document != null) {
-//                            document.toObject(User::class.java)?.let {
-//                                user = it
-//                            }
-//                            coroutineScope.launch {
-//                                isCurrentUserNeedRefreshFlow.emit(Unit)
-//                            }
-//                        } else {
-//                            Storage.clearPreferences(context)
-//                            Log.e("signToFirebaseInWithEmailAndPassword", "No user with email $fakeEmail, nickName ${user.nickName} found in Firebase")
-//                            //throw RuntimeException("No user with email $fakeEmail, nickName ${user.nickName} found in Firebase")
-//                        }
-//                    }
-//                } else {
-//                    signTask.exception?.message?.let {
-//                        Storage.clearPreferences(context)
-//                        Log.e("signToFirebaseInWithEmailAndPassword, signTask Error", it)
-//                        //throw RuntimeException("signInWithEmailAndPassword, signTask Error: $it")
-//                    }
-//                }
-//            }
-//    }
-
     private suspend fun registerAuthUser(user: User) {
         try {
-            // Поиск пользователя в Firebase
             val document = findUserByEmailInFirebase(user.fakeEmail, user.nickName)
 
-            // Если пользователь не найден, создаем нового
             if (document == null) {
                 try {
                     auth.createUserWithEmailAndPassword(user.fakeEmail, user.password).await()
                 } catch (e: FirebaseAuthUserCollisionException) {
-                    val t = e.message
                     throw RuntimeException("registerAuthUser: $USER_ALREADY_EXIST_IN_AUTH_BUT_NOT_IN_USERS: ${e.message}")
                 } catch (e: Exception) {
                     throw RuntimeException("registerAuthUser: $REGISTRATION_ERROR: ${e.message}")
                 }
             }
         } catch (e: Exception) {
-            // Обработка ошибок при поиске пользователя или создании нового
             e.printStackTrace()
             throw RuntimeException("registerAuthUser: ${e.message}")
         }
@@ -273,7 +241,6 @@ class RegLogRepositoryImpl @Inject constructor(
     ) {
         FirebaseAuth.getInstance().signOut()
 
-        // Ищем пользователя в Firebase
         val document = findUserByEmailInFirebase(email, nickName)
 
         if (document != null) {
@@ -306,58 +273,51 @@ class RegLogRepositoryImpl @Inject constructor(
                 }
             } catch (e: FirebaseAuthUserCollisionException) {
                 throw RuntimeException("registerAndVerifyByEmail: $USER_ALREADY_EXIST_IN_AUTH_BUT_NOT_IN_USERS")
-            } catch (e: Exception) {
+
+
+            } catch (e: CancellationException) {
+                val m = e.message
+            }
+
+            catch (e: Exception) {
                 throw RuntimeException("registerAndVerifyByEmail: $REGISTRATION_ERROR: ${e.message}")
             }
         }
     }
 
-    override fun regUserWithFakeEmail(
+    override suspend fun regUserWithFakeEmail(
         emailOrPhone: String,
         nickName: String,
         displayName: String,
         password: String
     ) {
+        val auth: FirebaseAuth = Firebase.auth
         val fakeEmail = createFakeUserEmail(nickName, emailOrPhone)
         val registrationOption = if (emailOrPhone.contains("@", true)) {
             RegistrationOption.EMAIL
         } else {
             RegistrationOption.PHONE
         }
-        auth.createUserWithEmailAndPassword(fakeEmail, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
 
-                    auth.signInWithEmailAndPassword(
-                        fakeEmail,
-                        password
-                    ).addOnCompleteListener { signTask ->
-                        if (signTask.isSuccessful) {
-                            addAdminAndUserToFirebase(
-                                registrationOption,
-                                emailOrPhone,
-                                nickName,
-                                displayName,
-                                password
-                            )
-                        } else {
-                            signTask.exception?.message?.let {
-                                Log.e(
-                                    "regUserWithFakeEmail, signTask Error",
-                                    it
-                                )
-                            }
-                        }
-                    }
-                } else {
-                    task.exception?.message?.let {
-                        Log.e("regUserWithFakeEmail, Registration Error", it)
-                    }
-                }
-            }
+        try {
+            auth.createUserWithEmailAndPassword(fakeEmail, password).await()
+
+            auth.signInWithEmailAndPassword(fakeEmail, password).await()
+
+            addAdminAndUserToFirebase(
+                registrationOption,
+                emailOrPhone,
+                nickName,
+                displayName,
+                password
+            )
+
+        } catch (e: Exception) {
+            Log.e("regUserWithFakeEmail", "Error: ${e.message}")
+        }
     }
 
-    override fun setAdminAndUser(
+    override suspend fun setAdminAndUser(
         emailOrPhone: String,
         nickName: String,
         displayName: String,
@@ -505,6 +465,7 @@ class RegLogRepositoryImpl @Inject constructor(
         const val TIMEOUT_VERIFICATION = 60L
         const val FIREBASE_ADMINS_COLLECTION = "admins"
         const val FIREBASE_USERS_COLLECTION = "users"
+        const val FIREBASE_TEAM_COLLECTION = "team"
 
         const val SMS_VERIFICATION_ERROR_INITIAL = "SMS_VERIFICATION_ERROR_INITIAL"
         const val FAKE_EMAIL_DOMAIN = "balexvic.com"

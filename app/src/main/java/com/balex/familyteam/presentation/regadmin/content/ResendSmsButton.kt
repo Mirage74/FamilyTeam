@@ -15,18 +15,27 @@ import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
 import com.balex.familyteam.presentation.MainActivity
 import com.balex.familyteam.presentation.regadmin.RegAdminComponent
 import com.balex.familyteam.presentation.regadmin.RegAdminStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
-fun ResendSmsButton(state: RegAdminStore.State, phoneFirebaseRepository: PhoneFirebaseRepository,
-                    context: Context, activity: MainActivity) {
+fun ResendSmsButton(
+    state: RegAdminStore.State, phoneFirebaseRepository: PhoneFirebaseRepository,
+    context: Context, activity: MainActivity
+) {
     Button(
         onClick = {
             //component.onClickSendSmsAgain()
-            phoneFirebaseRepository.resendVerificationCode("+" + state.emailOrPhone,
-                state.nickName,
-                state.displayName,
-                state.password,
-                activity)
+            CoroutineScope(Dispatchers.Default).launch {
+                phoneFirebaseRepository.resendVerificationCode(
+                    "+" + state.emailOrPhone,
+                    state.nickName,
+                    state.displayName,
+                    state.password,
+                    activity
+                )
+            }
         },
         modifier = Modifier
             .fillMaxWidth()
