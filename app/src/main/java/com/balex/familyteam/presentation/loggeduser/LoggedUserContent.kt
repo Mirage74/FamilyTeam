@@ -97,7 +97,7 @@ fun LoggedUserScreen(component: LoggedUserComponent, state: LoggedUserStore.Stat
                 onItemClick = {
                     scope.launch {
                         drawerState.close()
-                        //component.onClickAbout()
+                        component.onClickAbout()
                     }
 
                 }

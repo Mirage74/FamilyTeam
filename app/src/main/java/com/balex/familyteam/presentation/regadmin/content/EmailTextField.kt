@@ -8,7 +8,13 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusState
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -23,6 +29,8 @@ fun EmailTextField(state: RegAdminStore.State, component: RegAdminComponent, con
         if (state.selectedOption == RegistrationOption.EMAIL) state.emailOrPhone else ""
     val emailColor = if (state.isNickNameEnabled) Color.Unspecified else Color.Red
 
+    var hasFocus by remember { mutableStateOf(false) }
+
     TextField(
         value = emailText,
         onValueChange = { component.onLoginFieldChanged(it) },
@@ -30,7 +38,14 @@ fun EmailTextField(state: RegAdminStore.State, component: RegAdminComponent, con
         enabled = (state.selectedOption == RegistrationOption.EMAIL) && (!state.isRegisterButtonWasPressed),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 8.dp)
+            .onFocusChanged { focusState: FocusState ->
+                hasFocus = focusState.isFocused
+                if (!focusState.isFocused) {
+                    // Событие потери фокуса
+                    println("Фокус ушел из поля ввода")
+                }
+            },
         textStyle = LocalTextStyle.current.copy(
             color = emailColor
         ),

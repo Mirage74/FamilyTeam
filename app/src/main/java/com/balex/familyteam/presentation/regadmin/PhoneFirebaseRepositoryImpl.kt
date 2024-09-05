@@ -41,7 +41,6 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
         activity: MainActivity
     ) {
         val auth = Firebase.auth
-        //val coroutineScope = CoroutineScope(Dispatchers.Main)
 
         val options = PhoneAuthOptions.newBuilder(auth)
             .setPhoneNumber(phoneNumber)

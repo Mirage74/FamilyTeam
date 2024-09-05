@@ -216,7 +216,7 @@ class RegAdminStoreFactory @Inject constructor(
                                 getState().password
                             )
                         } else {
-                            //throw RuntimeException(SELECTED_OPTION_ILLEGAL_VALUE)
+                            throw RuntimeException(SELECTED_OPTION_ILLEGAL_VALUE)
                         }
 
                     }

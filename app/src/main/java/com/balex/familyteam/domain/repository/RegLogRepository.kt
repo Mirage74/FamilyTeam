@@ -6,8 +6,6 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface RegLogRepository {
 
-    fun getRepoAdmin(): Admin
-
     fun getRepoUser(): User
 
     fun setAdminAndUser(
@@ -41,12 +39,12 @@ interface RegLogRepository {
 
     suspend fun addUserToCollection(user: User): Result<Unit>
 
-    fun signRepoCurrentUserToFirebaseInWithEmailAndPassword()
+    suspend fun signRepoCurrentUserToFirebaseWithEmailAndPassword()
 
-    fun loginToFirebaseAndLoadUserData(adminEmailOrPhone: String, nickName: String, password: String)
+    //fun loginToFirebaseAndLoadUserData(adminEmailOrPhone: String, nickName: String, password: String)
 
 
-     fun registerAndVerifyByEmail(
+     suspend fun registerAndVerifyByEmail(
         email: String,
         nickName: String,
         displayName: String,
