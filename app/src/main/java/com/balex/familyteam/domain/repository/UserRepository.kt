@@ -17,8 +17,6 @@ interface UserRepository {
 
     fun observeMyTasksForOtherUsers(): StateFlow<ExternalTasks>
 
-    suspend fun createNewUser(user: User)
-
     suspend fun removeUser(nickName: String)
 
 }

@@ -7,5 +7,5 @@ class RegisterAndVerifyByEmailUseCase @Inject constructor(
     private val repository: RegLogRepository
 ) {
     suspend operator fun invoke(email: String, nickName: String, displayName: String, password: String) =
-        repository.registerAndVerifyByEmail(email, nickName, displayName, password)
+        repository.registerAndVerifyNewTeamByEmail(email, nickName, displayName, password)
 }

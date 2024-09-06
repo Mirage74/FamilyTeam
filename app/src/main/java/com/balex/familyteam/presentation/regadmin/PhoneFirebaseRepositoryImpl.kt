@@ -5,7 +5,7 @@ import com.balex.familyteam.data.repository.RegLogRepositoryImpl.Companion.TIMEO
 import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
 import com.balex.familyteam.domain.usecase.regLog.EmitUserNeedRefreshUseCase
 import com.balex.familyteam.domain.usecase.regLog.RegUserWithFakeEmailUseCase
-import com.balex.familyteam.domain.usecase.regLog.SetAdminAndUserUseCase
+import com.balex.familyteam.domain.usecase.regLog.RegUserWithFakeEmailToAuthAndToUsersCollectionUseCase
 import com.balex.familyteam.domain.usecase.regLog.SetUserAsVerifiedUseCase
 import com.balex.familyteam.presentation.MainActivity
 import com.google.firebase.FirebaseException
@@ -26,7 +26,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 class PhoneFirebaseRepositoryImpl @Inject constructor(
-    private val setAdminAndUserUseCase: SetAdminAndUserUseCase,
+    private val regUserWithFakeEmailToAuthAndToUsersCollectionUseCase: RegUserWithFakeEmailToAuthAndToUsersCollectionUseCase,
     private val regUserWithFakeEmailUseCase: RegUserWithFakeEmailUseCase,
     private val setUserAsVerifiedUseCase: SetUserAsVerifiedUseCase,
     private val emitUserNeedRefreshUseCase: EmitUserNeedRefreshUseCase
@@ -129,7 +129,7 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
                         ) {
                             storedSmsVerificationId = verificationId
                             resendTokenForSmsVerification = token
-                            continuation.resume(Unit) // Завершаем корутину успешно
+                            continuation.resume(Unit)
                         }
                     })
                     .setForceResendingToken(token)
@@ -166,7 +166,7 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
         val auth = Firebase.auth
 
 
-        setAdminAndUserUseCase(phoneNumber, nickName, displayName, password)
+        regUserWithFakeEmailToAuthAndToUsersCollectionUseCase(phoneNumber, nickName, displayName, password)
 
         try {
 

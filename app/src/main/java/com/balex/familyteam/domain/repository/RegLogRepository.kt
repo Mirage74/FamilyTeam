@@ -8,49 +8,45 @@ interface RegLogRepository {
 
     fun getRepoUser(): User
 
-    suspend fun setAdminAndUser(
-        emailOrPhone: String,
-        nickName: String,
-        displayName: String,
-        password: String
-    )
-
-    fun getCurrentLanguage(): String
-
     fun setUserAsVerified()
 
     fun observeUser(): StateFlow<User>
+
+    suspend fun emitUserNeedRefresh()
+
+    fun getCurrentLanguage(): String
+
+    fun saveLanguage(language: String)
 
     fun observeLanguage(): StateFlow<String>
 
     fun observeSmsVerificationError(): StateFlow<String>
 
-    fun saveLanguage(language: String)
-
-    suspend fun regUserWithFakeEmail(
-        emailOrPhone: String,
-        nickName: String,
-        displayName: String,
-        password: String
-    )
-
-
-    suspend fun addAdminToCollection(admin: Admin): Result<Unit>
-
-    suspend fun addUserToCollection(user: User): Result<Unit>
-
-    suspend fun signRepoCurrentUserToFirebaseWithEmailAndPassword()
-
-    //fun loginToFirebaseAndLoadUserData(adminEmailOrPhone: String, nickName: String, password: String)
-
-
-     suspend fun registerAndVerifyByEmail(
+    suspend fun registerAndVerifyNewTeamByEmail(
         email: String,
         nickName: String,
         displayName: String,
         password: String
     )
 
-    suspend fun emitUserNeedRefresh()
+    suspend fun regUserWithFakeEmailToAuthAndToUsersCollection(
+        emailOrPhone: String,
+        nickName: String,
+        displayName: String,
+        password: String
+    )
+
+
+    suspend fun addUserToCollection(user: User): Result<Unit>
+
+    suspend fun addAdminToCollection(admin: Admin): Result<Unit>
+
+    suspend fun signRepoCurrentUserToFirebaseWithEmailAndPassword()
+
+
+
+
+
+
 
 }

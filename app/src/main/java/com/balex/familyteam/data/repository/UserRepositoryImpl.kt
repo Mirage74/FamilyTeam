@@ -6,7 +6,7 @@ import com.balex.familyteam.domain.entity.ExternalTasks
 import com.balex.familyteam.domain.entity.PrivateTasks
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.repository.UserRepository
-import com.balex.familyteam.domain.usecase.regLog.AddUserUseCase
+import com.balex.familyteam.domain.usecase.regLog.AddUserToCollectionUseCase
 import com.balex.familyteam.domain.usecase.regLog.GetUserUseCase
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.Source
@@ -20,11 +20,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class UserRepositoryImpl @Inject constructor(
     private val getUserUseCase: GetUserUseCase,
-    private val addUserUseCase: AddUserUseCase
+
+    private val addUserToCollectionUseCase: AddUserToCollectionUseCase
 ) : UserRepository {
 
     private var usersList = mutableListOf(User())
@@ -50,17 +52,17 @@ class UserRepositoryImpl @Inject constructor(
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     override fun observeUsersList(): StateFlow<List<User>> = flow {
-        getUsersListFromFirebase { documents ->
-            if (documents.isNotEmpty()) {
-                val list = mutableListOf<User>()
-                documents.forEach { document ->
-                    document?.toObject(User::class.java)?.let {
-                        list.add(it)
-                    }
+        val documents = getUsersListFromFirebase()
+        if (documents.isNotEmpty()) {
+            val list = mutableListOf<User>()
+            documents.forEach { document ->
+                document?.toObject(User::class.java)?.let {
+                    list.add(it)
                 }
-                usersList = list.toMutableList()
             }
+            usersList = list.toMutableList()
         }
+
         isCurrentUsersListNeedRefreshFlow.emit(Unit)
         isCurrentUsersListNeedRefreshFlow.collect {
             emit(usersList)
@@ -92,39 +94,27 @@ class UserRepositoryImpl @Inject constructor(
         TODO("Not yet implemented")
     }
 
-    private fun getUsersListFromFirebase(
-        callback: (List<DocumentSnapshot?>) -> Unit
-    ) {
-        usersCollection
-            .whereNotEqualTo("nickName", getUserUseCase().nickName)
-            .get(Source.SERVER)
-            .addOnSuccessListener { documents ->
-                if (documents != null && !documents.isEmpty) {
-                    callback(documents.documents)
-                } else {
-                    callback(emptyList())
-                }
-            }
-            .addOnFailureListener { exception ->
-                exception.printStackTrace()
-                //throw RuntimeException("getUsersListFromFirebase: $ERROR_GET_USERS_LIST_FROM_FIREBASE")
-            }
-    }
+    private suspend fun getUsersListFromFirebase(): List<DocumentSnapshot?> {
+        return try {
+            val documents = usersCollection
+                .whereNotEqualTo("nickName", getUserUseCase().nickName)
+                .get(Source.SERVER)
+                .await()
 
-    override suspend fun createNewUser(user: User) {
-        coroutineScope.launch {
-            val resultFirebaseAddUser = addUserUseCase(user)
-            if (resultFirebaseAddUser.isSuccess) {
-                isCurrentUsersListNeedRefreshFlow.emit(Unit)
-
+            if (documents != null && !documents.isEmpty) {
+                documents.documents
             } else {
-                throw RuntimeException("createNewUser: $ERROR_CREATE_NEW_USER_IN_FIREBASE")
+                emptyList()
             }
+        } catch (exception: Exception) {
+            exception.printStackTrace()
+            throw RuntimeException("getUsersListFromFirebase: $ERROR_GET_USERS_LIST_FROM_FIREBASE")
         }
     }
 
+
+
     companion object {
         const val ERROR_GET_USERS_LIST_FROM_FIREBASE = "ERROR_GET_USERS_LIST_FROM_FIREBASE"
-        const val ERROR_CREATE_NEW_USER_IN_FIREBASE = "ERROR_CREATE_NEW_USER_IN_FIREBASE"
     }
 }

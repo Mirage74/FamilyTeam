@@ -68,10 +68,6 @@ fun LoggedUserContent(component: LoggedUserComponent) {
                 LoggedUserScreen(component, state)
             }
 
-            LoggedUserStore.State.LoggedUserState.Initial -> {
-                LoggedUserScreen(component, state)
-            }
-
             LoggedUserStore.State.LoggedUserState.Loading -> {
                 Box(
                     modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center

@@ -26,8 +26,10 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.time.withTimeoutOrNull
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
-import kotlin.coroutines.cancellation.CancellationException
 
 
 class RegLogRepositoryImpl @Inject constructor(
@@ -62,8 +64,10 @@ class RegLogRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
     override fun observeUser(): StateFlow<User> = flow {
-        Storage.clearPreferences(context)
+        //Storage.clearPreferences(context)
+
         val userFakeEmailFromStorage = Storage.getUser(context)
+        //findUser(userFakeEmailFromStorage)
         val phoneLanguageFromStorage = Storage.getLanguage(context)
         val phoneLang =
             if (phoneLanguageFromStorage != Storage.NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES) {
@@ -153,10 +157,8 @@ class RegLogRepositoryImpl @Inject constructor(
 
     override suspend fun addAdminToCollection(admin: Admin): Result<Unit> {
         return try {
-            val adminDocument = adminsCollection.document("Balex")
-            //adminsCollection.add(admin).await()
+            val adminDocument = adminsCollection.document(admin.emailOrPhoneNumber)
             adminDocument.set(admin).await()
-
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -170,15 +172,15 @@ class RegLogRepositoryImpl @Inject constructor(
             } else {
                 user
             }
-            //registerAuthUser(newUser)
-            val userSubCollection = usersCollection.document("admin@mail.com").collection(user.nickName)
-            //usersCollection.add(newUser).await()
-            userSubCollection.add(newUser).await()
+            val userCollection = usersCollection.document(user.adminEmailOrPhone).collection(user.nickName).document(user.nickName)
+            userCollection.set(newUser).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
+
 
 //    private fun isAdminExistInFirebase(emailOrPhone: String): Boolean {
 //
@@ -192,7 +194,7 @@ class RegLogRepositoryImpl @Inject constructor(
 
                 auth.signInWithEmailAndPassword(user.fakeEmail, user.password).await()
 
-                val document = findUserByEmailInFirebase(user.fakeEmail, user.nickName)
+                val document = findUserInCollectionByDocId(user.fakeEmail, user.nickName)
 
                 if (document != null) {
                     document.toObject(User::class.java)?.let {
@@ -214,26 +216,9 @@ class RegLogRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun registerAuthUser(user: User) {
-        try {
-            val document = findUserByEmailInFirebase(user.fakeEmail, user.nickName)
 
-            if (document == null) {
-                try {
-                    auth.createUserWithEmailAndPassword(user.fakeEmail, user.password).await()
-                } catch (e: FirebaseAuthUserCollisionException) {
-                    throw RuntimeException("registerAuthUser: $USER_ALREADY_EXIST_IN_AUTH_BUT_NOT_IN_USERS: ${e.message}")
-                } catch (e: Exception) {
-                    throw RuntimeException("registerAuthUser: $REGISTRATION_ERROR: ${e.message}")
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            throw RuntimeException("registerAuthUser: ${e.message}")
-        }
-    }
 
-    override suspend fun registerAndVerifyByEmail(
+    override suspend fun registerAndVerifyNewTeamByEmail(
         email: String,
         nickName: String,
         displayName: String,
@@ -241,7 +226,7 @@ class RegLogRepositoryImpl @Inject constructor(
     ) {
         FirebaseAuth.getInstance().signOut()
 
-        val document = findUserByEmailInFirebase(email, nickName)
+        val document = findUserInCollectionByDocId(email, nickName)
 
         if (document != null) {
             val newUser = document.toObject(User::class.java) ?: User()
@@ -258,34 +243,36 @@ class RegLogRepositoryImpl @Inject constructor(
 
         } else {
             try {
-                val authResult = auth.createUserWithEmailAndPassword(email, password).await()
+                val authResult = withContext(Dispatchers.IO) {
+                    auth.createUserWithEmailAndPassword(email, password).await()
+                }
+
                 val authUser = authResult.user
-                    ?: throw RuntimeException("registerAndVerifyByEmail: $AUTH_USER_NOT_FOUND")
+                    ?: throw RuntimeException("registerAndVerifyNewTeamByEmail: $AUTH_USER_NOT_FOUND")
+
                 authUser.sendEmailVerification().await()
 
-                while (!authUser.isEmailVerified) {
-                    authUser.reload().await()
-                    if (authUser.isEmailVerified) {
-                        regUserWithFakeEmail(email, nickName, displayName, password)
-                        isUserMailOrPhoneVerified = true
+                withTimeoutOrNull(60000) {
+                    while (!authUser.isEmailVerified) {
+                        delay(3000)
+                        authUser.reload().await()
+                        if (authUser.isEmailVerified) {
+                            regUserWithFakeEmailToAuthAndToUsersCollection(email, nickName, displayName, password)
+                            isUserMailOrPhoneVerified = true
+                            break
+                        }
                     }
-                    delay(1000)
-                }
+                } ?: throw RuntimeException("registerAndVerifyByEmail: Verification timed out")
+
             } catch (e: FirebaseAuthUserCollisionException) {
                 throw RuntimeException("registerAndVerifyByEmail: $USER_ALREADY_EXIST_IN_AUTH_BUT_NOT_IN_USERS")
-
-
-            } catch (e: CancellationException) {
-                val m = e.message
-            }
-
-            catch (e: Exception) {
+            } catch (e: Exception) {
                 throw RuntimeException("registerAndVerifyByEmail: $REGISTRATION_ERROR: ${e.message}")
             }
         }
     }
 
-    override suspend fun regUserWithFakeEmail(
+    override suspend fun regUserWithFakeEmailToAuthAndToUsersCollection(
         emailOrPhone: String,
         nickName: String,
         displayName: String,
@@ -307,6 +294,7 @@ class RegLogRepositoryImpl @Inject constructor(
             addAdminAndUserToFirebase(
                 registrationOption,
                 emailOrPhone,
+                fakeEmail,
                 nickName,
                 displayName,
                 password
@@ -317,24 +305,11 @@ class RegLogRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun setAdminAndUser(
-        emailOrPhone: String,
-        nickName: String,
-        displayName: String,
-        password: String
-    ) {
-        regUserWithFakeEmail(
-            emailOrPhone,
-            nickName,
-            displayName,
-            password
-        )
-
-    }
 
     private fun addAdminAndUserToFirebase(
         registrationOption: RegistrationOption,
         emailOrPhoneNumber: String,
+        fakeEmail: String,
         nickName: String,
         displayName: String,
         password: String
@@ -347,7 +322,7 @@ class RegLogRepositoryImpl @Inject constructor(
         val newUser = User(
             nickName = nickName,
             isAdmin = true,
-            fakeEmail = createFakeUserEmail(nickName, emailOrPhoneNumber),
+            fakeEmail = fakeEmail,
             adminEmailOrPhone = emailOrPhoneNumber,
             displayName = displayName,
             language = language,
@@ -396,10 +371,16 @@ class RegLogRepositoryImpl @Inject constructor(
         return lang
     }
 
-    private suspend fun findUserByEmailInFirebase(
+    private suspend fun findUser(user: User): Boolean {
+         val querySnapshot = usersCollection.document(user.adminEmailOrPhone).collection(user.nickName)
+        return true
+    }
+
+    private suspend fun findUserInCollectionByDocId(
         email: String,
         nickName: String
     ): DocumentSnapshot? {
+
         return try {
             val querySnapshot = usersCollection
                 .whereEqualTo("fakeEmail", email)
@@ -465,7 +446,6 @@ class RegLogRepositoryImpl @Inject constructor(
         const val TIMEOUT_VERIFICATION = 60L
         const val FIREBASE_ADMINS_COLLECTION = "admins"
         const val FIREBASE_USERS_COLLECTION = "users"
-        const val FIREBASE_TEAM_COLLECTION = "team"
 
         const val SMS_VERIFICATION_ERROR_INITIAL = "SMS_VERIFICATION_ERROR_INITIAL"
         const val FAKE_EMAIL_DOMAIN = "balexvic.com"

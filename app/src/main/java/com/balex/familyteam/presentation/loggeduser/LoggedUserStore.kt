@@ -12,11 +12,11 @@ import com.balex.familyteam.domain.entity.ExternalTasks
 import com.balex.familyteam.domain.entity.PrivateTasks
 import com.balex.familyteam.domain.entity.ToDoList
 import com.balex.familyteam.domain.entity.User
+import com.balex.familyteam.domain.usecase.regLog.AddUserToCollectionUseCase
 import com.balex.familyteam.domain.usecase.regLog.GetUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.SaveLanguageUseCase
-import com.balex.familyteam.domain.usecase.user.CreateNewUserUseCase
 import com.balex.familyteam.domain.usecase.user.ObserveExternalTasksUseCase
 import com.balex.familyteam.domain.usecase.user.ObserveListToShopUseCase
 import com.balex.familyteam.domain.usecase.user.ObserveMyTasksForOtherUsersUseCase
@@ -84,8 +84,6 @@ interface LoggedUserStore : Store<Intent, State, Label> {
     ) {
         sealed interface LoggedUserState {
 
-            data object Initial : LoggedUserState
-
             data object Loading : LoggedUserState
 
             data object Content : LoggedUserState
@@ -104,7 +102,7 @@ class LoggedUserStoreFactory @Inject constructor(
     private val saveLanguageUseCase: SaveLanguageUseCase,
     private val observeUserUseCase: ObserveUserUseCase,
     private val observeLanguageUseCase: ObserveLanguageUseCase,
-    private val createNewUserUseCase: CreateNewUserUseCase,
+    private val addUserToCollectionUseCase: AddUserToCollectionUseCase,
     private val removeUserUseCase: RemoveUserUseCase,
     private val observeUsersListUseCase: ObserveUsersListUseCase,
     private val observeExternalTasksUseCase: ObserveExternalTasksUseCase,
@@ -136,7 +134,7 @@ class LoggedUserStoreFactory @Inject constructor(
                 activeBottomItem = PagesNames.TodoList,
                 todoList = ToDoList(),
                 myTasksForOtherUsersList = ExternalTasks(listOf()),
-                loggedUserState = State.LoggedUserState.Initial
+                loggedUserState = State.LoggedUserState.Loading
             ),
             bootstrapper = BootstrapperImpl(),
             executorFactory = ::ExecutorImpl,
@@ -155,7 +153,8 @@ class LoggedUserStoreFactory @Inject constructor(
 
         data class ShopListIsChanged(val shopList: List<String>) : Action
 
-        data class MyTasksForOtherUsersListIsChanged(val myTasksForOtherUsersList: ExternalTasks) : Action
+        data class MyTasksForOtherUsersListIsChanged(val myTasksForOtherUsersList: ExternalTasks) :
+            Action
 
         data class PageIsChanged(val page: PagesNames) : Action
 
@@ -264,14 +263,13 @@ class LoggedUserStoreFactory @Inject constructor(
 
                 is Intent.ClickedRegisterNewUserInFirebase -> {
                     scope.launch {
-                        createNewUserUseCase(
+                        addUserToCollectionUseCase(
                             User(
                                 nickName = getState().nickName,
                                 displayName = getState().displayName,
                                 password = getState().password,
                                 adminEmailOrPhone = getState().user.adminEmailOrPhone,
-
-                                )
+                            )
                         )
                     }
                     dispatch(Msg.ButtonRegisterNewUserInFirebaseClicked)
@@ -400,7 +398,10 @@ class LoggedUserStoreFactory @Inject constructor(
             when (msg) {
 
                 is Msg.UserIsChanged -> {
-                    copy(user = msg.user)
+                    copy(
+                        user = msg.user,
+                        loggedUserState = State.LoggedUserState.Content
+                    )
                 }
 
                 is Msg.UsersListIsChanged -> {

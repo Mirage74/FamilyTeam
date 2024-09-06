@@ -10,5 +10,5 @@ class RegUserWithFakeEmailUseCase @Inject constructor(
                                 nickName: String,
                                 displayName: String,
                                 password: String) =
-        repository.regUserWithFakeEmail(emailOrPhone, nickName, displayName, password)
+        repository.regUserWithFakeEmailToAuthAndToUsersCollection(emailOrPhone, nickName, displayName, password)
 }
