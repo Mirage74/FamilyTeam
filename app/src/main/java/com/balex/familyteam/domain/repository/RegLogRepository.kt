@@ -38,11 +38,11 @@ interface RegLogRepository {
     )
 
 
-    suspend fun addUserToCollection(user: User): Result<Unit>
+    suspend fun addUserToCollection(userToAdd: User): Result<Unit>
 
     suspend fun addAdminToCollection(admin: Admin): Result<Unit>
 
-    suspend fun signToFirebaseWithEmailAndPassword(user: User): RegLogRepositoryImpl.Companion.StatusSignIn
+    suspend fun signToFirebaseWithFakeEmail(userToSignIn: User): RegLogRepositoryImpl.Companion.StatusSignIn
 
 
 

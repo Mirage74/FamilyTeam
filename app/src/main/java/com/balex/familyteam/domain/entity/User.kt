@@ -7,8 +7,8 @@ import kotlinx.serialization.Serializable
 data class User(
     @SerializedName("nickName")
     val nickName: String = DEFAULT_NICK_NAME,
-    @SerializedName("isAdmin")
-    val isAdmin: Boolean = false,
+    @SerializedName("admin")
+    val admin: Boolean = false,
     @SerializedName("fakeEmail")
     val fakeEmail: String = DEFAULT_FAKE_EMAIL,
     @SerializedName("adminEmailOrPhone")
