@@ -8,6 +8,7 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.balex.familyteam.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
+import com.balex.familyteam.domain.usecase.regLog.GetUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.SaveLanguageUseCase
@@ -65,6 +66,7 @@ interface NotLoggedStore : Store<Intent, State, Label> {
 class NotLoggedStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
     private val observeUserUseCase: ObserveUserUseCase,
+    private val getUserUseCase: GetUserUseCase,
     private val signInWithEmailAndPasswordUseCase: SignInWithEmailAndPasswordUseCase,
     private val observeLanguageUseCase: ObserveLanguageUseCase,
     private val saveLanguageUseCase: SaveLanguageUseCase,
@@ -112,11 +114,14 @@ class NotLoggedStoreFactory @Inject constructor(
                             NO_USER_SAVED_IN_SHARED_PREFERENCES -> {
                                 dispatch(Action.UserNotExistInPreference)
                             }
+                            User.DEFAULT_NICK_NAME -> {
+                                dispatch(Action.UserNotExistInPreference)
+                            }
                             User.ERROR_LOADING_USER_DATA_FROM_FIREBASE -> {
                                 dispatch(Action.UserExistInPreferenceButErrorLoadingUserData)
                             }
                             else -> {
-                                signInWithEmailAndPasswordUseCase()
+                                signInWithEmailAndPasswordUseCase(getUserUseCase())
                                 dispatch(Action.UserExistInPreferenceAndLoadedUserData)
                             }
                         }

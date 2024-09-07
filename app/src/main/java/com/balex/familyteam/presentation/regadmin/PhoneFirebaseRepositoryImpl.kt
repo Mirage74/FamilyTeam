@@ -1,7 +1,7 @@
 package com.balex.familyteam.presentation.regadmin
 
 import android.util.Log
-import com.balex.familyteam.data.repository.RegLogRepositoryImpl.Companion.TIMEOUT_VERIFICATION
+import com.balex.familyteam.data.repository.RegLogRepositoryImpl.Companion.TIMEOUT_VERIFICATION_PHONE
 import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
 import com.balex.familyteam.domain.usecase.regLog.EmitUserNeedRefreshUseCase
 import com.balex.familyteam.domain.usecase.regLog.RegUserWithFakeEmailUseCase
@@ -51,12 +51,12 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
             val verificationId = suspendCancellableCoroutine<String> { continuation ->
                 val options = PhoneAuthOptions.newBuilder(auth)
                     .setPhoneNumber(phoneNumber)
-                    .setTimeout(TIMEOUT_VERIFICATION, TimeUnit.SECONDS)
+                    .setTimeout(TIMEOUT_VERIFICATION_PHONE, TimeUnit.SECONDS)
                     .setActivity(activity)
                     .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
                         override fun onVerificationCompleted(credential: PhoneAuthCredential) {
                             CoroutineScope(Dispatchers.Default).launch {
-                                signInWithCredential(
+                                registerAndSignInWithCredential(
                                     credential,
                                     phoneNumber,
                                     nickName,
@@ -104,12 +104,12 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
             suspendCancellableCoroutine<Unit> { continuation ->
                 val options = PhoneAuthOptions.newBuilder(Firebase.auth)
                     .setPhoneNumber(phoneNumber)
-                    .setTimeout(TIMEOUT_VERIFICATION, TimeUnit.SECONDS)
+                    .setTimeout(TIMEOUT_VERIFICATION_PHONE, TimeUnit.SECONDS)
                     .setActivity(activity)
                     .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
                         override fun onVerificationCompleted(credential: PhoneAuthCredential) {
                             CoroutineScope(Dispatchers.Default).launch {
-                                signInWithCredential(
+                                registerAndSignInWithCredential(
                                     credential,
                                     phoneNumber,
                                     nickName,
@@ -153,10 +153,10 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
         password: String
     ) {
         val credential = PhoneAuthProvider.getCredential(storedSmsVerificationId, verificationCode)
-        signInWithCredential(credential, phoneNumber, nickName, displayName, password)
+        registerAndSignInWithCredential(credential, phoneNumber, nickName, displayName, password)
     }
 
-    private suspend fun signInWithCredential(
+    private suspend fun registerAndSignInWithCredential(
         credential: PhoneAuthCredential,
         phoneNumber: String,
         nickName: String,

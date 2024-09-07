@@ -329,7 +329,8 @@ class RegAdminStoreFactory @Inject constructor(
 
                 is Action.UserIsChanged -> {
                     if (action.user.nickName.length >= appContext.resources.getInteger(R.integer.min_nickName_length)
-                        && (action.user.nickName != NO_USER_SAVED_IN_SHARED_PREFERENCES)) {
+                        && (action.user.nickName != NO_USER_SAVED_IN_SHARED_PREFERENCES)
+                        && (action.user.nickName != User.DEFAULT_NICK_NAME) ) {
                         publish(Label.AdminIsRegisteredAndVerified)
                     }
                 }

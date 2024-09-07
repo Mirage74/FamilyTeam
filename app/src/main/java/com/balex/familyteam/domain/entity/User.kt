@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class User(
     @SerializedName("nickName")
-    val nickName: String = "",
+    val nickName: String = DEFAULT_NICK_NAME,
     @SerializedName("isAdmin")
     val isAdmin: Boolean = false,
     @SerializedName("fakeEmail")
@@ -24,6 +24,7 @@ data class User(
 ) {
     companion object {
         const val ERROR_LOADING_USER_DATA_FROM_FIREBASE = "ERROR_LOADING_USER_DATA_FROM_FIREBASE"
+        const val DEFAULT_NICK_NAME = "DEFAULT_NICK_NAME"
         const val DEFAULT_FAKE_EMAIL = "DEFAULT_FAKE_EMAIL"
     }
 }

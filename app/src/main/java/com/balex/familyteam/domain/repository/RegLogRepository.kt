@@ -1,5 +1,6 @@
 package com.balex.familyteam.domain.repository
 
+import com.balex.familyteam.data.repository.RegLogRepositoryImpl
 import com.balex.familyteam.domain.entity.Admin
 import com.balex.familyteam.domain.entity.User
 import kotlinx.coroutines.flow.StateFlow
@@ -41,7 +42,7 @@ interface RegLogRepository {
 
     suspend fun addAdminToCollection(admin: Admin): Result<Unit>
 
-    suspend fun signRepoCurrentUserToFirebaseWithEmailAndPassword()
+    suspend fun signToFirebaseWithEmailAndPassword(user: User): RegLogRepositoryImpl.Companion.StatusSignIn
 
 
 
