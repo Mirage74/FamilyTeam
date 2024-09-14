@@ -6,7 +6,7 @@ import com.arkivanov.essenty.lifecycle.doOnResume
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
-import com.balex.familyteam.domain.entity.Language
+import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
 import com.balex.familyteam.extensions.componentScope
 import dagger.assisted.Assisted
@@ -20,7 +20,7 @@ class DefaultNotLoggedComponent @AssistedInject constructor(
     private val storeFactory: NotLoggedStoreFactory,
     private val getLanguageUseCase: GetLanguageUseCase,
     @Assisted("onRegAdminClicked") private val onRegAdminClicked: () -> Unit,
-    @Assisted("onLoginUserClicked") private val onLoginUserClicked: () -> Unit,
+    @Assisted("onLoginUserClicked") private val onLoginUserClicked: (User) -> Unit,
     @Assisted("onUserIsLogged") private val onUserIsLogged: () -> Unit,
     @Assisted("onAbout") private val onAbout: () -> Unit,
     @Assisted("componentContext") componentContext: ComponentContext
@@ -47,7 +47,7 @@ class DefaultNotLoggedComponent @AssistedInject constructor(
 
                     NotLoggedStore.Label.ClickedLoginUser -> {
                         Log.d("NotLoggedComponent", "ClickedLoginUser")
-                        onLoginUserClicked()
+                        onLoginUserClicked(User())
                     }
 
                     NotLoggedStore.Label.UserIsLogged -> {
@@ -92,7 +92,7 @@ class DefaultNotLoggedComponent @AssistedInject constructor(
 
         fun create(
             @Assisted("onRegAdminClicked") onRegAdminClicked: () -> Unit,
-            @Assisted("onLoginUserClicked") onLoginUserClicked: () -> Unit,
+            @Assisted("onLoginUserClicked") onLoginUserClicked: (User) -> Unit,
             @Assisted("onUserIsLogged") onUserIsLogged: () -> Unit,
             @Assisted("onAbout") onAbout: () -> Unit,
             @Assisted("componentContext") componentContext: ComponentContext

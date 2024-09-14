@@ -5,6 +5,7 @@ import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
+import com.balex.familyteam.data.datastore.Storage
 import com.balex.familyteam.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
@@ -12,7 +13,8 @@ import com.balex.familyteam.domain.usecase.regLog.GetUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.SaveLanguageUseCase
-import com.balex.familyteam.domain.usecase.regLog.SignInWithEmailAndPasswordUseCase
+import com.balex.familyteam.domain.usecase.regLog.SignToFirebaseWithFakeEmailUseCase
+import com.balex.familyteam.domain.usecase.regLog.StorageClearPreferencesUseCase
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore.Intent
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore.Label
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore.State
@@ -66,8 +68,9 @@ interface NotLoggedStore : Store<Intent, State, Label> {
 class NotLoggedStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
     private val observeUserUseCase: ObserveUserUseCase,
+    private val storageClearPreferencesUseCase: StorageClearPreferencesUseCase,
     private val getUserUseCase: GetUserUseCase,
-    private val signInWithEmailAndPasswordUseCase: SignInWithEmailAndPasswordUseCase,
+    private val signToFirebaseWithFakeEmailUseCase: SignToFirebaseWithFakeEmailUseCase,
     private val observeLanguageUseCase: ObserveLanguageUseCase,
     private val saveLanguageUseCase: SaveLanguageUseCase,
     private val getLanguageUseCase: GetLanguageUseCase
@@ -121,7 +124,7 @@ class NotLoggedStoreFactory @Inject constructor(
                                 dispatch(Action.UserExistInPreferenceButErrorLoadingUserData)
                             }
                             else -> {
-                                signInWithEmailAndPasswordUseCase(getUserUseCase())
+                                signToFirebaseWithFakeEmailUseCase(getUserUseCase())
                                 dispatch(Action.UserExistInPreferenceAndLoadedUserData)
                             }
                         }
@@ -174,6 +177,7 @@ class NotLoggedStoreFactory @Inject constructor(
                 }
 
                 Action.UserExistInPreferenceButErrorLoadingUserData -> {
+                    storageClearPreferencesUseCase()
                     dispatch(Msg.UserExistInPreferenceButErrorLoadingUserData)
                 }
 

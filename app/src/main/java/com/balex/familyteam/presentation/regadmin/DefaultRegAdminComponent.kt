@@ -7,6 +7,7 @@ import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
 import com.balex.familyteam.domain.entity.Language
+import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
 import com.balex.familyteam.domain.usecase.regLog.EmitUserNeedRefreshUseCase
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
@@ -26,6 +27,7 @@ class DefaultRegAdminComponent @AssistedInject constructor(
     private val getLanguageUseCase: GetLanguageUseCase,
     override val phoneFirebaseRepository: PhoneFirebaseRepository,
     @Assisted("onAbout") private val onAbout: () -> Unit,
+    @Assisted("onAdminExistButWrongPassword") private val onAdminExistButWrongPassword: (User) -> Unit,
     @Assisted("onBackClicked") private val onBackClicked: () -> Unit,
     @Assisted("onAdminRegisteredAndVerified") private val onAdminRegisteredAndVerified: () -> Unit,
     @Assisted("componentContext") componentContext: ComponentContext
@@ -46,7 +48,7 @@ class DefaultRegAdminComponent @AssistedInject constructor(
                 when (it) {
 
                     RegAdminStore.Label.ClickedAbout -> {
-
+                        onAbout()
                     }
 
                     RegAdminStore.Label.AdminIsRegisteredAndVerified -> {
@@ -55,6 +57,10 @@ class DefaultRegAdminComponent @AssistedInject constructor(
 
                     RegAdminStore.Label.ClickedBack -> {
                         onBackClicked()
+                    }
+
+                    is RegAdminStore.Label.LoginPageWrongPassword -> {
+                        onAdminExistButWrongPassword(it.user)
                     }
                 }
             }
@@ -125,6 +131,7 @@ class DefaultRegAdminComponent @AssistedInject constructor(
 
         fun create(
             @Assisted("onAbout") onAbout: () -> Unit,
+            @Assisted("onAdminExistButWrongPassword") onAdminExistButWrongPassword: (User) -> Unit,
             @Assisted("onBackClicked") onBackClicked: () -> Unit,
             @Assisted("onAdminRegisteredAndVerified") onAdminRegisteredAndVerified: () -> Unit,
             @Assisted("componentContext") componentContext: ComponentContext

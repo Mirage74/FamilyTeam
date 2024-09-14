@@ -3,6 +3,7 @@ package com.balex.familyteam.presentation.loginuser
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.balex.familyteam.domain.entity.Language
+import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 class DefaultLoginUserComponent @AssistedInject constructor(
     private val storeFactory: LoginUserStoreFactory,
     private val getLanguageUseCase: GetLanguageUseCase,
+    @Assisted("user") private val user: User,
     @Assisted("onAbout") private val onAbout: () -> Unit,
     @Assisted("componentContext") componentContext: ComponentContext
 ) : LoginUserComponent, ComponentContext by componentContext {
@@ -36,6 +38,7 @@ class DefaultLoginUserComponent @AssistedInject constructor(
     interface Factory {
 
         fun create(
+            @Assisted("user") user: User,
             @Assisted("onAbout") onAbout: () -> Unit,
             @Assisted("componentContext") componentContext: ComponentContext
         ): DefaultLoginUserComponent

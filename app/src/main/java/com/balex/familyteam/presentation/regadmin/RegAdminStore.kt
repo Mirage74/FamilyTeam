@@ -11,6 +11,7 @@ import com.balex.familyteam.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFE
 import com.balex.familyteam.domain.entity.RegistrationOption
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
+import com.balex.familyteam.domain.usecase.regLog.IsWrongPasswordUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.RegisterAndVerifyByEmailUseCase
@@ -86,6 +87,8 @@ interface RegAdminStore : Store<Intent, State, Label> {
 
         data object ClickedBack : Label
 
+        data class LoginPageWrongPassword(val user: User) : Label
+
     }
 }
 
@@ -93,6 +96,7 @@ class RegAdminStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
     private val getLanguageUseCase: GetLanguageUseCase,
     private val observeLanguageUseCase: ObserveLanguageUseCase,
+    private val observeIsWrongPasswordUseCase: IsWrongPasswordUseCase,
     private val saveLanguageUseCase: SaveLanguageUseCase,
     private val observeUserUseCase: ObserveUserUseCase,
     private val registerAndVerifyByEmailUseCase: RegisterAndVerifyByEmailUseCase,
@@ -131,6 +135,8 @@ class RegAdminStoreFactory @Inject constructor(
         data class LanguageIsChanged(val language: String) : Action
 
         data class UserIsChanged(val user: User) : Action
+
+        data class AdminExistWrongPassword(val user: User) : Action
 
     }
 
@@ -188,6 +194,12 @@ class RegAdminStoreFactory @Inject constructor(
                     dispatch(Action.UserIsChanged(it))
                 }
             }
+
+            scope.launch {
+                observeIsWrongPasswordUseCase().collect {
+                    dispatch(Action.AdminExistWrongPassword(it))
+                }
+            }
         }
     }
 
@@ -215,10 +227,7 @@ class RegAdminStoreFactory @Inject constructor(
                                 getState().displayName,
                                 getState().password
                             )
-                        } else {
-                            throw RuntimeException(SELECTED_OPTION_ILLEGAL_VALUE)
                         }
-
                     }
                     dispatch(Msg.ClickedRegister)
                 }
@@ -333,6 +342,10 @@ class RegAdminStoreFactory @Inject constructor(
                         && (action.user.nickName != User.DEFAULT_NICK_NAME) ) {
                         publish(Label.AdminIsRegisteredAndVerified)
                     }
+                }
+
+                is Action.AdminExistWrongPassword -> {
+                    publish(Label.LoginPageWrongPassword(action.user))
                 }
             }
         }

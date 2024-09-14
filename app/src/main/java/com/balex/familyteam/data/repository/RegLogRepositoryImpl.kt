@@ -43,9 +43,12 @@ class RegLogRepositoryImpl @Inject constructor(
 
     private var language = Language.DEFAULT_LANGUAGE.symbol
 
+    private var isWrongPassword = User(nickName = User.DEFAULT_NICK_NAME)
+
     private var isUserMailOrPhoneVerified = false
 
     private val isCurrentUserNeedRefreshFlow = MutableSharedFlow<Unit>(replay = 1)
+    private val isWrongPasswordNeedRefreshFlow = MutableSharedFlow<Unit>(replay = 1)
     private val isCurrentLanguageNeedRefreshFlow = MutableSharedFlow<Unit>(replay = 1)
     private val isSmsVerificationErrorNeedRefreshFlow = MutableSharedFlow<Unit>(replay = 1)
 
@@ -66,20 +69,9 @@ class RegLogRepositoryImpl @Inject constructor(
     override fun observeUser(): StateFlow<User> = flow {
         Storage.clearPreferences(context)
 
-//        val userTest = User(
-//            nickName = "qw",
-//            adminEmailOrPhone = "balexvicx@gmail.com",
-//            password = "111111",
-//            displayName = "rr",
-//            fakeEmail = "qw-balexvicx@gmail.com"
-//        )
-        //regUserWithFakeEmailToAuthAndToUsersCollection(userTest)
-        //signToFirebaseWithFakeEmail(userTest)
-
-
         val userFakeEmailFromStorage = Storage.getUser(context)
-        //findUser(userFakeEmailFromStorage)
         val phoneLanguageFromStorage = Storage.getLanguage(context)
+
         val phoneLang =
             if (phoneLanguageFromStorage != Storage.NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES) {
                 language = phoneLanguageFromStorage
@@ -110,6 +102,18 @@ class RegLogRepositoryImpl @Inject constructor(
             scope = coroutineScope,
             started = SharingStarted.Lazily,
             initialValue = user
+        )
+
+    override fun observeIsWrongPassword(): StateFlow<User> = flow {
+        isWrongPasswordNeedRefreshFlow.emit(Unit)
+        isWrongPasswordNeedRefreshFlow.collect {
+            emit(isWrongPassword)
+        }
+    }
+        .stateIn(
+            scope = coroutineScope,
+            started = SharingStarted.Lazily,
+            initialValue = isWrongPassword
         )
 
     override fun observeLanguage(): StateFlow<String> = flow {
@@ -166,6 +170,38 @@ class RegLogRepositoryImpl @Inject constructor(
         return language
     }
 
+    override suspend fun removeRecordFromCollection(
+        collectionName: String,
+        emailOrPhoneNumber: String
+    ) {
+
+        if (collectionName == FIREBASE_ADMINS_COLLECTION || collectionName == FIREBASE_ADMINS_AND_USERS_COLLECTION) {
+            try {
+                val document = adminsCollection.document(emailOrPhoneNumber.trim())
+                val documentSnapshot = document.get().await()
+
+                if (documentSnapshot.exists()) {
+                    document.delete().await()
+                }
+            } catch (e: Exception) {
+                Log.d("removeRecordFromCollection, adminsCollection ", "Error: ${e.message}")
+            }
+        }
+
+        if (collectionName == FIREBASE_USERS_COLLECTION || collectionName == FIREBASE_ADMINS_AND_USERS_COLLECTION) {
+            try {
+                val document = usersCollection.document(emailOrPhoneNumber.trim())
+                val documentSnapshot = document.get().await()
+
+                if (documentSnapshot.exists()) {
+                    document.delete().await()
+                }
+            } catch (e: Exception) {
+                Log.d("removeRecordFromCollection, usersCollection ", "Error: ${e.message}")
+            }
+        }
+    }
+
     override suspend fun addAdminToCollection(admin: Admin): Result<Unit> {
         return try {
             val adminDocument = adminsCollection.document(admin.emailOrPhoneNumber)
@@ -207,6 +243,38 @@ class RegLogRepositoryImpl @Inject constructor(
         }
     }
 
+    private suspend fun addAdminToCollectionWhenAdminIsAuthenticated(
+        firebaseAuthUser: FirebaseUser,
+        adminEmail: String,
+        adminNickName: String,
+        displayName: String,
+        adminPassword: String
+    ) {
+
+        val newAdmin = Admin(
+            nickName = adminNickName,
+            emailOrPhoneNumber = adminEmail,
+            isEmailOrPhoneNumberVerified = true
+        )
+        if (firebaseAuthUser.isEmailVerified) {
+            val result = addAdminToCollection(newAdmin)
+            if (result.isSuccess) {
+                admin = newAdmin
+                //isCurrentAdminNeedRefreshFlow.emit(Unit)
+            }
+        } else {
+            sendVerificationEmailAndWaitForResult(
+                firebaseAuthUser,
+                adminEmail,
+                adminNickName,
+                displayName,
+                adminPassword
+            )
+            //if not verified, then exception in sendVerificationEmailAndWaitForResult
+            //sendVerificationEmailAndWaitForResult if verified, add Admin and User in DB
+
+        }
+    }
 
     private suspend fun signToFirebaseWithEmailAndPassword(
         adminEmail: String,
@@ -215,69 +283,107 @@ class RegLogRepositoryImpl @Inject constructor(
         adminPassword: String
 
 
-    ): StatusSignIn {
+    ): StatusEmailSignIn {
         try {
-//            if (FirebaseAuth.getInstance().currentUser != null) {
-//                FirebaseAuth.getInstance().signOut()
-//            }
-            Log.d("signToFirebase", "Attempting to sign in with email: $adminEmail")
-            Log.d("signToFirebase", "Attempting to sign in with email: $adminPassword")
-            val authRes =
-                auth.signInWithEmailAndPassword(adminEmail, adminPassword)
-                    .await()
-            val firebaseUser = authRes.user
-            if (firebaseUser != null) {
-                val adminFromCollection = findAdminInCollection(adminEmail, adminPassword)
+            if (FirebaseAuth.getInstance().currentUser != null) {
+                FirebaseAuth.getInstance().signOut()
+            }
+
+            val authRes = auth.signInWithEmailAndPassword(adminEmail, adminPassword).await()
+            val firebaseAuthUser = authRes.user
+
+            if (firebaseAuthUser != null) {
+                val adminFromCollection = findAdminInCollectionByEmail(adminEmail)
+
                 if (adminFromCollection != null) {
                     if (adminFromCollection.nickName != Admin.DEFAULT_NICK_NAME) {
-                        admin = adminFromCollection
-                        //isCurrentAdminNeedRefreshFlow.emit(Unit)
-
-                    } else {
-                        if (firebaseUser.isEmailVerified) {
-                            val newAdmin = Admin(
-                                nickName = adminNickName,
-                                emailOrPhoneNumber = adminEmail,
-                                isEmailOrPhoneNumberVerified = true
-                            )
-                            val result = addAdminToCollection(newAdmin)
-                            if (result.isSuccess) {
-                                admin = newAdmin
-                                //isCurrentAdminNeedRefreshFlow.emit(Unit)
-                            }
+                        if (firebaseAuthUser.isEmailVerified) {
+                            admin = adminFromCollection
+                            //isCurrentAdminNeedRefreshFlow.emit(Unit)
                         } else {
                             sendVerificationEmailAndWaitForResult(
-                                firebaseUser,
+                                firebaseAuthUser,
                                 adminEmail,
                                 adminNickName,
                                 displayName,
                                 adminPassword
                             )
+                            //if not verified, then exception in sendVerificationEmailAndWaitForResult
+                            //sendVerificationEmailAndWaitForResult if verified, add Admin and User in DB
                         }
+
+                    } else {
+                        addAdminToCollectionWhenAdminIsAuthenticated(
+                            firebaseAuthUser,
+                            adminEmail,
+                            adminNickName,
+                            displayName,
+                            adminPassword
+                        )
                     }
-                    return StatusSignIn.USER_SIGNED_IN
+                    return StatusEmailSignIn.ADMIN_SIGNED_IN_AND_VERIFIED
+                } else {
+                    if (firebaseAuthUser.isEmailVerified) {
+                        addAdminToCollectionWhenAdminIsAuthenticated(
+                            firebaseAuthUser,
+                            adminEmail,
+                            adminNickName,
+                            displayName,
+                            adminPassword
+                        )
+                    } else {
+                        sendVerificationEmailAndWaitForResult(
+                            firebaseAuthUser,
+                            adminEmail,
+                            adminNickName,
+                            displayName,
+                            adminPassword
+                        )
+                        //if not verified, then exception in sendVerificationEmailAndWaitForResult
+                        //sendVerificationEmailAndWaitForResult if verified, add Admin and User in DB
+                    }
                 }
             }
+
         } catch (e: FirebaseAuthException) {
-            val errCode = e.errorCode.trim()
-            if (errCode == "ERROR_INVALID_CREDENTIAL" || errCode == "ERROR_USER_NOT_FOUND") {
-                return StatusSignIn.USER_NOT_FOUND
-            } else {
-                Storage.clearPreferences(context)
-                Log.e("signToFirebaseInWithEmailAndPassword, Error", e.message ?: "Unknown error")
-                return StatusSignIn.OTHER_ERROR
+
+            val admin = findAdminInCollectionByEmail(adminEmail)
+
+            if (admin != null) {
+                val user = findUserInCollection(User(adminEmailOrPhone = adminEmail, nickName = admin?.nickName ?: Admin.DEFAULT_NICK_NAME))
+                if (user != null && user.password != adminPassword) {
+                    isWrongPassword = user
+                    isWrongPasswordNeedRefreshFlow.emit(Unit)
+                } else {
+                    val errCode = e.errorCode.trim()
+                    if (errCode == "ERROR_INVALID_CREDENTIAL" || errCode == "ERROR_USER_NOT_FOUND") {
+                        return StatusEmailSignIn.ADMIN_NOT_FOUND
+                    } else {
+                        Storage.clearPreferences(context)
+                        Log.e("signToFirebaseInWithEmailAndPassword, Error", e.message ?: "Unknown error")
+                        return StatusEmailSignIn.OTHER_SIGN_IN_ERROR
+                    }
+                }
             }
         }
 
-        return StatusSignIn.OTHER_ERROR
+        return StatusEmailSignIn.OTHER_SIGN_IN_ERROR
     }
 
-    override suspend fun signToFirebaseWithFakeEmail(userToSignIn: User): StatusSignIn {
+    override suspend fun signToFirebaseWithFakeEmail(userToSignIn: User): StatusFakeEmailSignIn {
         if (userToSignIn.fakeEmail != User.DEFAULT_FAKE_EMAIL) {
             try {
                 if (FirebaseAuth.getInstance().currentUser != null) {
                     FirebaseAuth.getInstance().signOut()
                 }
+
+
+                val newUser = User(
+                    fakeEmail = userToSignIn.fakeEmail,
+                    displayName = userToSignIn.displayName,
+                    password = userToSignIn.password,
+                    adminEmailOrPhone = extractUserInfoFromFakeEmail(userToSignIn.fakeEmail).adminEmailOrPhone
+                )
 
                 val authRes =
                     auth.signInWithEmailAndPassword(userToSignIn.fakeEmail, userToSignIn.password)
@@ -285,43 +391,45 @@ class RegLogRepositoryImpl @Inject constructor(
                 val firebaseUser = authRes.user
                 if (firebaseUser != null) {
                     val userFromCollection = findUserInCollection(userToSignIn)
-                    if (userFromCollection != null) {
-                        if (userFromCollection.nickName != User.DEFAULT_NICK_NAME) {
-                            user = userFromCollection
-                            isCurrentUserNeedRefreshFlow.emit(Unit)
 
+                    if (userFromCollection != null && userFromCollection.nickName != User.DEFAULT_NICK_NAME) {
+                        user = userFromCollection
+                        isCurrentUserNeedRefreshFlow.emit(Unit)
+
+                    } else {
+                        val result = addUserToCollection(newUser)
+                        if (result.isSuccess) {
+                            user = newUser
+                            isCurrentUserNeedRefreshFlow.emit(Unit)
                         } else {
-                            val newUser = User(
-                                fakeEmail = userToSignIn.fakeEmail,
-                                displayName = userToSignIn.displayName,
-                                password = userToSignIn.password,
-                                adminEmailOrPhone = extractUserInfoFromFakeEmail(userToSignIn.fakeEmail).adminEmailOrPhone
-                            )
-                            val result = addUserToCollection(newUser)
-                            if (result.isSuccess) {
-                                user = newUser
-                                isCurrentUserNeedRefreshFlow.emit(Unit)
-                            }
+                            user = User(nickName = User.ERROR_LOADING_USER_DATA_FROM_FIREBASE)
+                            isCurrentUserNeedRefreshFlow.emit(Unit)
+                            return StatusFakeEmailSignIn.OTHER_FAKE_EMAIL_SIGN_IN_ERROR
                         }
-                        return StatusSignIn.USER_SIGNED_IN
                     }
+                    return StatusFakeEmailSignIn.USER_SIGNED_IN
+
                 }
 
             } catch (e: FirebaseAuthException) {
                 val errCode = e.errorCode.trim()
                 if (errCode == "ERROR_INVALID_CREDENTIAL" || errCode == "ERROR_USER_NOT_FOUND") {
-                    return StatusSignIn.USER_NOT_FOUND
+                    return StatusFakeEmailSignIn.USER_NOT_FOUND
                 } else {
                     Storage.clearPreferences(context)
                     Log.e(
                         "signToFirebaseInWithEmailAndPassword, Error",
                         e.message ?: "Unknown error"
                     )
-                    return StatusSignIn.OTHER_ERROR
+                    return StatusFakeEmailSignIn.OTHER_FAKE_EMAIL_SIGN_IN_ERROR
                 }
             }
         }
-        return StatusSignIn.OTHER_ERROR
+        return StatusFakeEmailSignIn.OTHER_FAKE_EMAIL_SIGN_IN_ERROR
+    }
+
+    override fun storageClearPreferences() {
+        Storage.clearPreferences(context)
     }
 
 
@@ -331,12 +439,16 @@ class RegLogRepositoryImpl @Inject constructor(
         displayName: String,
         password: String
     ) {
-        if (FirebaseAuth.getInstance().currentUser != null) {
-            FirebaseAuth.getInstance().signOut()
-        }
-        val isEnteredTeamIsNotRegisteredInFirebase = isNewTeam(email, nickName, displayName, password)
+
+        val isEnteredTeamIsNotRegisteredInFirebase =
+            isNewTeamCheckByEmail(email, nickName, displayName, password)
 
         if (isEnteredTeamIsNotRegisteredInFirebase) {
+
+            if (FirebaseAuth.getInstance().currentUser != null) {
+                FirebaseAuth.getInstance().signOut()
+            }
+
             try {
                 val authResult = withContext(Dispatchers.IO) {
                     auth.createUserWithEmailAndPassword(email, password).await()
@@ -354,12 +466,17 @@ class RegLogRepositoryImpl @Inject constructor(
                 )
 
             } catch (e: FirebaseAuthUserCollisionException) {
-                throw RuntimeException("registerAndVerifyByEmail: $USER_ALREADY_EXIST_IN_AUTH_BUT_NOT_IN_USERS")
+                throw RuntimeException("registerAndVerifyNewTeamByEmail: $USER_ALREADY_EXIST_IN_AUTH")
             } catch (e: Exception) {
-                throw RuntimeException("registerAndVerifyByEmail: $REGISTRATION_ERROR: ${e.message}")
+                throw RuntimeException("registerAndVerifyNewTeamByEmail: $REGISTRATION_ERROR: ${e.message}")
             }
         } else {
-
+            Storage.saveAllPreferences(
+                context,
+                createFakeUserEmail(nickName, email),
+                password,
+                language
+            )
         }
     }
 
@@ -408,7 +525,9 @@ class RegLogRepositoryImpl @Inject constructor(
         try {
             auth.createUserWithEmailAndPassword(fakeEmail, password).await()
 
-            auth.signInWithEmailAndPassword(fakeEmail, password).await()
+//            auth.signInWithEmailAndPassword("balexvicx@gmail.com", "111111").await()
+//            FirebaseAuth.getInstance().currentUser?.email?.let { Log.d("currentUser", it) }
+
 
             addAdminAndUserToFirebase(
                 registrationOption,
@@ -500,7 +619,7 @@ class RegLogRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun findAdminInCollection(email: String, password: String): Admin? {
+    private suspend fun findAdminInCollectionByEmail(email: String): Admin? {
         return try {
             val document = adminsCollection.document(email)
                 .get()
@@ -516,7 +635,8 @@ class RegLogRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun isNewTeam(
+
+    private suspend fun isNewTeamCheckByEmail(
         email: String,
         nickName: String,
         displayName: String,
@@ -527,8 +647,8 @@ class RegLogRepositoryImpl @Inject constructor(
             val sigInResultAdmin =
                 signToFirebaseWithEmailAndPassword(email, nickName, displayName, password)
 
-            if (sigInResultAdmin == StatusSignIn.USER_SIGNED_IN) {
-                val sigInResultUser = signToFirebaseWithFakeEmail(
+            if (sigInResultAdmin == StatusEmailSignIn.ADMIN_SIGNED_IN_AND_VERIFIED) {
+                signToFirebaseWithFakeEmail(
                     User(
                         adminEmailOrPhone = email,
                         nickName = nickName,
@@ -536,23 +656,10 @@ class RegLogRepositoryImpl @Inject constructor(
                         password = password
                     )
                 )
-                if (sigInResultUser == StatusSignIn.USER_NOT_FOUND) {
-                    addUserToCollection(
-                        User(
-                            nickName = nickName,
-                            admin = true,
-                            fakeEmail = createFakeUserEmail(nickName, email),
-                            adminEmailOrPhone = email,
-                            displayName = displayName,
-                            language = language,
-                            password = password
-                        )
-                    )
-                    return false
-                }
-
+                return false
             } else {
-                if (sigInResultAdmin == StatusSignIn.USER_NOT_FOUND) {
+                if (sigInResultAdmin == StatusEmailSignIn.ADMIN_NOT_FOUND) {
+                    removeRecordFromCollection(FIREBASE_ADMINS_AND_USERS_COLLECTION, email)
                     return true
                 }
             }
@@ -564,14 +671,9 @@ class RegLogRepositoryImpl @Inject constructor(
     }
 
 
-    private fun createFakeUserEmail(nick: String, data: String): String {
+    override fun createFakeUserEmail(nick: String, data: String): String {
         val nameLowCase = nick.lowercase()
         val dataLowCase = data.lowercase()
-        val u = if (dataLowCase.contains("@", true)) {
-            "$nameLowCase-$dataLowCase".trim()
-        } else {
-            nameLowCase + "-" + dataLowCase.substring(1) + "@" + FAKE_EMAIL_DOMAIN.trim()
-        }
         return if (dataLowCase.contains("@", true)) {
             "$nameLowCase-$dataLowCase".trim()
         } else {
@@ -613,23 +715,29 @@ class RegLogRepositoryImpl @Inject constructor(
 
         const val FIREBASE_ADMINS_COLLECTION = "admins"
         const val FIREBASE_USERS_COLLECTION = "users"
+        const val FIREBASE_ADMINS_AND_USERS_COLLECTION = "adminsAndUsers"
 
         const val SMS_VERIFICATION_ERROR_INITIAL = "SMS_VERIFICATION_ERROR_INITIAL"
         const val FAKE_EMAIL_DOMAIN = "balexvic.com"
 
         const val ERROR_ADD_USER_TO_FIREBASE = "ERROR_ADD_USER_TO_FIREBASE"
         const val ERROR_ADD_ADMIN_TO_FIREBASE = "ERROR_ADD_ADMIN_TO_FIREBASE"
-        const val USER_ALREADY_EXIST_IN_AUTH_BUT_NOT_IN_USERS =
-            "user already exist in AUTH, but not in USERS"
+        const val USER_ALREADY_EXIST_IN_AUTH =
+            "user already exist in AUTH"
         const val REGISTRATION_ERROR = "REGISTRATION ERROR"
 
         const val AUTH_USER_NOT_FOUND = "ERROR_USER_NOT_FOUND"
-        const val ERROR_INVALID_CREDENTIAL = "ERROR_INVALID_CREDENTIAL"
 
-        enum class StatusSignIn {
+        enum class StatusFakeEmailSignIn {
             USER_SIGNED_IN,
             USER_NOT_FOUND,
-            OTHER_ERROR
+            OTHER_FAKE_EMAIL_SIGN_IN_ERROR
+        }
+
+        enum class StatusEmailSignIn {
+            ADMIN_SIGNED_IN_AND_VERIFIED,
+            ADMIN_NOT_FOUND,
+            OTHER_SIGN_IN_ERROR
         }
     }
 }

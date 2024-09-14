@@ -3,12 +3,16 @@ package com.balex.familyteam.presentation.regadmin
 import android.util.Log
 import com.balex.familyteam.data.repository.RegLogRepositoryImpl.Companion.TIMEOUT_VERIFICATION_PHONE
 import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
+import com.balex.familyteam.domain.usecase.regLog.CreateFakeUserEmailUseCase
 import com.balex.familyteam.domain.usecase.regLog.EmitUserNeedRefreshUseCase
 import com.balex.familyteam.domain.usecase.regLog.RegUserWithFakeEmailUseCase
 import com.balex.familyteam.domain.usecase.regLog.RegUserWithFakeEmailToAuthAndToUsersCollectionUseCase
 import com.balex.familyteam.domain.usecase.regLog.SetUserAsVerifiedUseCase
+import com.balex.familyteam.domain.usecase.regLog.SignToFirebaseWithFakeEmailUseCase
 import com.balex.familyteam.presentation.MainActivity
 import com.google.firebase.FirebaseException
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
@@ -45,10 +49,15 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
         password: String,
         activity: MainActivity
     ) {
+
+        if (FirebaseAuth.getInstance().currentUser != null) {
+            FirebaseAuth.getInstance().signOut()
+        }
+
         val auth = Firebase.auth
 
         try {
-            val verificationId = suspendCancellableCoroutine<String> { continuation ->
+            val verificationId = suspendCancellableCoroutine { continuation ->
                 val options = PhoneAuthOptions.newBuilder(auth)
                     .setPhoneNumber(phoneNumber)
                     .setTimeout(TIMEOUT_VERIFICATION_PHONE, TimeUnit.SECONDS)
@@ -56,13 +65,18 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
                     .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
                         override fun onVerificationCompleted(credential: PhoneAuthCredential) {
                             CoroutineScope(Dispatchers.Default).launch {
-                                registerAndSignInWithCredential(
-                                    credential,
-                                    phoneNumber,
-                                    nickName,
-                                    displayName,
-                                    password
-                                )
+
+                                try {
+                                    registerAndSignInWithCredential(
+                                        credential,
+                                        phoneNumber,
+                                        nickName,
+                                        displayName,
+                                        password
+                                    )
+                                } catch (e: FirebaseAuthUserCollisionException) {
+                                    Log.e("sendSmsVerifyCode", "Telephone number already in use")
+                                }
                             }
                         }
 
@@ -145,6 +159,28 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
         }
     }
 
+
+
+    private fun signInWithPhoneAuthCredential(credential: PhoneAuthCredential) {
+        FirebaseAuth.getInstance().signInWithCredential(credential)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    // Успешная аутентификация
+                    Log.d("Auth", "Пользователь успешно вошел.")
+                } else {
+                    // Проверка на наличие исключения FirebaseAuthUserCollisionException
+                    if (task.exception is FirebaseAuthUserCollisionException) {
+                        Log.e("Auth", "Номер телефона уже используется другим аккаунтом.")
+                        // Обработка, если номер уже зарегистрирован
+                        Log.e("Auth", "Этот номер телефона уже зарегистрирован.")
+                    } else {
+                        // Обработка других ошибок
+                        Log.e("Auth", "Ошибка входа: ${task.exception?.message}")
+                    }
+                }
+            }
+    }
+
     override suspend fun verifySmsCode(
         verificationCode: String,
         phoneNumber: String,
@@ -153,6 +189,10 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
         password: String
     ) {
         val credential = PhoneAuthProvider.getCredential(storedSmsVerificationId, verificationCode)
+
+        signInWithPhoneAuthCredential(credential)
+
+
         registerAndSignInWithCredential(credential, phoneNumber, nickName, displayName, password)
     }
 

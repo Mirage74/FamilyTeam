@@ -55,12 +55,10 @@ interface LoginUserStore : Store<Intent, State, Label> {
         val isLoginButtonEnabled: Boolean,
 
         val language: String,
-        val loginUserState: LoginUserState,
+        val loginUserState: LoginUserState
 
     ) {
         sealed interface LoginUserState {
-
-            data object Initial : LoginUserState
 
             data object Loading : LoginUserState
 
@@ -107,7 +105,7 @@ class LoginUserStoreFactory @Inject constructor(
                 isLoginButtonEnabled = false,
 
                 language = language,
-                loginUserState = State.LoginUserState.Content
+                loginUserState = State.LoginUserState.Loading
             ),
             bootstrapper = BootstrapperImpl(),
             executorFactory = ::ExecutorImpl,

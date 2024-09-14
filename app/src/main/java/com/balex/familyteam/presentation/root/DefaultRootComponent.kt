@@ -9,6 +9,7 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
+import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.presentation.about.DefaultAboutComponent
 import com.balex.familyteam.presentation.loggeduser.DefaultLoggedUserComponent
 import com.balex.familyteam.presentation.loginuser.DefaultLoginUserComponent
@@ -51,6 +52,7 @@ class DefaultRootComponent @AssistedInject constructor(
                 val component = notLoggedComponentFactory.create(onRegAdminClicked = {
                     navigation.push(Config.RegAdmin)
                 }, onLoginUserClicked = {
+                    navigation.push(Config.LoginUser(it))
 
                 }, onUserIsLogged = {
                     navigation.replaceAll(Config.LoggedUser)
@@ -65,10 +67,12 @@ class DefaultRootComponent @AssistedInject constructor(
             Config.RegAdmin -> {
                 val component = regAdminComponentFactory.create(
                     onAdminRegisteredAndVerified = {
-                    navigation.replaceAll(Config.LoggedUser)
-                }, onAbout = {
-                    navigation.push(Config.About)
-                },
+                        navigation.replaceAll(Config.LoggedUser)
+                    }, onAbout = {
+                        navigation.push(Config.About)
+                    }, onAdminExistButWrongPassword = {
+                        navigation.push(Config.LoginUser(it))
+                    },
                     onBackClicked = {
                         navigation.pop()
                     }, componentContext = childComponentContext
@@ -76,8 +80,9 @@ class DefaultRootComponent @AssistedInject constructor(
                 Child.RegAdmin(component)
             }
 
-            Config.LoginUser -> {
+            is Config.LoginUser -> {
                 val component = loginUserComponent.create(
+                    user = config.user,
                     onAbout = {
                         navigation.push(Config.About)
                     },
@@ -120,7 +125,7 @@ class DefaultRootComponent @AssistedInject constructor(
         data object RegAdmin : Config
 
         @Serializable
-        data object LoginUser : Config
+        data class LoginUser(val user: User) : Config
 
         @Serializable
         data object LoggedUser : Config

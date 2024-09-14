@@ -76,4 +76,12 @@ object Storage {
         }.apply()
     }
 
+    fun saveAllPreferences(context: Context, userName: String, password: String, language: String) {
+        getEncryptedSharedPreferences(context).edit().apply {
+            putString(USER_KEY, userName.trim())
+            putString(USER_PASSWORD_KEY, password.trim())
+            putString(LANGUAGE_KEY, language.trim())
+        }.apply()
+    }
+
 }
