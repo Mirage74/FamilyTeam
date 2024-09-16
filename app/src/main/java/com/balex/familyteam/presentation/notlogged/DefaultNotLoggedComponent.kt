@@ -1,6 +1,5 @@
 package com.balex.familyteam.presentation.notlogged
 
-import android.util.Log
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.lifecycle.doOnResume
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
@@ -41,17 +40,14 @@ class DefaultNotLoggedComponent @AssistedInject constructor(
                 when (it) {
 
                     NotLoggedStore.Label.ClickedRegisterAdmin -> {
-                        //Log.d("NotLoggedComponent", "ClickedRegisterAdmin")
                         onRegAdminClicked()
                     }
 
                     NotLoggedStore.Label.ClickedLoginUser -> {
-                        Log.d("NotLoggedComponent", "ClickedLoginUser")
                         onLoginUserClicked(User())
                     }
 
                     NotLoggedStore.Label.UserIsLogged -> {
-                        Log.d("NotLoggedComponent", "UserIsLogged")
                         onUserIsLogged()
                     }
 

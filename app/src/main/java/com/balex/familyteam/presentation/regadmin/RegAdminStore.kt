@@ -197,7 +197,9 @@ class RegAdminStoreFactory @Inject constructor(
 
             scope.launch {
                 observeIsWrongPasswordUseCase().collect {
-                    dispatch(Action.AdminExistWrongPassword(it))
+                    if (it.nickName != User.DEFAULT_NICK_NAME) {
+                        dispatch(Action.AdminExistWrongPassword(it))
+                    }
                 }
             }
         }
@@ -339,7 +341,8 @@ class RegAdminStoreFactory @Inject constructor(
                 is Action.UserIsChanged -> {
                     if (action.user.nickName.length >= appContext.resources.getInteger(R.integer.min_nickName_length)
                         && (action.user.nickName != NO_USER_SAVED_IN_SHARED_PREFERENCES)
-                        && (action.user.nickName != User.DEFAULT_NICK_NAME) ) {
+                        && (action.user.nickName != User.DEFAULT_NICK_NAME)
+                    ) {
                         publish(Label.AdminIsRegisteredAndVerified)
                     }
                 }
@@ -465,6 +468,7 @@ class RegAdminStoreFactory @Inject constructor(
         const val REGEX_PATTERN_NOT_LATIN_LETTERS_NUMBERS_UNDERSCORE = "[^a-zA-Z0-9_]"
         const val REGEX_PATTERN_NOT_ANY_LETTERS_NUMBERS_UNDERSCORE = """[^\p{L}\p{Nd}_]"""
 
-        const val SELECTED_OPTION_ILLEGAL_VALUE = "RegAdminStore, ExecutorImpl - getState().selectedOption must == RegistrationOption.EMAIL"
+        const val SELECTED_OPTION_ILLEGAL_VALUE =
+            "RegAdminStore, ExecutorImpl - getState().selectedOption must == RegistrationOption.EMAIL"
     }
 }

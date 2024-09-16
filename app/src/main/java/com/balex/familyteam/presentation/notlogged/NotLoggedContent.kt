@@ -147,7 +147,7 @@ fun MainContent(component: NotLoggedComponent) {
 
         when (state.logChooseState) {
             NotLoggedStore.State.LogChooseState.Initial -> {
-                ThreeButtonsScreen(true, component)
+                ShowContent(true, component)
             }
 
             NotLoggedStore.State.LogChooseState.ErrorLoadingUserData -> {
@@ -155,7 +155,7 @@ fun MainContent(component: NotLoggedComponent) {
             }
 
             NotLoggedStore.State.LogChooseState.NoSavedUserFound -> {
-                ThreeButtonsScreen(true, component)
+                ShowContent(true, component)
             }
         }
     }
@@ -190,7 +190,7 @@ fun DrawerContent(
 
 
 @Composable
-fun ThreeButtonsScreen(
+fun ShowContent(
     isEnabled: Boolean,
     component: NotLoggedComponent
 ) {

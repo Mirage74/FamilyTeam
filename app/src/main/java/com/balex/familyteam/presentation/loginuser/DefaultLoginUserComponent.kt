@@ -1,10 +1,14 @@
 package com.balex.familyteam.presentation.loginuser
 
 import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
+import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
 import com.balex.familyteam.domain.entity.Language
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
+import com.balex.familyteam.extensions.componentScope
+import com.balex.familyteam.presentation.notlogged.NotLoggedStore
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -17,21 +21,29 @@ class DefaultLoginUserComponent @AssistedInject constructor(
     @Assisted("onAbout") private val onAbout: () -> Unit,
     @Assisted("componentContext") componentContext: ComponentContext
 ) : LoginUserComponent, ComponentContext by componentContext {
-    private val store = instanceKeeper.getStore { storeFactory.create(getLanguageUseCase()) }
 
-    override val model: StateFlow<LoginUserStore.State>
-        get() = TODO("Not yet implemented")
+    private val store = instanceKeeper.getStore { storeFactory.create(getLanguageUseCase()) }
+    private val scope = componentScope()
+
+    init {
+        lifecycle.doOnResume {
+            onRefreshLanguage()
+        }
+    }
+
+
+    override val model: StateFlow<LoginUserStore.State> = store.stateFlow
 
     override fun onClickAbout() {
-        TODO("Not yet implemented")
+        store.accept(LoginUserStore.Intent.ClickedAbout)
     }
 
     override fun onRefreshLanguage() {
-        TODO("Not yet implemented")
+        store.accept(LoginUserStore.Intent.RefreshLanguage)
     }
 
     override fun onLanguageChanged(language: String) {
-        TODO("Not yet implemented")
+        store.accept(LoginUserStore.Intent.ClickedChangeLanguage(language))
     }
 
     @AssistedFactory

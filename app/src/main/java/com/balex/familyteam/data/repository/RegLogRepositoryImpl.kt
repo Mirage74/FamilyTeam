@@ -349,20 +349,20 @@ class RegLogRepositoryImpl @Inject constructor(
 
             val admin = findAdminInCollectionByEmail(adminEmail)
 
-            if (admin != null) {
+            if (admin != null && admin.nickName != Admin.DEFAULT_NICK_NAME) {
                 val user = findUserInCollection(User(adminEmailOrPhone = adminEmail, nickName = admin?.nickName ?: Admin.DEFAULT_NICK_NAME))
                 if (user != null && user.password != adminPassword) {
                     isWrongPassword = user
                     isWrongPasswordNeedRefreshFlow.emit(Unit)
+                }
+            } else {
+                val errCode = e.errorCode.trim()
+                if (errCode == "ERROR_INVALID_CREDENTIAL" || errCode == "ERROR_USER_NOT_FOUND") {
+                    return StatusEmailSignIn.ADMIN_NOT_FOUND
                 } else {
-                    val errCode = e.errorCode.trim()
-                    if (errCode == "ERROR_INVALID_CREDENTIAL" || errCode == "ERROR_USER_NOT_FOUND") {
-                        return StatusEmailSignIn.ADMIN_NOT_FOUND
-                    } else {
-                        Storage.clearPreferences(context)
-                        Log.e("signToFirebaseInWithEmailAndPassword, Error", e.message ?: "Unknown error")
-                        return StatusEmailSignIn.OTHER_SIGN_IN_ERROR
-                    }
+                    Storage.clearPreferences(context)
+                    Log.e("signToFirebaseInWithEmailAndPassword, Error", e.message ?: "Unknown error")
+                    return StatusEmailSignIn.OTHER_SIGN_IN_ERROR
                 }
             }
         }
@@ -651,8 +651,8 @@ class RegLogRepositoryImpl @Inject constructor(
                 signToFirebaseWithFakeEmail(
                     User(
                         adminEmailOrPhone = email,
-                        nickName = nickName,
-                        fakeEmail = createFakeUserEmail(nickName, email),
+                        nickName = admin.nickName,
+                        fakeEmail = createFakeUserEmail(admin.nickName, email),
                         password = password
                     )
                 )
