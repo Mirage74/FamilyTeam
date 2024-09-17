@@ -1,6 +1,8 @@
 package com.balex.familyteam.presentation.loginuser
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
@@ -25,8 +27,7 @@ fun LoginUserContent(component: LoginUserComponent) {
     when (state.loginUserState) {
 
         LoginUserStore.State.LoginUserState.Content -> {
-            //MainLoginUserContent(component)
-            ErrorLoginUserScreen()
+            MainLoginUserContent(state)
         }
 
         LoginUserStore.State.LoginUserState.Loading -> {
@@ -40,6 +41,29 @@ fun LoginUserContent(component: LoginUserComponent) {
         LoginUserStore.State.LoginUserState.Error -> {
             ErrorLoginUserScreen()
         }
+    }
+}
+
+@Composable
+fun MainLoginUserContent(state: LoginUserStore.State) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 64.dp),
+        verticalArrangement = Arrangement.SpaceEvenly
+    ) {
+        Text(
+            text = state.adminEmailOrPhone,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+        Text(
+            text = state.nickName,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
@@ -60,3 +84,4 @@ fun ErrorLoginUserScreen() {
         )
     }
 }
+

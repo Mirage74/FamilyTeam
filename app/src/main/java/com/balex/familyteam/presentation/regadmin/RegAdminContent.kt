@@ -39,8 +39,6 @@ import com.balex.familyteam.presentation.regadmin.content.ResendSmsButton
 import com.balex.familyteam.presentation.regadmin.content.VerifyEmailOrPhoneText
 import com.balex.familyteam.presentation.rememberImeState
 
-const val SMS_VERIFICATION_ID_INITIAL = "SMS_VERIFICATION_ID_INITIAL"
-
 @Composable
 fun RegAdminContent(component: RegAdminComponent, activity: MainActivity) {
 

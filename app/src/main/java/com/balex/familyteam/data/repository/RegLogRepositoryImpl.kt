@@ -709,7 +709,6 @@ class RegLogRepositoryImpl @Inject constructor(
     }
 
     companion object {
-        const val TIMEOUT_VERIFICATION_PHONE = 60L
         const val TIMEOUT_VERIFICATION_MAIL = 60000L * 60L * 24L
         const val TIMEOUT_VERIFICATION_CHECK = 15000L
 

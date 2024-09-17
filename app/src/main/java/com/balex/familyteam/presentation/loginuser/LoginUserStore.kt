@@ -9,6 +9,7 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.balex.familyteam.R
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
+import com.balex.familyteam.domain.usecase.regLog.IsWrongPasswordUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.SaveLanguageUseCase
@@ -80,6 +81,7 @@ interface LoginUserStore : Store<Intent, State, Label> {
 
 class LoginUserStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
+    private val observeIsWrongPasswordUseCase: IsWrongPasswordUseCase,
     private val getLanguageUseCase: GetLanguageUseCase,
     private val observeLanguageUseCase: ObserveLanguageUseCase,
     private val saveLanguageUseCase: SaveLanguageUseCase,
@@ -118,6 +120,10 @@ class LoginUserStoreFactory @Inject constructor(
 
         data class LanguageIsChanged(val language: String) : Action
 
+        data class AdminExistWrongPassword(val user: User) : Action
+
+        data object UserIsWrongPasswordIsCheckedInRepo : Action
+
     }
 
     private sealed interface Msg {
@@ -149,8 +155,11 @@ class LoginUserStoreFactory @Inject constructor(
 
         data object ClickedChangePasswordVisibility : Msg
 
-
         data class LanguageIsChanged(val language: String) : Msg
+
+        data class SetLoginWithoutWrongPassword(val user: User) : Msg
+
+        data object UserIsWrongPasswordIsCheckedInRepo : Msg
     }
 
     private inner class BootstrapperImpl : CoroutineBootstrapper<Action>() {
@@ -163,6 +172,14 @@ class LoginUserStoreFactory @Inject constructor(
             scope.launch {
                 observeUserUseCase().collect {
                     dispatch(Action.UserIsChanged(it))
+                }
+            }
+            scope.launch {
+                observeIsWrongPasswordUseCase().collect {
+                    if (it.nickName != User.DEFAULT_NICK_NAME) {
+                        dispatch(Action.AdminExistWrongPassword(it))
+                    }
+                    dispatch(Action.UserIsWrongPasswordIsCheckedInRepo)
                 }
             }
         }
@@ -246,6 +263,14 @@ class LoginUserStoreFactory @Inject constructor(
                 is Action.LanguageIsChanged -> {
                     dispatch(Msg.LanguageIsChanged(action.language))
                 }
+
+                is Action.AdminExistWrongPassword -> {
+                    dispatch(Msg.SetLoginWithoutWrongPassword(action.user))
+                }
+
+                Action.UserIsWrongPasswordIsCheckedInRepo -> {
+                    dispatch(Msg.UserIsWrongPasswordIsCheckedInRepo)
+                }
             }
         }
     }
@@ -301,6 +326,16 @@ class LoginUserStoreFactory @Inject constructor(
                     copy(language = msg.language)
                 }
 
+                is Msg.SetLoginWithoutWrongPassword -> {
+                    copy(
+                        adminEmailOrPhone = msg.user.adminEmailOrPhone,
+                        nickName = msg.user.nickName
+                    )
+                }
+
+                Msg.UserIsWrongPasswordIsCheckedInRepo -> {
+                    copy(loginUserState = State.LoginUserState.Content)
+                }
             }
     }
 }

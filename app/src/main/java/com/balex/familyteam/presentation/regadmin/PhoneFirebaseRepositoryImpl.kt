@@ -1,14 +1,11 @@
 package com.balex.familyteam.presentation.regadmin
 
 import android.util.Log
-import com.balex.familyteam.data.repository.RegLogRepositoryImpl.Companion.TIMEOUT_VERIFICATION_PHONE
 import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
-import com.balex.familyteam.domain.usecase.regLog.CreateFakeUserEmailUseCase
 import com.balex.familyteam.domain.usecase.regLog.EmitUserNeedRefreshUseCase
-import com.balex.familyteam.domain.usecase.regLog.RegUserWithFakeEmailUseCase
 import com.balex.familyteam.domain.usecase.regLog.RegUserWithFakeEmailToAuthAndToUsersCollectionUseCase
+import com.balex.familyteam.domain.usecase.regLog.RegUserWithFakeEmailUseCase
 import com.balex.familyteam.domain.usecase.regLog.SetUserAsVerifiedUseCase
-import com.balex.familyteam.domain.usecase.regLog.SignToFirebaseWithFakeEmailUseCase
 import com.balex.familyteam.presentation.MainActivity
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
@@ -67,16 +64,30 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
                             CoroutineScope(Dispatchers.Default).launch {
 
                                 try {
-                                    registerAndSignInWithCredential(
-                                        credential,
-                                        phoneNumber,
-                                        nickName,
-                                        displayName,
-                                        password
-                                    )
+                                    // Попробуйте войти с использованием креденшала
+                                    val authResult = auth.signInWithCredential(credential).await()
+                                    // Если регистрация или вход успешны, продолжайте логику
+                                    Log.d("sendSmsVerifyCode", "Authentication successful")
                                 } catch (e: FirebaseAuthUserCollisionException) {
+                                    // Ошибка: номер телефона уже используется
                                     Log.e("sendSmsVerifyCode", "Telephone number already in use")
+                                } catch (e: Exception) {
+                                    // Обработайте другие ошибки
+                                    Log.e("sendSmsVerifyCode", "Error: ${e.message}")
                                 }
+
+
+//                                try {
+//                                    registerAndSignInWithCredential(
+//                                        credential,
+//                                        phoneNumber,
+//                                        nickName,
+//                                        displayName,
+//                                        password
+//                                    )
+//                                } catch (e: FirebaseAuthUserCollisionException) {
+//                                    Log.e("sendSmsVerifyCode", "Telephone number already in use")
+//                                }
                             }
                         }
 
@@ -190,7 +201,7 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
     ) {
         val credential = PhoneAuthProvider.getCredential(storedSmsVerificationId, verificationCode)
 
-        signInWithPhoneAuthCredential(credential)
+        //signInWithPhoneAuthCredential(credential)
 
 
         registerAndSignInWithCredential(credential, phoneNumber, nickName, displayName, password)
@@ -233,4 +244,9 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
         }
     }
 
+    companion object {
+        const val SMS_VERIFICATION_ID_INITIAL = "SMS_VERIFICATION_ID_INITIAL"
+        const val TIMEOUT_VERIFICATION_PHONE = 60L
+
+    }
 }
