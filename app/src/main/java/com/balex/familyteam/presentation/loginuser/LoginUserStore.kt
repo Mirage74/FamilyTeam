@@ -1,12 +1,25 @@
 package com.balex.familyteam.presentation.loginuser
 
 import android.content.Context
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.balex.familyteam.R
+import com.balex.familyteam.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.IsWrongPasswordUseCase
@@ -98,7 +111,7 @@ class LoginUserStoreFactory @Inject constructor(
                 adminEmailOrPhone = "",
 
                 nickName = "",
-                isNickNameEnabled = true,
+                isNickNameEnabled = false,
 
                 password = "",
                 isPasswordEnabled = false,
@@ -143,8 +156,6 @@ class LoginUserStoreFactory @Inject constructor(
         data object NickNameMatched : Msg
 
         data object NickNameNotMatched : Msg
-
-
 
 
         data class UpdatePasswordField(val currentPasswordText: String) : Msg
@@ -196,7 +207,10 @@ class LoginUserStoreFactory @Inject constructor(
                 is Intent.NickNameFieldChanged -> {
 
                     val text = if (intent.currentNickNameFieldChanged.length == 1) {
-                        intent.currentNickNameFieldChanged.replace(Regex(REGEX_PATTERN_NOT_LETTERS), "")
+                        intent.currentNickNameFieldChanged.replace(
+                            Regex(REGEX_PATTERN_NOT_LETTERS),
+                            ""
+                        )
                     } else {
                         intent.currentNickNameFieldChanged.replace(
                             Regex
@@ -255,7 +269,10 @@ class LoginUserStoreFactory @Inject constructor(
             when (action) {
 
                 is Action.UserIsChanged -> {
-                    if (action.user.nickName.length >= appContext.resources.getInteger(R.integer.min_nickName_length)) {
+                    if (action.user.nickName.length >= appContext.resources.getInteger(R.integer.min_nickName_length)
+                        && (action.user.nickName != NO_USER_SAVED_IN_SHARED_PREFERENCES)
+                        && (action.user.nickName != User.DEFAULT_NICK_NAME)
+                    ) {
                         publish(Label.UserIsLogged)
                     }
                 }
@@ -298,6 +315,7 @@ class LoginUserStoreFactory @Inject constructor(
                     copy(nickName = msg.currentNickNameFieldText)
 
                 }
+
                 Msg.NickNameMatched -> {
                     copy(isPasswordEnabled = true)
                 }
@@ -314,6 +332,7 @@ class LoginUserStoreFactory @Inject constructor(
                     copy(isLoginButtonEnabled = true)
 
                 }
+
                 Msg.PasswordNotMatched -> {
                     copy(isLoginButtonEnabled = false)
                 }
@@ -334,8 +353,13 @@ class LoginUserStoreFactory @Inject constructor(
                 }
 
                 Msg.UserIsWrongPasswordIsCheckedInRepo -> {
-                    copy(loginUserState = State.LoginUserState.Content)
+                    copy(
+                        isNickNameEnabled = true,
+                        isPasswordEnabled = true,
+                        loginUserState = State.LoginUserState.Content
+                    )
                 }
             }
     }
 }
+

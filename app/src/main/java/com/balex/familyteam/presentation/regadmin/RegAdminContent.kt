@@ -12,19 +12,25 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.balex.familyteam.LocalLocalizedContext
 import com.balex.familyteam.LocalizedContextProvider
 import com.balex.familyteam.R
 import com.balex.familyteam.domain.entity.RegistrationOption
+import com.balex.familyteam.presentation.ANIMATION_DURATION
 import com.balex.familyteam.presentation.MainActivity
 import com.balex.familyteam.presentation.TopAppBarOnlyLanguage
 import com.balex.familyteam.presentation.regadmin.content.ChooseEmailOrPhoneButton
@@ -38,6 +44,7 @@ import com.balex.familyteam.presentation.regadmin.content.RegisterOrTryAgainButt
 import com.balex.familyteam.presentation.regadmin.content.ResendSmsButton
 import com.balex.familyteam.presentation.regadmin.content.VerifyEmailOrPhoneText
 import com.balex.familyteam.presentation.rememberImeState
+import com.balex.familyteam.presentation.ui.theme.DarkBlue
 
 @Composable
 fun RegAdminContent(component: RegAdminComponent, activity: MainActivity) {
@@ -47,17 +54,29 @@ fun RegAdminContent(component: RegAdminComponent, activity: MainActivity) {
     LocalizedContextProvider(languageCode = state.language.lowercase()) {
         when (state.regAdminState) {
             RegAdminStore.State.RegAdminState.Content -> {
-                ContentScreen(component, activity)
+                ContentScreen(component, state, activity)
+            }
+
+            RegAdminStore.State.RegAdminState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = DarkBlue)
+                }
+            }
+
+            RegAdminStore.State.RegAdminState.Error -> {
+                ErrorRegAdminScreen()
             }
         }
     }
-
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun ContentScreen(
     component: RegAdminComponent,
+    state: RegAdminStore.State,
     activity: MainActivity
 ) {
     Box(
@@ -66,14 +85,13 @@ fun ContentScreen(
             .background(Color.Cyan)
 
     ) {
-        val state by component.model.collectAsState()
         val imeState = rememberImeState()
         val scrollState = rememberScrollState()
 
 
         LaunchedEffect(key1 = imeState.value) {
             if (imeState.value) {
-                scrollState.animateScrollTo(scrollState.maxValue, tween(300))
+                scrollState.animateScrollTo(scrollState.maxValue, tween(ANIMATION_DURATION))
             }
         }
 
@@ -125,3 +143,20 @@ fun ContentScreen(
 
 
 
+@Composable
+fun ErrorRegAdminScreen() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Error login user, please try later",
+            color = Color.Red,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+    }
+}

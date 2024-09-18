@@ -132,7 +132,10 @@ fun NotLoggedScreen(component: NotLoggedComponent) {
                         }
                     }
                 )
-                MainContent(component)
+                //MainContent(component)
+                LocalizedContextProvider(languageCode = state.language.lowercase()) {
+                    ShowContent(true, component)
+                }
             }
 
 
@@ -140,26 +143,13 @@ fun NotLoggedScreen(component: NotLoggedComponent) {
     }
 }
 
-@Composable
-fun MainContent(component: NotLoggedComponent) {
-    val state by component.model.collectAsState()
-    LocalizedContextProvider(languageCode = state.language.lowercase()) {
-
-        when (state.logChooseState) {
-            NotLoggedStore.State.LogChooseState.Initial -> {
-                ShowContent(true, component)
-            }
-
-            NotLoggedStore.State.LogChooseState.ErrorLoadingUserData -> {
-                TODO()
-            }
-
-            NotLoggedStore.State.LogChooseState.NoSavedUserFound -> {
-                ShowContent(true, component)
-            }
-        }
-    }
-}
+//@Composable
+//fun MainContent(component: NotLoggedComponent) {
+//    val state by component.model.collectAsState()
+//    LocalizedContextProvider(languageCode = state.language.lowercase()) {
+//        ShowContent(true, component)
+//    }
+//}
 
 
 @Composable

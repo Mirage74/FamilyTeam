@@ -86,6 +86,9 @@ class DefaultRootComponent @AssistedInject constructor(
                     onAbout = {
                         navigation.push(Config.About)
                     },
+                    onUserLogged = {
+                        navigation.replaceAll(Config.LoggedUser)
+                    },
                     componentContext = childComponentContext
                 )
                 Child.LoginUser(component)

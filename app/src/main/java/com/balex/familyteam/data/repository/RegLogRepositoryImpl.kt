@@ -367,6 +367,13 @@ class RegLogRepositoryImpl @Inject constructor(
             }
         }
 
+        catch (e: Exception) {
+            Log.e("signToFirebaseInWithEmailAndPassword, Error", e.message ?: "Unknown error")
+            user = User(nickName = User.ERROR_LOADING_USER_DATA_FROM_FIREBASE)
+            isCurrentUserNeedRefreshFlow.emit(Unit)
+
+        }
+
         return StatusEmailSignIn.OTHER_SIGN_IN_ERROR
     }
 

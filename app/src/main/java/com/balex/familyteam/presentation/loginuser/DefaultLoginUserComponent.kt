@@ -3,22 +3,27 @@ package com.balex.familyteam.presentation.loginuser
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.lifecycle.doOnResume
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
+import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
 import com.balex.familyteam.domain.entity.Language
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
 import com.balex.familyteam.extensions.componentScope
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore
+import com.balex.familyteam.presentation.regadmin.RegAdminStore
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 class DefaultLoginUserComponent @AssistedInject constructor(
     private val storeFactory: LoginUserStoreFactory,
     private val getLanguageUseCase: GetLanguageUseCase,
     @Assisted("user") private val user: User,
     @Assisted("onAbout") private val onAbout: () -> Unit,
+    @Assisted("onUserLogged") private val onUserLogged: () -> Unit,
     @Assisted("componentContext") componentContext: ComponentContext
 ) : LoginUserComponent, ComponentContext by componentContext {
 
@@ -29,10 +34,46 @@ class DefaultLoginUserComponent @AssistedInject constructor(
         lifecycle.doOnResume {
             onRefreshLanguage()
         }
+
+        scope.launch {
+            store.labels.collect {
+                when (it) {
+
+                    LoginUserStore.Label.ClickedAbout -> {
+                        onAbout()
+                    }
+
+                    LoginUserStore.Label.UserIsLogged -> {
+                        onUserLogged()
+                    }
+                }
+            }
+        }
     }
 
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override val model: StateFlow<LoginUserStore.State> = store.stateFlow
+
+    override fun onClickLogin() {
+        store.accept(LoginUserStore.Intent.ClickedLoginButton)
+    }
+
+    override fun onLoginFieldChanged(currentLoginText: String) {
+        store.accept(LoginUserStore.Intent.LoginAdminFieldChanged(currentLoginText))
+    }
+
+    override fun onNickNameFieldChanged(currentNickNameText: String) {
+        store.accept(LoginUserStore.Intent.NickNameFieldChanged(currentNickNameText))
+    }
+
+    override fun onPasswordFieldChanged(currentPasswordText: String) {
+        store.accept(LoginUserStore.Intent.PasswordFieldChanged(currentPasswordText))
+    }
+
+    override fun onClickChangePasswordVisibility() {
+        store.accept(LoginUserStore.Intent.ClickedChangePasswordVisibility)
+    }
 
     override fun onClickAbout() {
         store.accept(LoginUserStore.Intent.ClickedAbout)
@@ -52,6 +93,7 @@ class DefaultLoginUserComponent @AssistedInject constructor(
         fun create(
             @Assisted("user") user: User,
             @Assisted("onAbout") onAbout: () -> Unit,
+            @Assisted("onUserLogged") onUserLogged: () -> Unit,
             @Assisted("componentContext") componentContext: ComponentContext
         ): DefaultLoginUserComponent
     }

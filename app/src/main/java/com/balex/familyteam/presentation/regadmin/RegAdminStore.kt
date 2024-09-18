@@ -10,6 +10,7 @@ import com.balex.familyteam.R
 import com.balex.familyteam.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
 import com.balex.familyteam.domain.entity.RegistrationOption
 import com.balex.familyteam.domain.entity.User
+import com.balex.familyteam.domain.entity.User.Companion.ERROR_LOADING_USER_DATA_FROM_FIREBASE
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.IsWrongPasswordUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
@@ -76,6 +77,10 @@ interface RegAdminStore : Store<Intent, State, Label> {
 
             data object Content : RegAdminState
 
+            data object Loading : RegAdminState
+
+            data object Error : RegAdminState
+
         }
     }
 
@@ -123,7 +128,7 @@ class RegAdminStoreFactory @Inject constructor(
                 isSmsOkButtonEnabled = false,
                 isRegisterButtonEnabled = false,
                 isEmailOrPhoneNumberVerified = false,
-                regAdminState = State.RegAdminState.Content
+                regAdminState = State.RegAdminState.Loading
             ),
             bootstrapper = BootstrapperImpl(),
             executorFactory = ::ExecutorImpl,
@@ -141,6 +146,8 @@ class RegAdminStoreFactory @Inject constructor(
     }
 
     private sealed interface Msg {
+
+        data class UserInfoIsChanged(val user: User) : Msg
 
         data object ClickedRegister : Msg
 
@@ -345,6 +352,7 @@ class RegAdminStoreFactory @Inject constructor(
                     ) {
                         publish(Label.AdminIsRegisteredAndVerified)
                     }
+                    dispatch(Msg.UserInfoIsChanged(action.user))
                 }
 
                 is Action.AdminExistWrongPassword -> {
@@ -457,6 +465,15 @@ class RegAdminStoreFactory @Inject constructor(
 
             Msg.SmsMatchedNotMatched -> {
                 copy(isSmsOkButtonEnabled = false)
+            }
+
+            is Msg.UserInfoIsChanged -> {
+                if (msg.user.nickName == ERROR_LOADING_USER_DATA_FROM_FIREBASE) {
+                    copy(regAdminState = State.RegAdminState.Error)
+                } else {
+                    copy(regAdminState = State.RegAdminState.Content)
+                }
+
             }
         }
     }

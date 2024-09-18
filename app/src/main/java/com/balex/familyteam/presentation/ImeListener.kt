@@ -6,6 +6,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
+const val ANIMATION_DURATION = 300
+
 @Composable
 fun rememberImeState(): State<Boolean> {
     val imeState = remember {
