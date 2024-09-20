@@ -176,6 +176,8 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
         FirebaseAuth.getInstance().signInWithCredential(credential)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
+
+                    //если уже есть, заходит. Если нет ?
                     // Успешная аутентификация
                     Log.d("Auth", "Пользователь успешно вошел.")
                 } else {
@@ -201,7 +203,7 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
     ) {
         val credential = PhoneAuthProvider.getCredential(storedSmsVerificationId, verificationCode)
 
-        //signInWithPhoneAuthCredential(credential)
+        signInWithPhoneAuthCredential(credential)
 
 
         registerAndSignInWithCredential(credential, phoneNumber, nickName, displayName, password)
