@@ -7,5 +7,6 @@ enum class PagesNames {
     TodoList,
     ShopList,
     MyTasksForOtherUsers,
-    AdminPanel
+    AdminPanel,
+    Logout
 }

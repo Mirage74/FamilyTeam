@@ -32,6 +32,8 @@ interface LoggedUserComponent {
 
     fun onClickAbout()
 
+    fun onClickLogout()
+
     fun onRefreshLanguage()
 
     fun onLanguageChanged(language: String)

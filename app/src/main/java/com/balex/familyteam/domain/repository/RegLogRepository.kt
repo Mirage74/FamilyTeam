@@ -11,7 +11,11 @@ interface RegLogRepository {
 
     fun setUserAsVerified()
 
+    suspend fun setUserWithError(message: String)
+
     fun observeUser(): StateFlow<User>
+
+    suspend fun findAdminInCollectionByDocumentName(documentName: String): Admin?
 
     fun observeIsWrongPassword(): StateFlow<User>
 
@@ -25,7 +29,7 @@ interface RegLogRepository {
 
     fun observeSmsVerificationError(): StateFlow<String>
 
-    fun storageClearPreferences()
+    fun storageClearPreferences(resetUserInRepo: Boolean)
 
     suspend fun registerAndVerifyNewTeamByEmail(
         email: String,
@@ -40,8 +44,6 @@ interface RegLogRepository {
         displayName: String,
         password: String
     )
-
-    fun createFakeUserEmail(nick: String, data: String): String
 
     suspend fun addUserToCollection(userToAdd: User): Result<Unit>
 

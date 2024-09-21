@@ -1,19 +1,27 @@
 package com.balex.familyteam.presentation.regadmin
 
 import android.util.Log
+import com.balex.familyteam.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_ADMINS_COLLECTION
+import com.balex.familyteam.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_USERS_COLLECTION
+import com.balex.familyteam.domain.entity.Admin
+import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
 import com.balex.familyteam.domain.usecase.regLog.EmitUserNeedRefreshUseCase
+import com.balex.familyteam.domain.usecase.regLog.FindAdminInCollectionByDocumentNameUseCase
 import com.balex.familyteam.domain.usecase.regLog.RegUserWithFakeEmailToAuthAndToUsersCollectionUseCase
 import com.balex.familyteam.domain.usecase.regLog.RegUserWithFakeEmailUseCase
+import com.balex.familyteam.domain.usecase.regLog.RemoveRecordFromCollectionUseCase
 import com.balex.familyteam.domain.usecase.regLog.SetUserAsVerifiedUseCase
+import com.balex.familyteam.domain.usecase.regLog.SetUserWithErrorUseCase
+import com.balex.familyteam.domain.usecase.regLog.SignToFirebaseWithFakeEmailUseCase
 import com.balex.familyteam.presentation.MainActivity
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,13 +38,20 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
     private val regUserWithFakeEmailToAuthAndToUsersCollectionUseCase: RegUserWithFakeEmailToAuthAndToUsersCollectionUseCase,
     private val regUserWithFakeEmailUseCase: RegUserWithFakeEmailUseCase,
     private val setUserAsVerifiedUseCase: SetUserAsVerifiedUseCase,
-    private val emitUserNeedRefreshUseCase: EmitUserNeedRefreshUseCase
+    private val setUserWithErrorUseCase: SetUserWithErrorUseCase,
+    private val emitUserNeedRefreshUseCase: EmitUserNeedRefreshUseCase,
+    private val findAdminInCollectionByDocumentNameUseCase: FindAdminInCollectionByDocumentNameUseCase,
+    private val removeRecordFromCollection: RemoveRecordFromCollectionUseCase,
+    private val signToFirebaseWithFakeEmailUseCase: SignToFirebaseWithFakeEmailUseCase
+
 ) : PhoneFirebaseRepository {
+
+    private val db = Firebase.firestore
+    private val usersCollection = db.collection(FIREBASE_USERS_COLLECTION)
+
 
     private var storedSmsVerificationId = SMS_VERIFICATION_ID_INITIAL
     private var resendTokenForSmsVerification: PhoneAuthProvider.ForceResendingToken? = null
-    private var isUserMailOrPhoneVerified = false
-
 
 
     override suspend fun sendSmsVerifyCode(
@@ -61,33 +76,20 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
                     .setActivity(activity)
                     .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
                         override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+                            //called only when verification without user action
                             CoroutineScope(Dispatchers.Default).launch {
-
                                 try {
-                                    // Попробуйте войти с использованием креденшала
-                                    val authResult = auth.signInWithCredential(credential).await()
-                                    // Если регистрация или вход успешны, продолжайте логику
-                                    Log.d("sendSmsVerifyCode", "Authentication successful")
-                                } catch (e: FirebaseAuthUserCollisionException) {
-                                    // Ошибка: номер телефона уже используется
-                                    Log.e("sendSmsVerifyCode", "Telephone number already in use")
+                                    registerAndSignInWithCredential(
+                                        credential,
+                                        phoneNumber,
+                                        nickName,
+                                        displayName,
+                                        password
+                                    )
                                 } catch (e: Exception) {
-                                    // Обработайте другие ошибки
                                     Log.e("sendSmsVerifyCode", "Error: ${e.message}")
+                                    setUserWithErrorUseCase("sendSmsVerifyCode, registerAndSignInWithCredential, error: ${e.message}")
                                 }
-
-
-//                                try {
-//                                    registerAndSignInWithCredential(
-//                                        credential,
-//                                        phoneNumber,
-//                                        nickName,
-//                                        displayName,
-//                                        password
-//                                    )
-//                                } catch (e: FirebaseAuthUserCollisionException) {
-//                                    Log.e("sendSmsVerifyCode", "Telephone number already in use")
-//                                }
                             }
                         }
 
@@ -96,22 +98,23 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
                         }
 
                         override fun onCodeSent(
-                            verificationId: String,
+                            verifId: String,
                             token: PhoneAuthProvider.ForceResendingToken
                         ) {
-                            storedSmsVerificationId = verificationId
+                            storedSmsVerificationId = verifId
                             resendTokenForSmsVerification = token
-                            continuation.resume(verificationId)
+                            continuation.resume(verifId)
                         }
                     })
                     .build()
                 PhoneAuthProvider.verifyPhoneNumber(options)
             }
 
-            Log.d("sendSmsVerifyCode", "Code sent successfully: $verificationId")
+            //Log.d("sendSmsVerifyCode", "Code sent successfully: $verificationId")
 
         } catch (e: Exception) {
             Log.e("sendSmsVerifyCode", "Error: ${e.message}")
+            setUserWithErrorUseCase("sendSmsVerifyCode, PhoneAuthProvider.verifyPhoneNumber(options), error: ${e.message}")
         }
     }
 
@@ -126,7 +129,7 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
             ?: throw RuntimeException("resendTokenForSmsVerification is null")
 
         try {
-            suspendCancellableCoroutine<Unit> { continuation ->
+            suspendCancellableCoroutine { continuation ->
                 val options = PhoneAuthOptions.newBuilder(Firebase.auth)
                     .setPhoneNumber(phoneNumber)
                     .setTimeout(TIMEOUT_VERIFICATION_PHONE, TimeUnit.SECONDS)
@@ -163,36 +166,14 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
                 PhoneAuthProvider.verifyPhoneNumber(options)
             }
 
-            Log.d("resendVerificationCode", "Code resent successfully")
+            //Log.d("resendVerificationCode", "Code resent successfully")
 
         } catch (e: Exception) {
             Log.e("resendVerificationCode", "Error: ${e.message}")
+            setUserWithErrorUseCase("resendVerificationCode, PhoneAuthProvider.verifyPhoneNumber(options), error: ${e.message}")
         }
     }
 
-
-
-    private fun signInWithPhoneAuthCredential(credential: PhoneAuthCredential) {
-        FirebaseAuth.getInstance().signInWithCredential(credential)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-
-                    //если уже есть, заходит. Если нет ?
-                    // Успешная аутентификация
-                    Log.d("Auth", "Пользователь успешно вошел.")
-                } else {
-                    // Проверка на наличие исключения FirebaseAuthUserCollisionException
-                    if (task.exception is FirebaseAuthUserCollisionException) {
-                        Log.e("Auth", "Номер телефона уже используется другим аккаунтом.")
-                        // Обработка, если номер уже зарегистрирован
-                        Log.e("Auth", "Этот номер телефона уже зарегистрирован.")
-                    } else {
-                        // Обработка других ошибок
-                        Log.e("Auth", "Ошибка входа: ${task.exception?.message}")
-                    }
-                }
-            }
-    }
 
     override suspend fun verifySmsCode(
         verificationCode: String,
@@ -201,11 +182,8 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
         displayName: String,
         password: String
     ) {
+
         val credential = PhoneAuthProvider.getCredential(storedSmsVerificationId, verificationCode)
-
-        signInWithPhoneAuthCredential(credential)
-
-
         registerAndSignInWithCredential(credential, phoneNumber, nickName, displayName, password)
     }
 
@@ -219,36 +197,115 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
         val auth = Firebase.auth
 
 
-        regUserWithFakeEmailToAuthAndToUsersCollectionUseCase(phoneNumber, nickName, displayName, password)
+        if (isNewTeamCheckInCollections(
+                phoneNumber,
+                password
+            ) == NO_ADMIN_IN_COLLECTION_FOUND_BY_PHONE
+        ) {
 
-        try {
 
-            val result = auth.signInWithCredential(credential).await()
+            regUserWithFakeEmailToAuthAndToUsersCollectionUseCase(
+                phoneNumber,
+                nickName,
+                displayName,
+                password
+            )
 
-            val user = result.user
-            if (user != null) {
-                while (!isUserMailOrPhoneVerified) {
-                    user.reload().await()
+            try {
+                var isUserMailOrPhoneVerified = false
+                val result = auth.signInWithCredential(credential).await()
 
-                    if (user.phoneNumber == phoneNumber) {
-                        regUserWithFakeEmailUseCase(phoneNumber, nickName, displayName, password)
-                        setUserAsVerifiedUseCase()
-                        emitUserNeedRefreshUseCase()
-                        isUserMailOrPhoneVerified = true
+                val user = result.user
+                if (user != null) {
+                    while (!isUserMailOrPhoneVerified) {
+                        user.reload().await()
+
+                        if (user.phoneNumber == phoneNumber) {
+                            regUserWithFakeEmailUseCase(
+                                phoneNumber,
+                                nickName,
+                                displayName,
+                                password
+                            )
+                            setUserAsVerifiedUseCase()
+                            emitUserNeedRefreshUseCase()
+                            isUserMailOrPhoneVerified = true
+                        }
+
+                        delay(TIME_CHECK_IS_USER_VERIFIED_IN_MILLIS)
                     }
-
-                    delay(1000)
                 }
-            }
 
-        } catch (e: Exception) {
-            Log.e("signInWithCredential", "Error: ${e.message}")
+            } catch (e: Exception) {
+                Log.e("signInWithCredential", "Error: ${e.message}")
+                setUserWithErrorUseCase("registerAndSignInWithCredential, auth.signInWithCredential, error: ${e.message}")
+
+            }
         }
     }
+
+    private suspend fun findUserAsAdminInCollection(admin: Admin): User? {
+
+        val adminUserRef =
+            usersCollection.document(admin.emailOrPhoneNumber).collection(admin.nickName)
+
+        val querySnapshot = adminUserRef
+            .whereEqualTo("admin", true)
+            .whereEqualTo("adminEmailOrPhone", admin.emailOrPhoneNumber)
+            .limit(1)
+            .get()
+            .await()
+            .documents
+            .firstOrNull()
+
+        val userData = querySnapshot?.toObject(User::class.java)
+
+        return userData
+
+    }
+
+
+    private suspend fun isNewTeamCheckInCollections(
+        phone: String,
+        password: String
+    ): String {
+        val admin = findAdminInCollectionByDocumentNameUseCase(phone)
+
+        if (admin == null) {
+            removeRecordFromCollection(FIREBASE_USERS_COLLECTION, phone)
+            return NO_ADMIN_IN_COLLECTION_FOUND_BY_PHONE
+        } else {
+            val adminAsUser = findUserAsAdminInCollection(admin)
+
+            if (adminAsUser == null) {
+                removeRecordFromCollection(FIREBASE_ADMINS_COLLECTION, phone)
+                return NO_ADMIN_IN_COLLECTION_FOUND_BY_PHONE
+            } else {
+                if (adminAsUser.password != password) {
+                    return ADMIN_IS_FOUND_IN_COLLECTION_BUT_PASSWORD_IS_WRONG
+                } else {
+                    try {
+                        signToFirebaseWithFakeEmailUseCase(adminAsUser)
+
+                        return adminAsUser.nickName
+
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        setUserWithErrorUseCase("isNewTeamCheckInCollections, signToFirebaseWithFakeEmailUseCase, error: ${e.message}")
+                        return e.message ?: "Unknown error"
+                    }
+                }
+            }
+        }
+    }
+
 
     companion object {
         const val SMS_VERIFICATION_ID_INITIAL = "SMS_VERIFICATION_ID_INITIAL"
         const val TIMEOUT_VERIFICATION_PHONE = 60L
-
+        const val TIME_CHECK_IS_USER_VERIFIED_IN_MILLIS = 1000L
+        const val NO_ADMIN_IN_COLLECTION_FOUND_BY_PHONE = "NO ADMIN_IN_COLLECTION_FOUND_BY_PHONE"
+        const val ADMIN_IS_FOUND_IN_COLLECTION_BUT_PASSWORD_IS_WRONG =
+            "ADMIN_IS_FOUND_IN_COLLECTION_BUT_PASSWORD_IS_WRONG"
     }
 }

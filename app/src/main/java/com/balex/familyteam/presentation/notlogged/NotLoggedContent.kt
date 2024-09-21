@@ -23,9 +23,13 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,6 +48,7 @@ import com.balex.familyteam.R
 import com.balex.familyteam.domain.entity.MenuItems
 import com.balex.familyteam.presentation.SwitchLanguage
 import com.balex.familyteam.presentation.ui.theme.DarkBlue
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
@@ -51,6 +56,17 @@ import kotlinx.coroutines.launch
 fun NotLoggedContent(component: NotLoggedComponent) {
 
     val state by component.model.collectAsState()
+
+    var showLoader by remember { mutableStateOf(false) }
+
+    LaunchedEffect(state.logChooseState) {
+        if (state.logChooseState == NotLoggedStore.State.LogChooseState.Initial) {
+            delay(3000)
+            showLoader = true
+        } else {
+            showLoader = false
+        }
+    }
 
     when (state.logChooseState) {
 
@@ -67,7 +83,7 @@ fun NotLoggedContent(component: NotLoggedComponent) {
         }
 
         NotLoggedStore.State.LogChooseState.ErrorLoadingUserData -> {
-            ErrorScreen()
+            ErrorScreen(state)
         }
 
     }
@@ -142,14 +158,6 @@ fun NotLoggedScreen(component: NotLoggedComponent) {
         }
     }
 }
-
-//@Composable
-//fun MainContent(component: NotLoggedComponent) {
-//    val state by component.model.collectAsState()
-//    LocalizedContextProvider(languageCode = state.language.lowercase()) {
-//        ShowContent(true, component)
-//    }
-//}
 
 
 @Composable
@@ -230,7 +238,7 @@ fun ShowContent(
 }
 
 @Composable
-fun ErrorScreen() {
+fun ErrorScreen(state: NotLoggedStore.State) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -238,7 +246,7 @@ fun ErrorScreen() {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Error loading user data from Firebase",
+            text = state.errorMessage,
             color = Color.Red,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,

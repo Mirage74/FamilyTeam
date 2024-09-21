@@ -21,9 +21,11 @@ data class User(
     val language: String = Language.DEFAULT_LANGUAGE.symbol,
     @SerializedName("listToDo")
     val listToDo: ToDoList = ToDoList(),
+    val isError: Boolean = false,
+    val errorMessage: String = NO_ERROR_MESSAGE
 ) {
     companion object {
-        const val ERROR_LOADING_USER_DATA_FROM_FIREBASE = "ERROR_LOADING_USER_DATA_FROM_FIREBASE"
+        const val NO_ERROR_MESSAGE = "NO_ERROR_MESSAGE"
         const val DEFAULT_NICK_NAME = "DEFAULT_NICK_NAME"
         const val DEFAULT_FAKE_EMAIL = "DEFAULT_FAKE_EMAIL"
     }

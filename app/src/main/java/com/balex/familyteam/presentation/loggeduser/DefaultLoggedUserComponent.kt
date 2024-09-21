@@ -7,6 +7,7 @@ import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
 import com.balex.familyteam.domain.entity.Language
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
+import com.balex.familyteam.domain.usecase.regLog.StorageClearPreferencesUseCase
 import com.balex.familyteam.extensions.componentScope
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore
 import dagger.assisted.Assisted
@@ -20,7 +21,9 @@ import kotlinx.coroutines.launch
 class DefaultLoggedUserComponent @AssistedInject constructor(
     private val storeFactory: LoggedUserStoreFactory,
     private val getLanguageUseCase: GetLanguageUseCase,
+    private val storageClearPreferencesUseCase: StorageClearPreferencesUseCase,
     @Assisted("onAbout") private val onAbout: () -> Unit,
+    @Assisted("onLogout") private val onLogout: () -> Unit,
     @Assisted("componentContext") componentContext: ComponentContext
 ) : LoggedUserComponent, ComponentContext by componentContext {
 
@@ -102,6 +105,11 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         store.accept(LoggedUserStore.Intent.ClickedAbout)
     }
 
+    override fun onClickLogout() {
+        storageClearPreferencesUseCase(true)
+        onLogout()
+    }
+
     override fun onRefreshLanguage() {
         store.accept(LoggedUserStore.Intent.RefreshLanguage)
     }
@@ -115,6 +123,7 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
 
         fun create(
             @Assisted("onAbout") onAbout: () -> Unit,
+            @Assisted("onLogout") onLogout: () -> Unit,
             @Assisted("componentContext") componentContext: ComponentContext
         ): DefaultLoggedUserComponent
     }

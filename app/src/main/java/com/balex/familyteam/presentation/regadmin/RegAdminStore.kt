@@ -10,7 +10,6 @@ import com.balex.familyteam.R
 import com.balex.familyteam.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
 import com.balex.familyteam.domain.entity.RegistrationOption
 import com.balex.familyteam.domain.entity.User
-import com.balex.familyteam.domain.entity.User.Companion.ERROR_LOADING_USER_DATA_FROM_FIREBASE
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.IsWrongPasswordUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
@@ -71,6 +70,7 @@ interface RegAdminStore : Store<Intent, State, Label> {
         val isSmsVerifyButtonWasPressed: Boolean,
         val isSmsOkButtonEnabled: Boolean,
         val isEmailOrPhoneNumberVerified: Boolean,
+        val errorMessage: String,
         val regAdminState: RegAdminState
     ) {
         sealed interface RegAdminState {
@@ -128,6 +128,7 @@ class RegAdminStoreFactory @Inject constructor(
                 isSmsOkButtonEnabled = false,
                 isRegisterButtonEnabled = false,
                 isEmailOrPhoneNumberVerified = false,
+                errorMessage = User.NO_ERROR_MESSAGE,
                 regAdminState = State.RegAdminState.Loading
             ),
             bootstrapper = BootstrapperImpl(),
@@ -396,7 +397,9 @@ class RegAdminStoreFactory @Inject constructor(
                     passwordVisible = false,
                     isRegisterButtonWasPressed = false,
                     isRegisterButtonEnabled = false,
-                    isEmailOrPhoneNumberVerified = false
+                    isEmailOrPhoneNumberVerified = false,
+                    errorMessage = User.NO_ERROR_MESSAGE,
+                    regAdminState = State.RegAdminState.Content
                 )
 
             }
@@ -468,8 +471,10 @@ class RegAdminStoreFactory @Inject constructor(
             }
 
             is Msg.UserInfoIsChanged -> {
-                if (msg.user.nickName == ERROR_LOADING_USER_DATA_FROM_FIREBASE) {
-                    copy(regAdminState = State.RegAdminState.Error)
+                if (msg.user.isError) {
+                    copy(
+                        errorMessage = msg.user.errorMessage,
+                        regAdminState = State.RegAdminState.Error)
                 } else {
                     copy(regAdminState = State.RegAdminState.Content)
                 }

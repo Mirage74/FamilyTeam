@@ -17,6 +17,8 @@ import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
@@ -150,7 +152,12 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                             contentDescription = "To-Do list"
                         )
                     },
-                    label = { Text("My") },
+                    label = {
+                        Text(
+                            "My",
+                            maxLines = 1
+                        )
+                    },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
                     unselectedContentColor = androidx.compose.material.MaterialTheme.colors.onSecondary
                 )
@@ -163,7 +170,12 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                             contentDescription = "Tasks to other"
                         )
                     },
-                    label = { Text("Others") },
+                    label = {
+                        Text(
+                            "Others",
+                            maxLines = 1
+                        )
+                    },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
                     unselectedContentColor = androidx.compose.material.MaterialTheme.colors.onSecondary
                 )
@@ -176,7 +188,12 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                             contentDescription = "Shop list"
                         )
                     },
-                    label = { Text("Shop") },
+                    label = {
+                        Text(
+                            "Shop",
+                            maxLines = 1
+                        )
+                    },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
                     unselectedContentColor = androidx.compose.material.MaterialTheme.colors.onSecondary
                 )
@@ -184,10 +201,34 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                     selected = state.activeBottomItem == PagesNames.AdminPanel,
                     onClick = { component.onNavigateToBottomItem(PagesNames.AdminPanel) },
                     icon = { Icon(Icons.Default.Settings, contentDescription = "Admin panel") },
-                    label = { Text("Admin") },
+                    label = {
+                        Text(
+                            "Admin",
+                            maxLines = 1
+                        )
+                    },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
                     unselectedContentColor = androidx.compose.material.MaterialTheme.colors.onSecondary
                 )
+                BottomNavigationItem(
+                    selected = state.activeBottomItem == PagesNames.Logout,
+                    onClick = { component.onClickLogout() },
+                    icon = {
+                        Icon(
+                            Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = "Logout"
+                        )
+                    },
+                    label = {
+                        Text(
+                            "Logout",
+                            maxLines = 1
+                        )
+                    },
+                    selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
+                    unselectedContentColor = androidx.compose.material.MaterialTheme.colors.onSecondary
+                )
+
             }
         }
     ) { paddingValues ->
@@ -220,7 +261,9 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                     paddingValues = paddingValues
                 )
 
+                PagesNames.Logout -> {
 
+                }
             }
         }
     }

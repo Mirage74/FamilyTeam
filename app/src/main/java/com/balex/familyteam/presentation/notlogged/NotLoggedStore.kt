@@ -7,6 +7,7 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.balex.familyteam.data.datastore.Storage
 import com.balex.familyteam.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
+import com.balex.familyteam.data.repository.RegLogRepositoryImpl
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.GetUserUseCase
@@ -29,7 +30,7 @@ interface NotLoggedStore : Store<Intent, State, Label> {
 
         data object ClickedLoginUser : Intent
 
-        data object ClickedAbout: Intent
+        data object ClickedAbout : Intent
 
         data object RefreshLanguage : Intent
 
@@ -39,6 +40,7 @@ interface NotLoggedStore : Store<Intent, State, Label> {
 
     data class State(
         val language: String,
+        val errorMessage: String,
         val logChooseState: LogChooseState
     ) {
         sealed interface LogChooseState {
@@ -79,7 +81,7 @@ class NotLoggedStoreFactory @Inject constructor(
     fun create(language: String): NotLoggedStore =
         object : NotLoggedStore, Store<Intent, State, Label> by storeFactory.create(
             name = "NotLoggedStore",
-            initialState = State(language, State.LogChooseState.Initial),
+            initialState = State(language, User.NO_ERROR_MESSAGE, State.LogChooseState.Initial),
             bootstrapper = BootstrapperImpl(),
             executorFactory = ::ExecutorImpl,
             reducer = ReducerImpl
@@ -89,9 +91,11 @@ class NotLoggedStoreFactory @Inject constructor(
 
         data object UserNotExistInPreference : Action
 
-        data object UserExistInPreferenceAndLoadedUserData: Action
+        data object UserExistInPreferenceAndLoadedUserData : Action
 
         data object UserExistInPreferenceButErrorLoadingUserData : Action
+
+        data class OtherUserError(val errorMessage: String) : Action
 
         data class LanguageIsChanged(val language: String) : Action
 
@@ -105,30 +109,38 @@ class NotLoggedStoreFactory @Inject constructor(
 
         data object UserExistInPreferenceButErrorLoadingUserData : Msg
 
+        data class OtherUserError(val errorMessage: String) : Msg
+
     }
 
     private inner class BootstrapperImpl : CoroutineBootstrapper<Action>() {
         override fun invoke() {
             scope.launch {
                 observeUserUseCase().collect {
-                    val login = it.nickName
-                    if (login.isNotEmpty()) {
-                        when (login) {
-                            NO_USER_SAVED_IN_SHARED_PREFERENCES -> {
-                                dispatch(Action.UserNotExistInPreference)
-                            }
-                            User.DEFAULT_NICK_NAME -> {
-                                dispatch(Action.UserNotExistInPreference)
-                            }
-                            User.ERROR_LOADING_USER_DATA_FROM_FIREBASE -> {
-                                dispatch(Action.UserExistInPreferenceButErrorLoadingUserData)
-                            }
-                            else -> {
-                                signToFirebaseWithFakeEmailUseCase(getUserUseCase())
-                                dispatch(Action.UserExistInPreferenceAndLoadedUserData)
+                    if (it.isError) {
+                        if (it.errorMessage == RegLogRepositoryImpl.ERROR_LOADING_USER_DATA_FROM_FIREBASE) {
+                            dispatch(Action.UserExistInPreferenceButErrorLoadingUserData)
+                        } else {
+                            dispatch(Action.OtherUserError(it.errorMessage))
+                        }
+                    } else {
+                        val login = it.nickName
+                        if (login.isNotEmpty()) {
+                            when (login) {
+                                NO_USER_SAVED_IN_SHARED_PREFERENCES -> {
+                                    dispatch(Action.UserNotExistInPreference)
+                                }
+
+                                User.DEFAULT_NICK_NAME -> {
+                                    dispatch(Action.UserNotExistInPreference)
+                                }
+
+                                else -> {
+                                    signToFirebaseWithFakeEmailUseCase(getUserUseCase())
+                                    dispatch(Action.UserExistInPreferenceAndLoadedUserData)
+                                }
                             }
                         }
-
                     }
                 }
             }
@@ -177,7 +189,7 @@ class NotLoggedStoreFactory @Inject constructor(
                 }
 
                 Action.UserExistInPreferenceButErrorLoadingUserData -> {
-                    storageClearPreferencesUseCase()
+                    storageClearPreferencesUseCase(false)
                     dispatch(Msg.UserExistInPreferenceButErrorLoadingUserData)
                 }
 
@@ -189,6 +201,9 @@ class NotLoggedStoreFactory @Inject constructor(
                     dispatch(Msg.RefreshLanguage(action.language))
                 }
 
+                is Action.OtherUserError -> {
+                    dispatch(Msg.OtherUserError(action.errorMessage))
+                }
             }
         }
     }
@@ -201,11 +216,22 @@ class NotLoggedStoreFactory @Inject constructor(
             }
 
             Msg.UserExistInPreferenceButErrorLoadingUserData -> {
-                copy(logChooseState = State.LogChooseState.ErrorLoadingUserData)
+                copy(
+                    errorMessage = msg.toString(),
+                    logChooseState = State.LogChooseState.ErrorLoadingUserData
+                )
             }
 
             is Msg.RefreshLanguage -> {
                 copy(language = msg.language)
+            }
+
+            is Msg.OtherUserError -> {
+
+                copy(
+                    errorMessage = msg.toString(),
+                    logChooseState = State.LogChooseState.ErrorLoadingUserData
+                )
             }
         }
     }

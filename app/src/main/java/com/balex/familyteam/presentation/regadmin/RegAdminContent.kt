@@ -66,7 +66,7 @@ fun RegAdminContent(component: RegAdminComponent, activity: MainActivity) {
             }
 
             RegAdminStore.State.RegAdminState.Error -> {
-                ErrorRegAdminScreen()
+                ErrorRegAdminScreen(state)
             }
         }
     }
@@ -144,7 +144,7 @@ fun ContentScreen(
 
 
 @Composable
-fun ErrorRegAdminScreen() {
+fun ErrorRegAdminScreen(state: RegAdminStore.State) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -152,7 +152,7 @@ fun ErrorRegAdminScreen() {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Error login user, please try later",
+            text = state.errorMessage,
             color = Color.Red,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,

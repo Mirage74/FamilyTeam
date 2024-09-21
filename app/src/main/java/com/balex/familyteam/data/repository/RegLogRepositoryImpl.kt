@@ -67,7 +67,7 @@ class RegLogRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
     override fun observeUser(): StateFlow<User> = flow {
-        Storage.clearPreferences(context)
+        //Storage.clearPreferences(context)
 
         val userFakeEmailFromStorage = Storage.getUser(context)
         val phoneLanguageFromStorage = Storage.getLanguage(context)
@@ -161,6 +161,11 @@ class RegLogRepositoryImpl @Inject constructor(
         isUserMailOrPhoneVerified = true
     }
 
+    override suspend fun setUserWithError(message: String)  {
+        user = User(isError = true, errorMessage = message)
+        isCurrentUserNeedRefreshFlow.emit(Unit)
+    }
+
     override fun saveLanguage(language: String) {
         this.language = language
         Storage.saveLanguage(context, language)
@@ -208,6 +213,7 @@ class RegLogRepositoryImpl @Inject constructor(
             adminDocument.set(admin).await()
             Result.success(Unit)
         } catch (e: Exception) {
+            setUserWithError(ERROR_ADD_ADMIN_TO_FIREBASE)
             Result.failure(e)
         }
     }
@@ -238,8 +244,8 @@ class RegLogRepositoryImpl @Inject constructor(
             isCurrentUserNeedRefreshFlow.emit(Unit)
             Result.success(Unit)
         } catch (e: Exception) {
-            //Result.failure(e)
-            throw RuntimeException("addUserToCollection: $ERROR_ADD_USER_TO_FIREBASE")
+            setUserWithError(ERROR_ADD_USER_TO_FIREBASE)
+            Result.failure(e)
         }
     }
 
@@ -293,7 +299,7 @@ class RegLogRepositoryImpl @Inject constructor(
             val firebaseAuthUser = authRes.user
 
             if (firebaseAuthUser != null) {
-                val adminFromCollection = findAdminInCollectionByEmail(adminEmail)
+                val adminFromCollection = findAdminInCollectionByDocumentName(adminEmail)
 
                 if (adminFromCollection != null) {
                     if (adminFromCollection.nickName != Admin.DEFAULT_NICK_NAME) {
@@ -347,7 +353,7 @@ class RegLogRepositoryImpl @Inject constructor(
 
         } catch (e: FirebaseAuthException) {
 
-            val admin = findAdminInCollectionByEmail(adminEmail)
+            val admin = findAdminInCollectionByDocumentName(adminEmail)
 
             if (admin != null && admin.nickName != Admin.DEFAULT_NICK_NAME) {
                 val user = findUserInCollection(User(adminEmailOrPhone = adminEmail, nickName = admin?.nickName ?: Admin.DEFAULT_NICK_NAME))
@@ -369,9 +375,7 @@ class RegLogRepositoryImpl @Inject constructor(
 
         catch (e: Exception) {
             Log.e("signToFirebaseInWithEmailAndPassword, Error", e.message ?: "Unknown error")
-            user = User(nickName = User.ERROR_LOADING_USER_DATA_FROM_FIREBASE)
-            isCurrentUserNeedRefreshFlow.emit(Unit)
-
+            setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
         }
 
         return StatusEmailSignIn.OTHER_SIGN_IN_ERROR
@@ -409,8 +413,7 @@ class RegLogRepositoryImpl @Inject constructor(
                             user = newUser
                             isCurrentUserNeedRefreshFlow.emit(Unit)
                         } else {
-                            user = User(nickName = User.ERROR_LOADING_USER_DATA_FROM_FIREBASE)
-                            isCurrentUserNeedRefreshFlow.emit(Unit)
+                            setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
                             return StatusFakeEmailSignIn.OTHER_FAKE_EMAIL_SIGN_IN_ERROR
                         }
                     }
@@ -435,8 +438,12 @@ class RegLogRepositoryImpl @Inject constructor(
         return StatusFakeEmailSignIn.OTHER_FAKE_EMAIL_SIGN_IN_ERROR
     }
 
-    override fun storageClearPreferences() {
+    override fun storageClearPreferences(resetUserInRepo: Boolean) {
         Storage.clearPreferences(context)
+        if (resetUserInRepo) {
+            user = User(nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES)
+            isCurrentUserNeedRefreshFlow.tryEmit(Unit)
+        }
     }
 
 
@@ -473,9 +480,9 @@ class RegLogRepositoryImpl @Inject constructor(
                 )
 
             } catch (e: FirebaseAuthUserCollisionException) {
-                throw RuntimeException("registerAndVerifyNewTeamByEmail: $USER_ALREADY_EXIST_IN_AUTH")
+                setUserWithError("registerAndVerifyNewTeamByEmail: $USER_ALREADY_EXIST_IN_AUTH: ${e.message}")
             } catch (e: Exception) {
-                throw RuntimeException("registerAndVerifyNewTeamByEmail: $REGISTRATION_ERROR: ${e.message}")
+                setUserWithError("registerAndVerifyNewTeamByEmail: $REGISTRATION_ERROR: ${e.message}")
             }
         } else {
             Storage.saveAllPreferences(
@@ -531,10 +538,6 @@ class RegLogRepositoryImpl @Inject constructor(
 
         try {
             auth.createUserWithEmailAndPassword(fakeEmail, password).await()
-
-//            auth.signInWithEmailAndPassword("balexvicx@gmail.com", "111111").await()
-//            FirebaseAuth.getInstance().currentUser?.email?.let { Log.d("currentUser", it) }
-
 
             addAdminAndUserToFirebase(
                 registrationOption,
@@ -607,11 +610,11 @@ class RegLogRepositoryImpl @Inject constructor(
         return lang
     }
 
-    private suspend fun findUserInCollection(user: User): User? {
+    private suspend fun findUserInCollection(userToFind: User): User? {
         return try {
             val document =
-                usersCollection.document(user.adminEmailOrPhone).collection(user.nickName)
-                    .document(user.nickName)
+                usersCollection.document(userToFind.adminEmailOrPhone).collection(userToFind.nickName)
+                    .document(userToFind.nickName)
                     .get()
                     .await()
 
@@ -621,14 +624,14 @@ class RegLogRepositoryImpl @Inject constructor(
 
         } catch (e: Exception) {
             e.printStackTrace()
-            Log.e("findUserInCollection", "Error: ${e.message}")
+            setUserWithError(e.message ?: "findUserInCollection, Error: ${e.message}")
             null
         }
     }
 
-    private suspend fun findAdminInCollectionByEmail(email: String): Admin? {
+    override suspend fun findAdminInCollectionByDocumentName(documentName: String): Admin? {
         return try {
-            val document = adminsCollection.document(email)
+            val document = adminsCollection.document(documentName)
                 .get()
                 .await()
 
@@ -637,7 +640,7 @@ class RegLogRepositoryImpl @Inject constructor(
 
         } catch (e: Exception) {
             e.printStackTrace()
-            Log.e("findAdminInCollection", "Error: ${e.message}")
+            setUserWithError(e.message ?: "findAdminInCollection, Error: ${e.message}")
             null
         }
     }
@@ -672,13 +675,14 @@ class RegLogRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            setUserWithError(e.message ?: "isNewTeamCheckByEmail: Unknown error")
             return false
         }
         return false
     }
 
 
-    override fun createFakeUserEmail(nick: String, data: String): String {
+    private fun createFakeUserEmail(nick: String, data: String): String {
         val nameLowCase = nick.lowercase()
         val dataLowCase = data.lowercase()
         return if (dataLowCase.contains("@", true)) {
@@ -726,6 +730,7 @@ class RegLogRepositoryImpl @Inject constructor(
         const val SMS_VERIFICATION_ERROR_INITIAL = "SMS_VERIFICATION_ERROR_INITIAL"
         const val FAKE_EMAIL_DOMAIN = "balexvic.com"
 
+        const val ERROR_LOADING_USER_DATA_FROM_FIREBASE = "ERROR_LOADING_USER_DATA_FROM_FIREBASE"
         const val ERROR_ADD_USER_TO_FIREBASE = "ERROR_ADD_USER_TO_FIREBASE"
         const val ERROR_ADD_ADMIN_TO_FIREBASE = "ERROR_ADD_ADMIN_TO_FIREBASE"
         const val USER_ALREADY_EXIST_IN_AUTH =
