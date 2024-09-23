@@ -1,11 +1,14 @@
 package com.balex.familyteam.presentation.root
 
 
+import android.util.Log
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.popTo
+import com.arkivanov.decompose.router.stack.popWhile
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
@@ -33,6 +36,8 @@ class DefaultRootComponent @AssistedInject constructor(
 
     private val navigation = StackNavigation<Config>()
 
+
+
     private val _stack = childStack(
         source = navigation,
         serializer = Config.serializer(),
@@ -43,6 +48,8 @@ class DefaultRootComponent @AssistedInject constructor(
 
 
     override val stack: Value<ChildStack<*, Child>> = _stack
+
+
 
     private fun child(
         config: Config, childComponentContext: ComponentContext
@@ -70,8 +77,9 @@ class DefaultRootComponent @AssistedInject constructor(
                         navigation.replaceAll(Config.LoggedUser)
                     }, onAbout = {
                         navigation.push(Config.About)
-                    }, onAdminExistButWrongPassword = {
-                        navigation.push(Config.LoginUser(it))
+                    }, onAdminExistButWrongPassword = { userLogin ->
+                        navigation.push(Config.LoginUser(userLogin))
+                        navigation.popWhile { it != Config.NotLogged && it != Config.LoginUser(userLogin) }
                     },
                     onBackClicked = {
                         navigation.pop()

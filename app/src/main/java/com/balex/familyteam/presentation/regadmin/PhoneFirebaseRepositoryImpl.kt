@@ -246,21 +246,27 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
 
     private suspend fun findUserAsAdminInCollection(admin: Admin): User? {
 
-        val adminUserRef =
-            usersCollection.document(admin.emailOrPhoneNumber).collection(admin.nickName)
+        try {
 
-        val querySnapshot = adminUserRef
-            .whereEqualTo("admin", true)
-            .whereEqualTo("adminEmailOrPhone", admin.emailOrPhoneNumber)
-            .limit(1)
-            .get()
-            .await()
-            .documents
-            .firstOrNull()
 
-        val userData = querySnapshot?.toObject(User::class.java)
+            val adminUserRef =
+                usersCollection.document(admin.emailOrPhoneNumber).collection(admin.nickName)
 
-        return userData
+            val querySnapshot = adminUserRef
+                .whereEqualTo("admin", true)
+                .whereEqualTo("adminEmailOrPhone", admin.emailOrPhoneNumber)
+                .limit(1)
+                .get()
+                .await()
+                .documents
+                .firstOrNull()
+
+            val userData = querySnapshot?.toObject(User::class.java)
+            return userData
+
+        } catch (e: Exception) {
+            return null
+        }
 
     }
 

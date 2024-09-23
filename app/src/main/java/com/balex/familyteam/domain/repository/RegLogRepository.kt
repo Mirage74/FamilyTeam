@@ -7,7 +7,11 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface RegLogRepository {
 
+    suspend fun resetUserToDefault()
+
     fun getRepoUser(): User
+
+    fun getWrongPasswordUser(): User
 
     fun setUserAsVerified()
 
@@ -29,7 +33,7 @@ interface RegLogRepository {
 
     fun observeSmsVerificationError(): StateFlow<String>
 
-    fun storageClearPreferences(resetUserInRepo: Boolean)
+    fun storageClearPreferences()
 
     suspend fun registerAndVerifyNewTeamByEmail(
         email: String,

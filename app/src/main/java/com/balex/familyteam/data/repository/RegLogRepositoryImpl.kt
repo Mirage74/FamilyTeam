@@ -87,9 +87,7 @@ class RegLogRepositoryImpl @Inject constructor(
                 User(nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES, language = phoneLang)
             user = emptyUserNotSaved
         } else {
-            val userFromStorage = extractUserInfoFromFakeEmail(userFakeEmailFromStorage)
-
-            user = userFromStorage
+            signToFirebaseWithEmailAndPasswordFromPreferences(userFakeEmailFromStorage, Storage.getUsersPassword(context))
 
         }
         isCurrentUserNeedRefreshFlow.emit(Unit)
@@ -153,15 +151,24 @@ class RegLogRepositoryImpl @Inject constructor(
             initialValue = isSmsVerificationError
         )
 
+    override suspend fun resetUserToDefault() {
+        user = User()
+        isCurrentUserNeedRefreshFlow.emit(Unit)
+    }
+
     override fun getRepoUser(): User {
         return user
+    }
+
+    override fun getWrongPasswordUser(): User {
+        return isWrongPassword
     }
 
     override fun setUserAsVerified() {
         isUserMailOrPhoneVerified = true
     }
 
-    override suspend fun setUserWithError(message: String)  {
+    override suspend fun setUserWithError(message: String) {
         user = User(isError = true, errorMessage = message)
         isCurrentUserNeedRefreshFlow.emit(Unit)
     }
@@ -282,6 +289,70 @@ class RegLogRepositoryImpl @Inject constructor(
         }
     }
 
+    private suspend fun signToFirebaseWithEmailAndPasswordFromPreferences(
+        fakeEmail: String,
+        password: String
+
+    ) {
+        val extractedUser = extractUserInfoFromFakeEmail(fakeEmail)
+
+
+        try {
+
+            val adminFromCollection =
+                findAdminInCollectionByDocumentName(extractedUser.adminEmailOrPhone)
+
+            if (adminFromCollection != null && adminFromCollection.nickName != Admin.DEFAULT_NICK_NAME) {
+                val userFromCollection = findUserInCollection(
+                    User(
+                        adminEmailOrPhone = extractedUser.adminEmailOrPhone,
+                        nickName = extractedUser.nickName
+                    )
+                )
+                if (userFromCollection != null) {
+                    if (userFromCollection.password == extractedUser.password) {
+
+                        if (FirebaseAuth.getInstance().currentUser != null) {
+                            FirebaseAuth.getInstance().signOut()
+                        }
+
+                        val authRes = auth.signInWithEmailAndPassword(fakeEmail, password).await()
+                        val firebaseAuthUser = authRes.user
+                        if (firebaseAuthUser != null) {
+                            user = userFromCollection
+                            isCurrentUserNeedRefreshFlow.emit(Unit)
+                        } else {
+                            setUserWithError("signToFirebaseWithEmailAndPasswordFromPreferences: ERROR AUTH USER: $fakeEmail")
+                        }
+                    } else {
+                        isWrongPassword = userFromCollection
+                        isWrongPasswordNeedRefreshFlow.emit(Unit)
+                    }
+                } else {
+                    setUserWithError("signToFirebaseWithEmailAndPasswordFromPreferences: ADMIN_NOT_FOUND: ${extractedUser.adminEmailOrPhone}")
+                }
+
+            } else {
+                setUserWithError("signToFirebaseWithEmailAndPasswordFromPreferences: ADMIN_NOT_FOUND: ${extractedUser.adminEmailOrPhone}")
+            }
+
+        } catch (e: FirebaseAuthException) {
+            val errCode = e.errorCode.trim()
+            if (errCode == "ERROR_INVALID_CREDENTIAL" || errCode == "ERROR_USER_NOT_FOUND") {
+                isWrongPassword = user
+                isWrongPasswordNeedRefreshFlow.emit(Unit)
+            } else {
+                Storage.clearPreferences(context)
+                setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
+            }
+
+        } catch (e: Exception) {
+            Log.e("signToFirebaseInWithEmailAndPassword, Error", e.message ?: "Unknown error")
+            setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
+        }
+    }
+
+
     private suspend fun signToFirebaseWithEmailAndPassword(
         adminEmail: String,
         adminNickName: String,
@@ -356,7 +427,12 @@ class RegLogRepositoryImpl @Inject constructor(
             val admin = findAdminInCollectionByDocumentName(adminEmail)
 
             if (admin != null && admin.nickName != Admin.DEFAULT_NICK_NAME) {
-                val user = findUserInCollection(User(adminEmailOrPhone = adminEmail, nickName = admin?.nickName ?: Admin.DEFAULT_NICK_NAME))
+                val user = findUserInCollection(
+                    User(
+                        adminEmailOrPhone = adminEmail,
+                        nickName = admin.nickName
+                    )
+                )
                 if (user != null && user.password != adminPassword) {
                     isWrongPassword = user
                     isWrongPasswordNeedRefreshFlow.emit(Unit)
@@ -367,13 +443,14 @@ class RegLogRepositoryImpl @Inject constructor(
                     return StatusEmailSignIn.ADMIN_NOT_FOUND
                 } else {
                     Storage.clearPreferences(context)
-                    Log.e("signToFirebaseInWithEmailAndPassword, Error", e.message ?: "Unknown error")
+                    Log.e(
+                        "signToFirebaseInWithEmailAndPassword, Error",
+                        e.message ?: "Unknown error"
+                    )
                     return StatusEmailSignIn.OTHER_SIGN_IN_ERROR
                 }
             }
-        }
-
-        catch (e: Exception) {
+        } catch (e: Exception) {
             Log.e("signToFirebaseInWithEmailAndPassword, Error", e.message ?: "Unknown error")
             setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
         }
@@ -438,12 +515,8 @@ class RegLogRepositoryImpl @Inject constructor(
         return StatusFakeEmailSignIn.OTHER_FAKE_EMAIL_SIGN_IN_ERROR
     }
 
-    override fun storageClearPreferences(resetUserInRepo: Boolean) {
+    override fun storageClearPreferences() {
         Storage.clearPreferences(context)
-        if (resetUserInRepo) {
-            user = User(nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES)
-            isCurrentUserNeedRefreshFlow.tryEmit(Unit)
-        }
     }
 
 
@@ -613,12 +686,13 @@ class RegLogRepositoryImpl @Inject constructor(
     private suspend fun findUserInCollection(userToFind: User): User? {
         return try {
             val document =
-                usersCollection.document(userToFind.adminEmailOrPhone).collection(userToFind.nickName)
+                usersCollection.document(userToFind.adminEmailOrPhone)
+                    .collection(userToFind.nickName)
                     .document(userToFind.nickName)
                     .get()
                     .await()
 
-            val userData = document?.toObject(User::class.java) ?: User()
+            val userData = document?.toObject(User::class.java)
 
             return userData
 
@@ -635,7 +709,7 @@ class RegLogRepositoryImpl @Inject constructor(
                 .get()
                 .await()
 
-            val adminData = document?.toObject(Admin::class.java) ?: Admin()
+            val adminData = document?.toObject(Admin::class.java)
             return adminData
 
         } catch (e: Exception) {

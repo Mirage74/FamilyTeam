@@ -26,7 +26,9 @@
             android:windowSoftInputMode="adjustResize"
             android:name=".presentation.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.FamilyTeam">
+            android:enableOnBackInvokedCallback="true"
+            android:theme="@style/Theme.FamilyTeam"
+            tools:targetApi="tiramisu">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

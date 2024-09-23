@@ -106,7 +106,7 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     }
 
     override fun onClickLogout() {
-        storageClearPreferencesUseCase(true)
+        storageClearPreferencesUseCase()
         onLogout()
     }
 

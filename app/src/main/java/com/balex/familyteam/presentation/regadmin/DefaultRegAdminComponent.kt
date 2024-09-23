@@ -12,6 +12,7 @@ import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
 import com.balex.familyteam.domain.usecase.regLog.EmitUserNeedRefreshUseCase
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
+import com.balex.familyteam.domain.usecase.regLog.ResetUserToDefaultUseCase
 import com.balex.familyteam.extensions.componentScope
 import com.balex.familyteam.presentation.loggeduser.LoggedUserStore
 import dagger.assisted.Assisted
@@ -25,6 +26,7 @@ import javax.inject.Scope
 class DefaultRegAdminComponent @AssistedInject constructor(
     private val storeFactory: RegAdminStoreFactory,
     private val getLanguageUseCase: GetLanguageUseCase,
+    private val resetUserToDefaultUseCase: ResetUserToDefaultUseCase,
     override val phoneFirebaseRepository: PhoneFirebaseRepository,
     @Assisted("onAbout") private val onAbout: () -> Unit,
     @Assisted("onAdminExistButWrongPassword") private val onAdminExistButWrongPassword: (User) -> Unit,
@@ -60,6 +62,7 @@ class DefaultRegAdminComponent @AssistedInject constructor(
                     }
 
                     is RegAdminStore.Label.LoginPageWrongPassword -> {
+                        resetUserToDefaultUseCase()
                         onAdminExistButWrongPassword(it.user)
                     }
                 }

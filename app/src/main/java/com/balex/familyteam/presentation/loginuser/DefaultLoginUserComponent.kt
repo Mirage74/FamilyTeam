@@ -27,7 +27,7 @@ class DefaultLoginUserComponent @AssistedInject constructor(
     @Assisted("componentContext") componentContext: ComponentContext
 ) : LoginUserComponent, ComponentContext by componentContext {
 
-    private val store = instanceKeeper.getStore { storeFactory.create(getLanguageUseCase()) }
+    private val store = instanceKeeper.getStore { storeFactory.create(user.adminEmailOrPhone, getLanguageUseCase()) }
     private val scope = componentScope()
 
     init {

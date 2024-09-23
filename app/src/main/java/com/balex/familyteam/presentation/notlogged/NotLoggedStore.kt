@@ -11,6 +11,7 @@ import com.balex.familyteam.data.repository.RegLogRepositoryImpl
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.GetUserUseCase
+import com.balex.familyteam.domain.usecase.regLog.GetWrongPasswordUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.SaveLanguageUseCase
@@ -72,6 +73,7 @@ class NotLoggedStoreFactory @Inject constructor(
     private val observeUserUseCase: ObserveUserUseCase,
     private val storageClearPreferencesUseCase: StorageClearPreferencesUseCase,
     private val getUserUseCase: GetUserUseCase,
+    private val getWrongPasswordUserUseCase: GetWrongPasswordUserUseCase,
     private val signToFirebaseWithFakeEmailUseCase: SignToFirebaseWithFakeEmailUseCase,
     private val observeLanguageUseCase: ObserveLanguageUseCase,
     private val saveLanguageUseCase: SaveLanguageUseCase,
@@ -136,8 +138,13 @@ class NotLoggedStoreFactory @Inject constructor(
                                 }
 
                                 else -> {
-                                    signToFirebaseWithFakeEmailUseCase(getUserUseCase())
-                                    dispatch(Action.UserExistInPreferenceAndLoadedUserData)
+                                    if (getWrongPasswordUserUseCase().nickName != User.DEFAULT_NICK_NAME) {
+                                        signToFirebaseWithFakeEmailUseCase(getUserUseCase())
+                                        dispatch(Action.UserExistInPreferenceAndLoadedUserData)
+                                    } else {
+
+                                    }
+
                                 }
                             }
                         }
@@ -189,7 +196,7 @@ class NotLoggedStoreFactory @Inject constructor(
                 }
 
                 Action.UserExistInPreferenceButErrorLoadingUserData -> {
-                    storageClearPreferencesUseCase(false)
+                    storageClearPreferencesUseCase()
                     dispatch(Msg.UserExistInPreferenceButErrorLoadingUserData)
                 }
 

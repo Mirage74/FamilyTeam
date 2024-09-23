@@ -104,11 +104,14 @@ class LoginUserStoreFactory @Inject constructor(
 
     val appContext: Context = context.applicationContext
 
-    fun create(language: String): LoginUserStore =
+    fun create(
+        userDefault: String,
+        language: String
+    ): LoginUserStore =
         object : LoginUserStore, Store<Intent, State, Label> by storeFactory.create(
             name = "LoginUserStore",
             initialState = State(
-                adminEmailOrPhone = "",
+                adminEmailOrPhone = userDefault,
 
                 nickName = "",
                 isNickNameEnabled = false,
