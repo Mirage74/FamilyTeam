@@ -28,6 +28,7 @@ data class User(
         const val NO_ERROR_MESSAGE = "NO_ERROR_MESSAGE"
         const val DEFAULT_NICK_NAME = "DEFAULT_NICK_NAME"
         const val DEFAULT_FAKE_EMAIL = "DEFAULT_FAKE_EMAIL"
+        const val WRONG_PASSWORD = "WRONG_PASSWORD"
     }
 }
 

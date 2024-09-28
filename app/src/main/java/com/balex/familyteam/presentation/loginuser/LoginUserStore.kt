@@ -1,18 +1,6 @@
 package com.balex.familyteam.presentation.loginuser
 
 import android.content.Context
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
@@ -114,10 +102,10 @@ class LoginUserStoreFactory @Inject constructor(
                 adminEmailOrPhone = userDefault,
 
                 nickName = "",
-                isNickNameEnabled = false,
+                isNickNameEnabled = true,
 
                 password = "",
-                isPasswordEnabled = false,
+                isPasswordEnabled = true,
                 isPasswordVisible = false,
 
                 isLoginButtonEnabled = false,
@@ -136,9 +124,7 @@ class LoginUserStoreFactory @Inject constructor(
 
         data class LanguageIsChanged(val language: String) : Action
 
-        data class AdminExistWrongPassword(val user: User) : Action
-
-        data object UserIsWrongPasswordIsCheckedInRepo : Action
+        data class AdminAndUserExistButWrongPassword(val user: User) : Action
 
     }
 
@@ -173,7 +159,6 @@ class LoginUserStoreFactory @Inject constructor(
 
         data class SetLoginWithoutWrongPassword(val user: User) : Msg
 
-        data object UserIsWrongPasswordIsCheckedInRepo : Msg
     }
 
     private inner class BootstrapperImpl : CoroutineBootstrapper<Action>() {
@@ -191,9 +176,8 @@ class LoginUserStoreFactory @Inject constructor(
             scope.launch {
                 observeIsWrongPasswordUseCase().collect {
                     if (it.nickName != User.DEFAULT_NICK_NAME) {
-                        dispatch(Action.AdminExistWrongPassword(it))
+                        dispatch(Action.AdminAndUserExistButWrongPassword(it))
                     }
-                    dispatch(Action.UserIsWrongPasswordIsCheckedInRepo)
                 }
             }
         }
@@ -276,7 +260,9 @@ class LoginUserStoreFactory @Inject constructor(
                         && (action.user.nickName != NO_USER_SAVED_IN_SHARED_PREFERENCES)
                         && (action.user.nickName != User.DEFAULT_NICK_NAME)
                     ) {
-                        publish(Label.UserIsLogged)
+                        if (action.user.password != User.WRONG_PASSWORD) {
+                            publish(Label.UserIsLogged)
+                        }
                     }
                 }
 
@@ -284,13 +270,10 @@ class LoginUserStoreFactory @Inject constructor(
                     dispatch(Msg.LanguageIsChanged(action.language))
                 }
 
-                is Action.AdminExistWrongPassword -> {
+                is Action.AdminAndUserExistButWrongPassword -> {
                     dispatch(Msg.SetLoginWithoutWrongPassword(action.user))
                 }
 
-                Action.UserIsWrongPasswordIsCheckedInRepo -> {
-                    dispatch(Msg.UserIsWrongPasswordIsCheckedInRepo)
-                }
             }
         }
     }
@@ -351,17 +334,12 @@ class LoginUserStoreFactory @Inject constructor(
                 is Msg.SetLoginWithoutWrongPassword -> {
                     copy(
                         adminEmailOrPhone = msg.user.adminEmailOrPhone,
-                        nickName = msg.user.nickName
-                    )
-                }
-
-                Msg.UserIsWrongPasswordIsCheckedInRepo -> {
-                    copy(
-                        isNickNameEnabled = true,
-                        isPasswordEnabled = true,
+                        nickName = msg.user.nickName,
+                        password = "",
                         loginUserState = State.LoginUserState.Content
                     )
                 }
+
             }
     }
 }

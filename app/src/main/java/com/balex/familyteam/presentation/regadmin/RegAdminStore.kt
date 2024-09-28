@@ -205,7 +205,7 @@ class RegAdminStoreFactory @Inject constructor(
 
             scope.launch {
                 observeIsWrongPasswordUseCase().collect {
-                    if (it.nickName != User.DEFAULT_NICK_NAME) {
+                    if (it.nickName != User.DEFAULT_NICK_NAME ) {
                         dispatch(Action.AdminExistWrongPassword(it))
                     }
                 }
@@ -357,7 +357,10 @@ class RegAdminStoreFactory @Inject constructor(
                 }
 
                 is Action.AdminExistWrongPassword -> {
-                    publish(Label.LoginPageWrongPassword(action.user))
+                    if (getState().isRegisterButtonWasPressed) {
+                        publish(Label.LoginPageWrongPassword(action.user))
+                    }
+
                 }
             }
         }

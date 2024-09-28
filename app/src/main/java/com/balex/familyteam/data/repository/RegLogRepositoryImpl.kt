@@ -43,7 +43,7 @@ class RegLogRepositoryImpl @Inject constructor(
 
     private var language = Language.DEFAULT_LANGUAGE.symbol
 
-    private var isWrongPassword = User(nickName = User.DEFAULT_NICK_NAME)
+    private var isWrongPassword = User()
 
     private var isUserMailOrPhoneVerified = false
 
@@ -86,15 +86,16 @@ class RegLogRepositoryImpl @Inject constructor(
             val emptyUserNotSaved =
                 User(nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES, language = phoneLang)
             user = emptyUserNotSaved
+            isCurrentUserNeedRefreshFlow.emit(Unit)
+
         } else {
-            signToFirebaseWithEmailAndPasswordFromPreferences(userFakeEmailFromStorage, Storage.getUsersPassword(context))
-
+            signToFirebaseWithEmailAndPasswordFromPreferences(userFakeEmailFromStorage, Storage.getUsersPassword(context), phoneLang)
         }
-        isCurrentUserNeedRefreshFlow.emit(Unit)
-
+        emit(user)
         isCurrentUserNeedRefreshFlow.collect {
             emit(user)
         }
+
     }
         .stateIn(
             scope = coroutineScope,
@@ -103,7 +104,7 @@ class RegLogRepositoryImpl @Inject constructor(
         )
 
     override fun observeIsWrongPassword(): StateFlow<User> = flow {
-        isWrongPasswordNeedRefreshFlow.emit(Unit)
+        emit(isWrongPassword)
         isWrongPasswordNeedRefreshFlow.collect {
             emit(isWrongPassword)
         }
@@ -154,6 +155,12 @@ class RegLogRepositoryImpl @Inject constructor(
     override suspend fun resetUserToDefault() {
         user = User()
         isCurrentUserNeedRefreshFlow.emit(Unit)
+    }
+
+    override suspend fun resetWrongPasswordUserToDefault() {
+        isWrongPassword = User()
+        isWrongPasswordNeedRefreshFlow.emit(Unit)
+
     }
 
     override fun getRepoUser(): User {
@@ -291,7 +298,8 @@ class RegLogRepositoryImpl @Inject constructor(
 
     private suspend fun signToFirebaseWithEmailAndPasswordFromPreferences(
         fakeEmail: String,
-        password: String
+        password: String,
+        phoneLang: String = Language.DEFAULT_LANGUAGE.symbol
 
     ) {
         val extractedUser = extractUserInfoFromFakeEmail(fakeEmail)
@@ -305,8 +313,8 @@ class RegLogRepositoryImpl @Inject constructor(
             if (adminFromCollection != null && adminFromCollection.nickName != Admin.DEFAULT_NICK_NAME) {
                 val userFromCollection = findUserInCollection(
                     User(
-                        adminEmailOrPhone = extractedUser.adminEmailOrPhone,
-                        nickName = extractedUser.nickName
+                        adminEmailOrPhone = adminFromCollection.emailOrPhoneNumber,
+                        nickName = adminFromCollection.nickName
                     )
                 )
                 if (userFromCollection != null) {
@@ -320,20 +328,31 @@ class RegLogRepositoryImpl @Inject constructor(
                         val firebaseAuthUser = authRes.user
                         if (firebaseAuthUser != null) {
                             user = userFromCollection
+
                             isCurrentUserNeedRefreshFlow.emit(Unit)
                         } else {
                             setUserWithError("signToFirebaseWithEmailAndPasswordFromPreferences: ERROR AUTH USER: $fakeEmail")
                         }
                     } else {
-                        isWrongPassword = userFromCollection
+                        user = User()
+                        isWrongPassword = userFromCollection.copy(password = User.WRONG_PASSWORD)
+
                         isWrongPasswordNeedRefreshFlow.emit(Unit)
                     }
                 } else {
-                    setUserWithError("signToFirebaseWithEmailAndPasswordFromPreferences: ADMIN_NOT_FOUND: ${extractedUser.adminEmailOrPhone}")
+                    //setUserWithError("signToFirebaseWithEmailAndPasswordFromPreferences: ADMIN_NOT_FOUND: ${extractedUser.adminEmailOrPhone}")
+                    Storage.clearPreferences(context)
+                    val emptyUserNotSaved =
+                        User(nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES, language = phoneLang)
+                    user = emptyUserNotSaved
                 }
 
             } else {
-                setUserWithError("signToFirebaseWithEmailAndPasswordFromPreferences: ADMIN_NOT_FOUND: ${extractedUser.adminEmailOrPhone}")
+                //setUserWithError("signToFirebaseWithEmailAndPasswordFromPreferences: ADMIN_NOT_FOUND: ${extractedUser.adminEmailOrPhone}")
+                Storage.clearPreferences(context)
+                val emptyUserNotSaved =
+                    User(nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES, language = phoneLang)
+                user = emptyUserNotSaved
             }
 
         } catch (e: FirebaseAuthException) {

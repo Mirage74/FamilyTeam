@@ -37,7 +37,6 @@ class DefaultRootComponent @AssistedInject constructor(
     private val navigation = StackNavigation<Config>()
 
 
-
     private val _stack = childStack(
         source = navigation,
         serializer = Config.serializer(),
@@ -50,23 +49,29 @@ class DefaultRootComponent @AssistedInject constructor(
     override val stack: Value<ChildStack<*, Child>> = _stack
 
 
-
     private fun child(
         config: Config, childComponentContext: ComponentContext
     ): Child {
         return when (config) {
             Config.NotLogged -> {
-                val component = notLoggedComponentFactory.create(onRegAdminClicked = {
-                    navigation.push(Config.RegAdmin)
-                }, onLoginUserClicked = {
-                    navigation.push(Config.LoginUser(it))
-
-                }, onUserIsLogged = {
-                    navigation.replaceAll(Config.LoggedUser)
-
-                }, onAbout = {
-                    navigation.push(Config.About)
-                }, componentContext = childComponentContext
+                val component = notLoggedComponentFactory.create(
+                    onAdminExistButWrongPassword = {
+                        userLogin -> navigation.push(Config.LoginUser(userLogin))
+                        //navigation.push(Config.LoginUser(it))
+                    },
+                    onRegAdminClicked = {
+                        navigation.push(Config.RegAdmin)
+                    },
+                    onLoginUserClicked = {
+                        navigation.push(Config.LoginUser(it))
+                    },
+                    onUserIsLogged = {
+                        navigation.replaceAll(Config.LoggedUser)
+                    },
+                    onAbout = {
+                        navigation.push(Config.About)
+                    },
+                    componentContext = childComponentContext
                 )
                 Child.NotLogged(component)
             }
@@ -79,7 +84,9 @@ class DefaultRootComponent @AssistedInject constructor(
                         navigation.push(Config.About)
                     }, onAdminExistButWrongPassword = { userLogin ->
                         navigation.push(Config.LoginUser(userLogin))
-                        navigation.popWhile { it != Config.NotLogged && it != Config.LoginUser(userLogin) }
+                        navigation.popWhile {
+                            it == Config.RegAdmin
+                        }
                     },
                     onBackClicked = {
                         navigation.pop()

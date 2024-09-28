@@ -9,6 +9,8 @@ interface RegLogRepository {
 
     suspend fun resetUserToDefault()
 
+    suspend fun resetWrongPasswordUserToDefault()
+
     fun getRepoUser(): User
 
     fun getWrongPasswordUser(): User

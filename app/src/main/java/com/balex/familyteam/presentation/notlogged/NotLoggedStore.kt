@@ -5,13 +5,13 @@ import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
-import com.balex.familyteam.data.datastore.Storage
 import com.balex.familyteam.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
 import com.balex.familyteam.data.repository.RegLogRepositoryImpl
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.GetUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.GetWrongPasswordUserUseCase
+import com.balex.familyteam.domain.usecase.regLog.IsWrongPasswordUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.SaveLanguageUseCase
@@ -65,12 +65,15 @@ interface NotLoggedStore : Store<Intent, State, Label> {
 
         data object ClickedAbout : Label
 
+        data class LoginPageWrongPassword(val user: User) : Label
+
     }
 }
 
 class NotLoggedStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
     private val observeUserUseCase: ObserveUserUseCase,
+    private val observeIsWrongPasswordUseCase: IsWrongPasswordUseCase,
     private val storageClearPreferencesUseCase: StorageClearPreferencesUseCase,
     private val getUserUseCase: GetUserUseCase,
     private val getWrongPasswordUserUseCase: GetWrongPasswordUserUseCase,
@@ -96,6 +99,8 @@ class NotLoggedStoreFactory @Inject constructor(
         data object UserExistInPreferenceAndLoadedUserData : Action
 
         data object UserExistInPreferenceButErrorLoadingUserData : Action
+
+        data class AdminAndUserExistButWrongPassword(val user: User) : Action
 
         data class OtherUserError(val errorMessage: String) : Action
 
@@ -138,16 +143,21 @@ class NotLoggedStoreFactory @Inject constructor(
                                 }
 
                                 else -> {
-                                    if (getWrongPasswordUserUseCase().nickName != User.DEFAULT_NICK_NAME) {
+                                    if (getWrongPasswordUserUseCase().nickName == User.DEFAULT_NICK_NAME) {
                                         signToFirebaseWithFakeEmailUseCase(getUserUseCase())
                                         dispatch(Action.UserExistInPreferenceAndLoadedUserData)
-                                    } else {
-
                                     }
-
                                 }
                             }
                         }
+                    }
+                }
+            }
+
+            scope.launch {
+                observeIsWrongPasswordUseCase().collect {
+                    if (it.nickName != User.DEFAULT_NICK_NAME) {
+                        dispatch(Action.AdminAndUserExistButWrongPassword(it))
                     }
                 }
             }
@@ -202,6 +212,10 @@ class NotLoggedStoreFactory @Inject constructor(
 
                 Action.UserNotExistInPreference -> {
                     dispatch(Msg.UserIsNotExistInPreference)
+                }
+
+                is Action.AdminAndUserExistButWrongPassword -> {
+                    publish(Label.LoginPageWrongPassword(action.user))
                 }
 
                 is Action.LanguageIsChanged -> {

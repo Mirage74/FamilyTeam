@@ -62,7 +62,7 @@ class DefaultRegAdminComponent @AssistedInject constructor(
                     }
 
                     is RegAdminStore.Label.LoginPageWrongPassword -> {
-                        resetUserToDefaultUseCase()
+                        //resetUserToDefaultUseCase()
                         onAdminExistButWrongPassword(it.user)
                     }
                 }
