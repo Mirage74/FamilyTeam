@@ -9,11 +9,13 @@
     <string name="by_phone">by Phone</string>
     <string name="e_mail">Email</string>
     <string name="phone">Phone, only digits with country code</string>
+    <string name="email_or_phone">Email/Phone, only digits with country code</string>
     <string name="nick_name">Nick, only letters, numbers and \'_\'</string>
     <string name="display_name">(optional) Display name</string>
     <string name="optional">optional:</string>
     <string name="password">Password, minimum 6 characters</string>
     <string name="reg_button">Register</string>
+    <string name="login_button">Login</string>
     <string name="cancel_button">Cancel</string>
     <string name="try_again_button">Try again</string>
     <string name="please_verify_email">Please verify your email</string>

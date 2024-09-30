@@ -1,13 +1,11 @@
 package com.balex.familyteam.presentation.root
 
 
-import android.util.Log
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
-import com.arkivanov.decompose.router.stack.popTo
 import com.arkivanov.decompose.router.stack.popWhile
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
@@ -55,10 +53,6 @@ class DefaultRootComponent @AssistedInject constructor(
         return when (config) {
             Config.NotLogged -> {
                 val component = notLoggedComponentFactory.create(
-                    onAdminExistButWrongPassword = {
-                        userLogin -> navigation.push(Config.LoginUser(userLogin))
-                        //navigation.push(Config.LoginUser(it))
-                    },
                     onRegAdminClicked = {
                         navigation.push(Config.RegAdmin)
                     },

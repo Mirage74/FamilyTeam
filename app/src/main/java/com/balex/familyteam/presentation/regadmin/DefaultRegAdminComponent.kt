@@ -1,32 +1,24 @@
 package com.balex.familyteam.presentation.regadmin
 
 import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.essenty.backhandler.BackHandler
 import com.arkivanov.essenty.lifecycle.doOnResume
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
-import com.balex.familyteam.domain.entity.Language
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
-import com.balex.familyteam.domain.usecase.regLog.EmitUserNeedRefreshUseCase
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
-import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
-import com.balex.familyteam.domain.usecase.regLog.ResetUserToDefaultUseCase
 import com.balex.familyteam.extensions.componentScope
-import com.balex.familyteam.presentation.loggeduser.LoggedUserStore
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Scope
 
 class DefaultRegAdminComponent @AssistedInject constructor(
     private val storeFactory: RegAdminStoreFactory,
     private val getLanguageUseCase: GetLanguageUseCase,
-    private val resetUserToDefaultUseCase: ResetUserToDefaultUseCase,
     override val phoneFirebaseRepository: PhoneFirebaseRepository,
     @Assisted("onAbout") private val onAbout: () -> Unit,
     @Assisted("onAdminExistButWrongPassword") private val onAdminExistButWrongPassword: (User) -> Unit,

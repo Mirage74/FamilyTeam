@@ -32,7 +32,7 @@ interface LoggedUserComponent {
 
     fun onClickAbout()
 
-    fun onClickLogout()
+    suspend fun onClickLogout()
 
     fun onRefreshLanguage()
 

@@ -57,6 +57,9 @@ import com.balex.familyteam.presentation.loggeduser.content.PasswordTextField
 import com.balex.familyteam.presentation.loggeduser.content.RegisterNewUserButton
 import com.balex.familyteam.presentation.notlogged.DrawerContent
 import com.balex.familyteam.presentation.ui.theme.DarkBlue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
@@ -212,7 +215,11 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                 )
                 BottomNavigationItem(
                     selected = state.activeBottomItem == PagesNames.Logout,
-                    onClick = { component.onClickLogout() },
+                    onClick = {
+                        CoroutineScope(Dispatchers.Default).launch {
+                            component.onClickLogout()
+                        }
+                    },
                     icon = {
                         Icon(
                             Icons.AutoMirrored.Filled.Logout,

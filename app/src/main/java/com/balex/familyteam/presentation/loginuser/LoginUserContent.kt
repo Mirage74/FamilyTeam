@@ -32,6 +32,7 @@ import com.balex.familyteam.presentation.ANIMATION_DURATION
 import com.balex.familyteam.presentation.TopAppBarOnlyLanguage
 import com.balex.familyteam.presentation.loginuser.content.ClickLoginText
 import com.balex.familyteam.presentation.loginuser.content.EmailTextField
+import com.balex.familyteam.presentation.loginuser.content.LoginButton
 import com.balex.familyteam.presentation.loginuser.content.NickNameTextField
 import com.balex.familyteam.presentation.loginuser.content.PasswordTextField
 import com.balex.familyteam.presentation.rememberImeState
@@ -57,7 +58,7 @@ fun LoginUserContent(component: LoginUserComponent) {
             }
 
             LoginUserStore.State.LoginUserState.Error -> {
-                ErrorLoginUserScreen()
+                ErrorLoginUserScreen(state)
             }
         }
     }
@@ -108,6 +109,7 @@ fun MainLoginUserContent(
                 NickNameTextField(state, component, context)
                 PasswordTextField(state, component, context)
                 ClickLoginText(state, component, context)
+                LoginButton(state, component, context)
 
 
 //                Spacer(modifier = Modifier.height(24.dp))
@@ -119,7 +121,7 @@ fun MainLoginUserContent(
 
 
 @Composable
-fun ErrorLoginUserScreen() {
+fun ErrorLoginUserScreen(state: LoginUserStore.State) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -127,7 +129,7 @@ fun ErrorLoginUserScreen() {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Error login user, please try later",
+            text = state.errorMessage,
             color = Color.Red,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,

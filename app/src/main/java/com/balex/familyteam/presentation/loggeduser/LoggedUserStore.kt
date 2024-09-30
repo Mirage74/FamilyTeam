@@ -405,7 +405,10 @@ class LoggedUserStoreFactory @Inject constructor(
                 }
 
                 is Msg.UsersListIsChanged -> {
-                    copy(usersList = msg.usersList)
+                    copy(
+                        usersList = msg.usersList,
+                        loggedUserState = State.LoggedUserState.Content
+                    )
                 }
 
                 is Msg.ExternalTasksListIsChanged -> {

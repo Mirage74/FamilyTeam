@@ -25,7 +25,7 @@ fun EmailTextField(state: LoginUserStore.State, component: LoginUserComponent, c
     TextField(
         value = emailText,
         onValueChange = { component.onLoginFieldChanged(it) },
-        label = { Text(context.getString(R.string.e_mail)) },
+        label = { Text(context.getString(R.string.email_or_phone)) },
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),

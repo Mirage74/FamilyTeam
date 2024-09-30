@@ -3,8 +3,8 @@ package com.balex.familyteam.domain.usecase.regLog
 import com.balex.familyteam.domain.repository.RegLogRepository
 import javax.inject.Inject
 
-class ResetUserToDefaultUseCase @Inject constructor(
+class LogoutUserUseCase @Inject constructor(
     private val repository: RegLogRepository
 ) {
-    suspend operator fun invoke() = repository.resetUserToDefault()
+    suspend operator fun invoke() = repository.logoutUser()
 }

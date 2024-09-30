@@ -10,6 +10,7 @@ import com.balex.familyteam.domain.entity.LanguagesList
 import com.balex.familyteam.domain.entity.RegistrationOption
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.repository.RegLogRepository
+import com.balex.familyteam.domain.usecase.regLog.SignToFirebaseWithFakeEmailUseCase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
@@ -89,7 +90,11 @@ class RegLogRepositoryImpl @Inject constructor(
             isCurrentUserNeedRefreshFlow.emit(Unit)
 
         } else {
-            signToFirebaseWithEmailAndPasswordFromPreferences(userFakeEmailFromStorage, Storage.getUsersPassword(context), phoneLang)
+            signToFirebaseWithEmailAndPasswordFromPreferences(
+                userFakeEmailFromStorage,
+                Storage.getUsersPassword(context),
+                phoneLang
+            )
         }
         emit(user)
         isCurrentUserNeedRefreshFlow.collect {
@@ -152,9 +157,13 @@ class RegLogRepositoryImpl @Inject constructor(
             initialValue = isSmsVerificationError
         )
 
-    override suspend fun resetUserToDefault() {
+    override suspend fun logoutUser() {
         user = User()
+        admin = Admin()
+        isWrongPassword = User()
+        isUserMailOrPhoneVerified = false
         isCurrentUserNeedRefreshFlow.emit(Unit)
+        isCurrentLanguageNeedRefreshFlow.emit(Unit)
     }
 
     override suspend fun resetWrongPasswordUserToDefault() {
@@ -223,8 +232,9 @@ class RegLogRepositoryImpl @Inject constructor(
 
     override suspend fun addAdminToCollection(admin: Admin): Result<Unit> {
         return try {
-            val adminDocument = adminsCollection.document(admin.emailOrPhoneNumber)
-            adminDocument.set(admin).await()
+            val adminWithList = admin.copy(usersNickNamesList = listOf(admin.nickName))
+            val adminDocument = adminsCollection.document(adminWithList.emailOrPhoneNumber)
+            adminDocument.set(adminWithList).await()
             Result.success(Unit)
         } catch (e: Exception) {
             setUserWithError(ERROR_ADD_ADMIN_TO_FIREBASE)
@@ -343,7 +353,10 @@ class RegLogRepositoryImpl @Inject constructor(
                     //setUserWithError("signToFirebaseWithEmailAndPasswordFromPreferences: ADMIN_NOT_FOUND: ${extractedUser.adminEmailOrPhone}")
                     Storage.clearPreferences(context)
                     val emptyUserNotSaved =
-                        User(nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES, language = phoneLang)
+                        User(
+                            nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES,
+                            language = phoneLang
+                        )
                     user = emptyUserNotSaved
                 }
 
@@ -351,7 +364,10 @@ class RegLogRepositoryImpl @Inject constructor(
                 //setUserWithError("signToFirebaseWithEmailAndPasswordFromPreferences: ADMIN_NOT_FOUND: ${extractedUser.adminEmailOrPhone}")
                 Storage.clearPreferences(context)
                 val emptyUserNotSaved =
-                    User(nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES, language = phoneLang)
+                    User(
+                        nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES,
+                        language = phoneLang
+                    )
                 user = emptyUserNotSaved
             }
 
@@ -812,36 +828,94 @@ class RegLogRepositoryImpl @Inject constructor(
 
     }
 
-    companion object {
-        const val TIMEOUT_VERIFICATION_MAIL = 60000L * 60L * 24L
-        const val TIMEOUT_VERIFICATION_CHECK = 15000L
+    override suspend fun checkUserInCollectionAndLoginIfExist(
+        adminEmailOrPhone: String,
+        nickName: String,
+        password: String
+    ): User {
+        val admin = findAdminInCollectionByDocumentName(adminEmailOrPhone)
+        if (admin == null || admin.emailOrPhoneNumber.trim() != adminEmailOrPhone.trim()) {
+            return User(
+                isError = true,
+                errorMessage = CheckUserInCollectionAndLoginIfExistErrorMessages.ADMIN_NOT_FOUND.name
+            )
+        } else {
+            val userFromCollection = findUserInCollection(
+                User(
+                    adminEmailOrPhone = adminEmailOrPhone,
+                    nickName = nickName
+                )
+            )
+            if (userFromCollection != null) {
+                if (userFromCollection.password != password) {
+                    return User(
+                        isError = true,
+                        errorMessage = CheckUserInCollectionAndLoginIfExistErrorMessages.WRONG_PASSWORD.name
+                    )
 
-        const val FIREBASE_ADMINS_COLLECTION = "admins"
-        const val FIREBASE_USERS_COLLECTION = "users"
-        const val FIREBASE_ADMINS_AND_USERS_COLLECTION = "adminsAndUsers"
+                } else {
+                    val trySignIn = signToFirebaseWithFakeEmail(
+                        User(
+                            adminEmailOrPhone = adminEmailOrPhone,
+                            nickName = admin.nickName,
+                            fakeEmail = createFakeUserEmail(nickName, adminEmailOrPhone),
+                            password = password
+                        )
+                    )
+                    if (trySignIn == StatusFakeEmailSignIn.USER_SIGNED_IN) {
+                        user = userFromCollection
+                        isCurrentUserNeedRefreshFlow.emit(Unit)
+                    }
+                    return user
+                }
 
-        const val SMS_VERIFICATION_ERROR_INITIAL = "SMS_VERIFICATION_ERROR_INITIAL"
-        const val FAKE_EMAIL_DOMAIN = "balexvic.com"
+            } else {
+                return User(
+                    isError = true,
+                    errorMessage = CheckUserInCollectionAndLoginIfExistErrorMessages.NICK_NAME_NOT_FOUND.name
+                )
+            }
 
-        const val ERROR_LOADING_USER_DATA_FROM_FIREBASE = "ERROR_LOADING_USER_DATA_FROM_FIREBASE"
-        const val ERROR_ADD_USER_TO_FIREBASE = "ERROR_ADD_USER_TO_FIREBASE"
-        const val ERROR_ADD_ADMIN_TO_FIREBASE = "ERROR_ADD_ADMIN_TO_FIREBASE"
-        const val USER_ALREADY_EXIST_IN_AUTH =
-            "user already exist in AUTH"
-        const val REGISTRATION_ERROR = "REGISTRATION ERROR"
-
-        const val AUTH_USER_NOT_FOUND = "ERROR_USER_NOT_FOUND"
-
-        enum class StatusFakeEmailSignIn {
-            USER_SIGNED_IN,
-            USER_NOT_FOUND,
-            OTHER_FAKE_EMAIL_SIGN_IN_ERROR
-        }
-
-        enum class StatusEmailSignIn {
-            ADMIN_SIGNED_IN_AND_VERIFIED,
-            ADMIN_NOT_FOUND,
-            OTHER_SIGN_IN_ERROR
         }
     }
-}
+        companion object {
+            const val TIMEOUT_VERIFICATION_MAIL = 60000L * 60L * 24L
+            const val TIMEOUT_VERIFICATION_CHECK = 15000L
+
+            const val FIREBASE_ADMINS_COLLECTION = "admins"
+            const val FIREBASE_USERS_COLLECTION = "users"
+            const val FIREBASE_ADMINS_AND_USERS_COLLECTION = "adminsAndUsers"
+
+            const val SMS_VERIFICATION_ERROR_INITIAL = "SMS_VERIFICATION_ERROR_INITIAL"
+            const val FAKE_EMAIL_DOMAIN = "balexvic.com"
+
+            const val ERROR_LOADING_USER_DATA_FROM_FIREBASE =
+                "ERROR_LOADING_USER_DATA_FROM_FIREBASE"
+            const val ERROR_ADD_USER_TO_FIREBASE = "ERROR_ADD_USER_TO_FIREBASE"
+            const val ERROR_ADD_ADMIN_TO_FIREBASE = "ERROR_ADD_ADMIN_TO_FIREBASE"
+            const val USER_ALREADY_EXIST_IN_AUTH =
+                "user already exist in AUTH"
+            const val REGISTRATION_ERROR = "REGISTRATION ERROR"
+
+            const val AUTH_USER_NOT_FOUND = "ERROR_USER_NOT_FOUND"
+
+            enum class CheckUserInCollectionAndLoginIfExistErrorMessages {
+                ADMIN_NOT_FOUND,
+                NICK_NAME_NOT_FOUND,
+                WRONG_PASSWORD,
+            }
+
+
+            enum class StatusFakeEmailSignIn {
+                USER_SIGNED_IN,
+                USER_NOT_FOUND,
+                OTHER_FAKE_EMAIL_SIGN_IN_ERROR
+            }
+
+            enum class StatusEmailSignIn {
+                ADMIN_SIGNED_IN_AND_VERIFIED,
+                ADMIN_NOT_FOUND,
+                OTHER_SIGN_IN_ERROR
+            }
+        }
+    }

@@ -8,7 +8,6 @@ import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
-import com.balex.familyteam.domain.usecase.regLog.ResetUserToDefaultUseCase
 import com.balex.familyteam.domain.usecase.regLog.ResetWrongPasswordUserToDefaultUseCase
 import com.balex.familyteam.extensions.componentScope
 import dagger.assisted.Assisted
@@ -16,7 +15,6 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -24,7 +22,6 @@ class DefaultNotLoggedComponent @AssistedInject constructor(
     private val storeFactory: NotLoggedStoreFactory,
     private val getLanguageUseCase: GetLanguageUseCase,
     private val resetWrongPasswordUserToDefaultUseCase: ResetWrongPasswordUserToDefaultUseCase,
-    @Assisted("onAdminExistButWrongPassword") private val onAdminExistButWrongPassword: (User) -> Unit,
     @Assisted("onRegAdminClicked") private val onRegAdminClicked: () -> Unit,
     @Assisted("onLoginUserClicked") private val onLoginUserClicked: (User) -> Unit,
     @Assisted("onUserIsLogged") private val onUserIsLogged: () -> Unit,
@@ -75,8 +72,7 @@ class DefaultNotLoggedComponent @AssistedInject constructor(
                     }
 
                     is NotLoggedStore.Label.LoginPageWrongPassword -> {
-                        //resetUserToDefaultUseCase()
-                        onAdminExistButWrongPassword(it.user)
+                        onLoginUserClicked(it.user)
                     }
                 }
             }
@@ -115,7 +111,6 @@ class DefaultNotLoggedComponent @AssistedInject constructor(
     interface Factory {
 
         fun create(
-            @Assisted("onAdminExistButWrongPassword") onAdminExistButWrongPassword: (User) -> Unit,
             @Assisted("onRegAdminClicked") onRegAdminClicked: () -> Unit,
             @Assisted("onLoginUserClicked") onLoginUserClicked: (User) -> Unit,
             @Assisted("onUserIsLogged") onUserIsLogged: () -> Unit,

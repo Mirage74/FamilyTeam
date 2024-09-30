@@ -1,5 +1,6 @@
 package com.balex.familyteam.data.repository
 
+import android.util.Log
 import com.balex.familyteam.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_ADMINS_COLLECTION
 import com.balex.familyteam.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_USERS_COLLECTION
 import com.balex.familyteam.domain.entity.ExternalTasks
@@ -8,8 +9,6 @@ import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.repository.UserRepository
 import com.balex.familyteam.domain.usecase.regLog.AddUserToCollectionUseCase
 import com.balex.familyteam.domain.usecase.regLog.GetUserUseCase
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
@@ -19,7 +18,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -52,16 +50,17 @@ class UserRepositoryImpl @Inject constructor(
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     override fun observeUsersList(): StateFlow<List<User>> = flow {
-        val documents = getUsersListFromFirebase()
-        if (documents.isNotEmpty()) {
-            val list = mutableListOf<User>()
-            documents.forEach { document ->
-                document?.toObject(User::class.java)?.let {
-                    list.add(it)
-                }
-            }
-            usersList = list.toMutableList()
-        }
+        //val teamList = getUsersListFromFirebase()
+        //Log.d("documents:", teamList.toString())
+//        if (documents.isNotEmpty()) {
+//            val list = mutableListOf<User>()
+//            documents.forEach { document ->
+//                document?.toObject(User::class.java)?.let {
+//                    list.add(it)
+//                }
+//            }
+//            usersList = list.toMutableList()
+//        }
 
         isCurrentUsersListNeedRefreshFlow.emit(Unit)
         isCurrentUsersListNeedRefreshFlow.collect {
@@ -94,23 +93,31 @@ class UserRepositoryImpl @Inject constructor(
         TODO("Not yet implemented")
     }
 
-    private suspend fun getUsersListFromFirebase(): List<DocumentSnapshot?> {
-        return try {
-            val documents = usersCollection
-                .whereNotEqualTo("nickName", getUserUseCase().nickName)
-                .get(Source.SERVER)
-                .await()
-
-            if (documents != null && !documents.isEmpty) {
-                documents.documents
-            } else {
-                emptyList()
-            }
-        } catch (exception: Exception) {
-            exception.printStackTrace()
-            throw RuntimeException("getUsersListFromFirebase: $ERROR_GET_USERS_LIST_FROM_FIREBASE")
-        }
-    }
+//    private suspend fun getUsersListFromFirebase(): List<User> {
+//        try {
+//
+//
+//            val teamData = usersCollection.document(getUserUseCase().adminEmailOrPhone)
+//                .get()
+//                .await()
+//
+//            val dt = teamData.data
+//
+//            val userList = mutableListOf<User>()
+//            if (teamData.data != null) {
+//            for (collection in teamData.data!!) {
+//
+//                    collection.value?.let { toObject(User::class.java)?.let { userList.add(it) }}
+//
+//            }
+//}
+//            return userList
+//
+//        } catch (exception: Exception) {
+//            exception.printStackTrace()
+//            throw RuntimeException("getUsersListFromFirebase: $ERROR_GET_USERS_LIST_FROM_FIREBASE")
+//        }
+//    }
 
 
 

@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface RegLogRepository {
 
-    suspend fun resetUserToDefault()
+    suspend fun logoutUser()
 
     suspend fun resetWrongPasswordUserToDefault()
 
@@ -22,6 +22,12 @@ interface RegLogRepository {
     fun observeUser(): StateFlow<User>
 
     suspend fun findAdminInCollectionByDocumentName(documentName: String): Admin?
+
+    suspend fun checkUserInCollectionAndLoginIfExist(
+        adminEmailOrPhone: String,
+        nickName: String,
+        password: String
+    ): User
 
     fun observeIsWrongPassword(): StateFlow<User>
 
