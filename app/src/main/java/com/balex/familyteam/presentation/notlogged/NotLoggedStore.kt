@@ -20,10 +20,13 @@ import com.balex.familyteam.domain.usecase.regLog.StorageClearPreferencesUseCase
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore.Intent
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore.Label
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore.State
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 interface NotLoggedStore : Store<Intent, State, Label> {
+
+    fun stopBootstrapperCollectFlow()
 
     sealed interface Intent {
 
@@ -90,7 +93,16 @@ class NotLoggedStoreFactory @Inject constructor(
             bootstrapper = BootstrapperImpl(),
             executorFactory = ::ExecutorImpl,
             reducer = ReducerImpl
-        ) {}
+        ) {
+
+            private val bootstrapper: BootstrapperImpl = BootstrapperImpl()
+
+            override fun stopBootstrapperCollectFlow() {
+                bootstrapper.stop()
+            }
+        }
+
+
 
     private sealed interface Action {
 
@@ -121,8 +133,23 @@ class NotLoggedStoreFactory @Inject constructor(
     }
 
     private inner class BootstrapperImpl : CoroutineBootstrapper<Action>() {
+
+        private var userJob: Job? = null
+        private var passwordJob: Job? = null
+        private var languageJob: Job? = null
+
         override fun invoke() {
-            scope.launch {
+            start()
+        }
+
+        fun stop() {
+            userJob?.cancel()
+            passwordJob?.cancel()
+            languageJob?.cancel()
+        }
+
+        fun start() {
+            userJob = scope.launch {
                 observeUserUseCase().collect {
                     if (it.isError) {
                         if (it.errorMessage == RegLogRepositoryImpl.ERROR_LOADING_USER_DATA_FROM_FIREBASE) {
@@ -154,7 +181,7 @@ class NotLoggedStoreFactory @Inject constructor(
                 }
             }
 
-            scope.launch {
+            passwordJob = scope.launch {
                 observeIsWrongPasswordUseCase().collect {
                     if (it.nickName != User.DEFAULT_NICK_NAME) {
                         dispatch(Action.AdminAndUserExistButWrongPassword(it))
@@ -162,7 +189,7 @@ class NotLoggedStoreFactory @Inject constructor(
                 }
             }
 
-            scope.launch {
+            languageJob = scope.launch {
                 observeLanguageUseCase().collect {
                     dispatch(Action.LanguageIsChanged(it))
                 }

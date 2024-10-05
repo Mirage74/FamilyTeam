@@ -18,7 +18,6 @@ import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
@@ -59,7 +58,6 @@ import com.balex.familyteam.presentation.notlogged.DrawerContent
 import com.balex.familyteam.presentation.ui.theme.DarkBlue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
@@ -216,7 +214,7 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                 BottomNavigationItem(
                     selected = state.activeBottomItem == PagesNames.Logout,
                     onClick = {
-                        CoroutineScope(Dispatchers.Default).launch {
+                        CoroutineScope(Dispatchers.Main.immediate).launch {
                             component.onClickLogout()
                         }
                     },

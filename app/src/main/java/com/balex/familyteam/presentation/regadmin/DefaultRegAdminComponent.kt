@@ -1,6 +1,8 @@
 package com.balex.familyteam.presentation.regadmin
 
 import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.essenty.lifecycle.doOnDestroy
+import com.arkivanov.essenty.lifecycle.doOnPause
 import com.arkivanov.essenty.lifecycle.doOnResume
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
@@ -13,6 +15,8 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -32,11 +36,21 @@ class DefaultRegAdminComponent @AssistedInject constructor(
     private val scope = componentScope()
 
     init {
-
         lifecycle.doOnResume {
             onRefreshLanguage()
+            startCollectingLabels()
+        }
+        lifecycle.doOnPause {
+            stopCollectingLabels()
+            store.stopBootstrapperCollectFlow()
         }
 
+        lifecycle.doOnDestroy {
+            scope.cancel()
+        }
+    }
+
+    private fun startCollectingLabels() {
         scope.launch {
             store.labels.collect {
                 when (it) {
@@ -62,6 +76,9 @@ class DefaultRegAdminComponent @AssistedInject constructor(
         }
     }
 
+    private fun stopCollectingLabels() {
+        scope.coroutineContext.cancelChildren()
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override val model: StateFlow<RegAdminStore.State> = store.stateFlow

@@ -1,6 +1,8 @@
 package com.balex.familyteam.presentation.loggeduser
 
 import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.essenty.lifecycle.doOnDestroy
+import com.arkivanov.essenty.lifecycle.doOnPause
 import com.arkivanov.essenty.lifecycle.doOnResume
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
@@ -17,6 +19,8 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -39,7 +43,19 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     init {
         lifecycle.doOnResume {
             onRefreshLanguage()
+            startCollectingLabels()
         }
+        lifecycle.doOnPause {
+            stopCollectingLabels()
+            store.stopBootstrapperCollectFlow()
+        }
+
+        lifecycle.doOnDestroy {
+            scope.cancel()
+        }
+    }
+
+    private fun startCollectingLabels() {
         scope.launch {
             store.labels.collect {
                 when (it) {
@@ -51,6 +67,9 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         }
     }
 
+    private fun stopCollectingLabels() {
+        scope.coroutineContext.cancelChildren()
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override val model: StateFlow<LoggedUserStore.State> = store.stateFlow
@@ -113,12 +132,7 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     override suspend fun onClickLogout() {
         storageClearPreferencesUseCase()
         logoutUserUseCase()
-
-        CoroutineScope(Dispatchers.Main.immediate).launch {
-            onLogout()
-        }
-
-
+        onLogout()
     }
 
     override fun onRefreshLanguage() {

@@ -19,10 +19,13 @@ import com.balex.familyteam.domain.usecase.regLog.SaveLanguageUseCase
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.Intent
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.Label
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.State
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 interface RegAdminStore : Store<Intent, State, Label> {
+
+    fun stopBootstrapperCollectFlow()
 
     sealed interface Intent {
 
@@ -134,7 +137,13 @@ class RegAdminStoreFactory @Inject constructor(
             bootstrapper = BootstrapperImpl(),
             executorFactory = ::ExecutorImpl,
             reducer = ReducerImpl
-        ) {}
+        ) {
+            private val bootstrapper: BootstrapperImpl = BootstrapperImpl()
+
+            override fun stopBootstrapperCollectFlow() {
+                bootstrapper.stop()
+            }
+        }
 
     private sealed interface Action {
 
@@ -191,23 +200,40 @@ class RegAdminStoreFactory @Inject constructor(
     }
 
     private inner class BootstrapperImpl : CoroutineBootstrapper<Action>() {
+
+        private var userJob: Job? = null
+        private var passwordJob: Job? = null
+        private var languageJob: Job? = null
+
         override fun invoke() {
-            scope.launch {
-                observeLanguageUseCase().collect {
-                    dispatch(Action.LanguageIsChanged(it))
-                }
-            }
-            scope.launch {
+            start()
+        }
+
+        fun stop() {
+            userJob?.cancel()
+            passwordJob?.cancel()
+            languageJob?.cancel()
+        }
+
+        fun start() {
+
+            userJob = scope.launch {
                 observeUserUseCase().collect {
                     dispatch(Action.UserIsChanged(it))
                 }
             }
 
-            scope.launch {
+            passwordJob = scope.launch {
                 observeIsWrongPasswordUseCase().collect {
                     if (it.nickName != User.DEFAULT_NICK_NAME ) {
                         dispatch(Action.AdminExistWrongPassword(it))
                     }
+                }
+            }
+
+            languageJob = scope.launch {
+                observeLanguageUseCase().collect {
+                    dispatch(Action.LanguageIsChanged(it))
                 }
             }
         }
@@ -493,8 +519,5 @@ class RegAdminStoreFactory @Inject constructor(
         const val REGEX_PATTERN_NOT_LETTERS = "[^a-zA-Z]"
         const val REGEX_PATTERN_NOT_LATIN_LETTERS_NUMBERS_UNDERSCORE = "[^a-zA-Z0-9_]"
         const val REGEX_PATTERN_NOT_ANY_LETTERS_NUMBERS_UNDERSCORE = """[^\p{L}\p{Nd}_]"""
-
-        const val SELECTED_OPTION_ILLEGAL_VALUE =
-            "RegAdminStore, ExecutorImpl - getState().selectedOption must == RegistrationOption.EMAIL"
     }
 }

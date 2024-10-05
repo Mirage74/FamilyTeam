@@ -29,10 +29,13 @@ import com.balex.familyteam.presentation.loggeduser.LoggedUserStore.State
 import com.balex.familyteam.presentation.regadmin.RegAdminStoreFactory.Companion.REGEX_PATTERN_NOT_ANY_LETTERS_NUMBERS_UNDERSCORE
 import com.balex.familyteam.presentation.regadmin.RegAdminStoreFactory.Companion.REGEX_PATTERN_NOT_LATIN_LETTERS_NUMBERS_UNDERSCORE
 import com.balex.familyteam.presentation.regadmin.RegAdminStoreFactory.Companion.REGEX_PATTERN_NOT_LETTERS
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 interface LoggedUserStore : Store<Intent, State, Label> {
+
+    fun stopBootstrapperCollectFlow()
 
     sealed interface Intent {
 
@@ -139,7 +142,13 @@ class LoggedUserStoreFactory @Inject constructor(
             bootstrapper = BootstrapperImpl(),
             executorFactory = ::ExecutorImpl,
             reducer = ReducerImpl
-        ) {}
+        ) {
+            private val bootstrapper: BootstrapperImpl = BootstrapperImpl()
+
+            override fun stopBootstrapperCollectFlow() {
+                bootstrapper.stop()
+            }
+        }
 
     private sealed interface Action {
 
@@ -208,20 +217,35 @@ class LoggedUserStoreFactory @Inject constructor(
     }
 
     private inner class BootstrapperImpl : CoroutineBootstrapper<Action>() {
+
+        private var userJob: Job? = null
+        private var languageJob: Job? = null
+        private var usersListJob: Job? = null
+
         override fun invoke() {
-            scope.launch {
+            start()
+        }
+
+        fun stop() {
+            userJob?.cancel()
+            languageJob?.cancel()
+            usersListJob?.cancel()
+        }
+
+        fun start() {
+            userJob = scope.launch {
                 observeUserUseCase().collect {
                     dispatch(Action.UserIsChanged(it))
                 }
             }
 
-            scope.launch {
+            languageJob = scope.launch {
                 observeLanguageUseCase().collect {
                     dispatch(Action.LanguageIsChanged(it))
                 }
             }
 
-            scope.launch {
+            usersListJob = scope.launch {
                 observeUsersListUseCase().collect {
                     dispatch(Action.UsersListIsChanged(it))
                 }

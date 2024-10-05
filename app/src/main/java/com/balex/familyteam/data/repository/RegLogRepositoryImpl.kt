@@ -10,7 +10,6 @@ import com.balex.familyteam.domain.entity.LanguagesList
 import com.balex.familyteam.domain.entity.RegistrationOption
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.repository.RegLogRepository
-import com.balex.familyteam.domain.usecase.regLog.SignToFirebaseWithFakeEmailUseCase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
@@ -344,7 +343,7 @@ class RegLogRepositoryImpl @Inject constructor(
                             setUserWithError("signToFirebaseWithEmailAndPasswordFromPreferences: ERROR AUTH USER: $fakeEmail")
                         }
                     } else {
-                        user = User()
+                        user = userFromCollection.copy(password = User.WRONG_PASSWORD)
                         isWrongPassword = userFromCollection.copy(password = User.WRONG_PASSWORD)
 
                         isWrongPasswordNeedRefreshFlow.emit(Unit)
@@ -554,6 +553,16 @@ class RegLogRepositoryImpl @Inject constructor(
         Storage.clearPreferences(context)
     }
 
+    override fun storageSavePreferences(email: String, nickName: String, password: String, language: String) {
+        val fakeEmail = createFakeUserEmail(nickName, email)
+        Storage.saveAllPreferences(
+            context,
+            fakeEmail,
+            password,
+            language
+        )
+    }
+
 
     override suspend fun registerAndVerifyNewTeamByEmail(
         email: String,
@@ -593,14 +602,11 @@ class RegLogRepositoryImpl @Inject constructor(
                 setUserWithError("registerAndVerifyNewTeamByEmail: $REGISTRATION_ERROR: ${e.message}")
             }
         } else {
-            Storage.saveAllPreferences(
-                context,
-                createFakeUserEmail(nickName, email),
-                password,
-                language
-            )
+            storageSavePreferences(email, nickName, password, language)
+
         }
     }
+
 
     private suspend fun sendVerificationEmailAndWaitForResult(
         authUser: FirebaseUser,
@@ -722,7 +728,7 @@ class RegLogRepositoryImpl @Inject constructor(
         return try {
             val document =
                 usersCollection.document(userToFind.adminEmailOrPhone)
-                    .collection(userToFind.nickName)
+                    .collection(formatStringFirstLetterUppercase( userToFind.nickName))
                     .document(userToFind.nickName)
                     .get()
                     .await()
@@ -843,7 +849,7 @@ class RegLogRepositoryImpl @Inject constructor(
             val userFromCollection = findUserInCollection(
                 User(
                     adminEmailOrPhone = adminEmailOrPhone,
-                    nickName = nickName
+                    nickName = formatStringFirstLetterUppercase(nickName)
                 )
             )
             if (userFromCollection != null) {
@@ -877,7 +883,13 @@ class RegLogRepositoryImpl @Inject constructor(
             }
 
         }
+
     }
+
+    private fun formatStringFirstLetterUppercase(s: String): String {
+        return s.lowercase().replaceFirstChar { it.uppercase() }.trim()
+    }
+
         companion object {
             const val TIMEOUT_VERIFICATION_MAIL = 60000L * 60L * 24L
             const val TIMEOUT_VERIFICATION_CHECK = 15000L

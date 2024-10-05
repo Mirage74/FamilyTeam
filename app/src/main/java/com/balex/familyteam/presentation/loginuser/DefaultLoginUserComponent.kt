@@ -1,20 +1,21 @@
 package com.balex.familyteam.presentation.loginuser
 
 import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.essenty.lifecycle.doOnDestroy
+import com.arkivanov.essenty.lifecycle.doOnPause
 import com.arkivanov.essenty.lifecycle.doOnResume
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
-import com.balex.familyteam.domain.entity.Language
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
 import com.balex.familyteam.extensions.componentScope
-import com.balex.familyteam.presentation.notlogged.NotLoggedStore
-import com.balex.familyteam.presentation.regadmin.RegAdminStore
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -33,8 +34,19 @@ class DefaultLoginUserComponent @AssistedInject constructor(
     init {
         lifecycle.doOnResume {
             onRefreshLanguage()
+            startCollectingLabels()
+        }
+        lifecycle.doOnPause {
+            stopCollectingLabels()
+            store.stopBootstrapperCollectFlow()
         }
 
+        lifecycle.doOnDestroy {
+            scope.cancel()
+        }
+    }
+
+    private fun startCollectingLabels() {
         scope.launch {
             store.labels.collect {
                 when (it) {
@@ -51,6 +63,9 @@ class DefaultLoginUserComponent @AssistedInject constructor(
         }
     }
 
+    private fun stopCollectingLabels() {
+        scope.coroutineContext.cancelChildren()
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override val model: StateFlow<LoginUserStore.State> = store.stateFlow

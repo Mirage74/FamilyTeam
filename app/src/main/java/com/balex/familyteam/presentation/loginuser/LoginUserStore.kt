@@ -17,6 +17,7 @@ import com.balex.familyteam.domain.usecase.regLog.IsWrongPasswordUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.SaveLanguageUseCase
+import com.balex.familyteam.domain.usecase.regLog.StorageSavePreferencesUseCase
 import com.balex.familyteam.presentation.loginuser.LoginUserStore.Intent
 import com.balex.familyteam.presentation.loginuser.LoginUserStore.Label
 import com.balex.familyteam.presentation.loginuser.LoginUserStore.State
@@ -24,10 +25,13 @@ import com.balex.familyteam.presentation.regadmin.RegAdminStoreFactory.Companion
 import com.balex.familyteam.presentation.regadmin.RegAdminStoreFactory.Companion.REGEX_PATTERN_NOT_LATIN_LETTERS_NUMBERS_UNDERSCORE
 import com.balex.familyteam.presentation.regadmin.RegAdminStoreFactory.Companion.REGEX_PATTERN_NOT_LETTERS
 import com.balex.familyteam.presentation.regadmin.RegAdminStoreFactory.Companion.REGEX_PATTERN_ONLY_NUMBERS_FIRST_NOT_ZERO
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 interface LoginUserStore : Store<Intent, State, Label> {
+
+    fun stopBootstrapperCollectFlow()
 
     sealed interface Intent {
 
@@ -98,6 +102,7 @@ class LoginUserStoreFactory @Inject constructor(
     private val saveLanguageUseCase: SaveLanguageUseCase,
     private val observeUserUseCase: ObserveUserUseCase,
     private val checkUserInCollectionAndLoginIfExistUseCase: CheckUserInCollectionAndLoginIfExistUseCase,
+    private val storageSavePreferencesUseCase: StorageSavePreferencesUseCase,
     context: Context
 ) {
 
@@ -128,7 +133,13 @@ class LoginUserStoreFactory @Inject constructor(
             bootstrapper = BootstrapperImpl(),
             executorFactory = ::ExecutorImpl,
             reducer = ReducerImpl
-        ) {}
+        ) {
+            private val bootstrapper: BootstrapperImpl = BootstrapperImpl()
+
+            override fun stopBootstrapperCollectFlow() {
+                bootstrapper.stop()
+            }
+        }
 
     private sealed interface Action {
 
@@ -143,6 +154,8 @@ class LoginUserStoreFactory @Inject constructor(
     private sealed interface Msg {
 
         data object ClickedLoginButton : Msg
+
+        data object EmptyUser : Msg
 
 
         data class UpdateLoginAdminField(val currentAdminLoginText: String) : Msg
@@ -171,27 +184,42 @@ class LoginUserStoreFactory @Inject constructor(
 
         data class SetLoginWithoutWrongPassword(val user: User) : Msg
 
-        data class ErrorAccured(val errorMessage: String) : Msg
+        data class ErrorOccurred(val errorMessage: String) : Msg
 
     }
 
     private inner class BootstrapperImpl : CoroutineBootstrapper<Action>() {
+
+        private var userJob: Job? = null
+        private var passwordJob: Job? = null
+        private var languageJob: Job? = null
+
         override fun invoke() {
-            scope.launch {
-                observeLanguageUseCase().collect {
-                    dispatch(Action.LanguageIsChanged(it))
-                }
-            }
-            scope.launch {
+            start()
+        }
+
+        fun stop() {
+            userJob?.cancel()
+            passwordJob?.cancel()
+            languageJob?.cancel()
+        }
+
+        fun start() {
+            userJob = scope.launch {
                 observeUserUseCase().collect {
                     dispatch(Action.UserIsChanged(it))
                 }
             }
-            scope.launch {
+            passwordJob = scope.launch {
                 observeIsWrongPasswordUseCase().collect {
                     if (it.nickName != User.DEFAULT_NICK_NAME) {
                         dispatch(Action.AdminAndUserExistButWrongPassword(it))
                     }
+                }
+            }
+            languageJob = scope.launch {
+                observeLanguageUseCase().collect {
+                    dispatch(Action.LanguageIsChanged(it))
                 }
             }
         }
@@ -261,13 +289,19 @@ class LoginUserStoreFactory @Inject constructor(
 
                 Intent.ClickedLoginButton -> {
                     scope.launch {
+                        val adminEmailOrPhone = getState().adminEmailOrPhone
+                        val nickName = getState().nickName
+                        val password = getState().password
+                        val language = getState().language
                         dispatch(Msg.ClickedLoginButton)
+
                         val loggedUser = checkUserInCollectionAndLoginIfExistUseCase(
-                            getState().adminEmailOrPhone,
-                            getState().nickName,
-                            getState().password
+                            adminEmailOrPhone,
+                            nickName,
+                            password
                         )
                         if (!loggedUser.isError) {
+                            storageSavePreferencesUseCase(adminEmailOrPhone, nickName, password, language)
                             publish(Label.UserIsLogged)
                         } else {
                             when (loggedUser.errorMessage) {
@@ -284,7 +318,7 @@ class LoginUserStoreFactory @Inject constructor(
                                 }
 
                                 else -> {
-                                    dispatch(Msg.ErrorAccured(loggedUser.errorMessage))
+                                    dispatch(Msg.ErrorOccurred(loggedUser.errorMessage))
                                 }
                             }
                         }
@@ -316,8 +350,11 @@ class LoginUserStoreFactory @Inject constructor(
                         && (action.user.nickName != User.DEFAULT_NICK_NAME)
                     ) {
                         if (action.user.password != User.WRONG_PASSWORD) {
+                            storageSavePreferencesUseCase(action.user.adminEmailOrPhone, action.user.nickName, action.user.password, action.user.language)
                             publish(Label.UserIsLogged)
                         }
+                    } else {
+                        dispatch(Msg.EmptyUser)
                     }
                 }
 
@@ -407,11 +444,15 @@ class LoginUserStoreFactory @Inject constructor(
                     )
                 }
 
-                is Msg.ErrorAccured -> {
+                is Msg.ErrorOccurred -> {
                     copy(
                         errorMessage = msg.errorMessage,
                         loginUserState = State.LoginUserState.Error
                     )
+                }
+
+                Msg.EmptyUser -> {
+                    copy(loginUserState = State.LoginUserState.Content)
                 }
             }
     }

@@ -1,6 +1,7 @@
 package com.balex.familyteam.presentation.notlogged
 
 import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.arkivanov.essenty.lifecycle.doOnPause
 import com.arkivanov.essenty.lifecycle.doOnResume
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
@@ -14,7 +15,8 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -33,24 +35,25 @@ class DefaultNotLoggedComponent @AssistedInject constructor(
     private val store =
         instanceKeeper.getStore { storeFactory.create(getLanguageUseCase()) }
     private val scope = componentScope()
-    private var labelsJob: Job? = null
+
 
     init {
         lifecycle.doOnResume {
             onRefreshLanguage()
             startCollectingLabels()
-            //Log.d("NotLoggedComponent", "doOnResume")
         }
         lifecycle.doOnPause {
             stopCollectingLabels()
+            store.stopBootstrapperCollectFlow()
         }
 
+        lifecycle.doOnDestroy {
+            scope.cancel()
+        }
     }
 
     private fun startCollectingLabels() {
-        labelsJob?.cancel()
-
-        labelsJob = scope.launch {
+        scope.launch {
             store.labels.collect {
                 when (it) {
 
@@ -80,8 +83,7 @@ class DefaultNotLoggedComponent @AssistedInject constructor(
     }
 
     private fun stopCollectingLabels() {
-        labelsJob?.cancel()
-        labelsJob = null
+        scope.coroutineContext.cancelChildren()
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)

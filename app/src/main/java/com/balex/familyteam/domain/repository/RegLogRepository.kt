@@ -43,6 +43,8 @@ interface RegLogRepository {
 
     fun storageClearPreferences()
 
+    fun storageSavePreferences(email: String, nickName: String, password: String, language: String)
+
     suspend fun registerAndVerifyNewTeamByEmail(
         email: String,
         nickName: String,
