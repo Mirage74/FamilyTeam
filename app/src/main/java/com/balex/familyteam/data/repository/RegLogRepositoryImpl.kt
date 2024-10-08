@@ -10,6 +10,8 @@ import com.balex.familyteam.domain.entity.LanguagesList
 import com.balex.familyteam.domain.entity.RegistrationOption
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.repository.RegLogRepository
+import com.balex.familyteam.extentions.formatStringFirstLetterUppercase
+import com.balex.familyteam.presentation.regadmin.RegAdminStoreFactory.Companion.REGEX_PATTERN_ONLY_NUMBERS_FIRST_NOT_ZERO
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
@@ -230,8 +232,12 @@ class RegLogRepositoryImpl @Inject constructor(
     }
 
     override suspend fun addAdminToCollection(admin: Admin): Result<Unit> {
+        val adminWithList = admin.copy(
+            emailOrPhoneNumber = admin.emailOrPhoneNumber.lowercase(),
+            nickName = admin.nickName.formatStringFirstLetterUppercase(),
+            usersNickNamesList = listOf(admin.nickName.formatStringFirstLetterUppercase())
+        )
         return try {
-            val adminWithList = admin.copy(usersNickNamesList = listOf(admin.nickName))
             val adminDocument = adminsCollection.document(adminWithList.emailOrPhoneNumber)
             adminDocument.set(adminWithList).await()
             Result.success(Unit)
@@ -241,21 +247,34 @@ class RegLogRepositoryImpl @Inject constructor(
         }
     }
 
+    private fun formatUser(user: User): User {
+        val newUser = if (user.fakeEmail == User.DEFAULT_FAKE_EMAIL) {
+            user.copy(
+                adminEmailOrPhone = user.adminEmailOrPhone.lowercase(),
+                nickName = user.nickName.formatStringFirstLetterUppercase(),
+                displayName = user.displayName.formatStringFirstLetterUppercase(),
+                fakeEmail = createFakeUserEmail(
+                    user.nickName.formatStringFirstLetterUppercase(),
+                    user.adminEmailOrPhone
+                )
+            )
+        } else {
+            user.copy(
+                adminEmailOrPhone = user.adminEmailOrPhone.lowercase(),
+                nickName = user.nickName.formatStringFirstLetterUppercase(),
+                displayName = user.displayName.formatStringFirstLetterUppercase()
+            )
+        }
+        return newUser
+    }
+
     override suspend fun addUserToCollection(userToAdd: User): Result<Unit> {
         return try {
-            val newUser = if (userToAdd.fakeEmail == User.DEFAULT_FAKE_EMAIL) {
-                userToAdd.copy(
-                    fakeEmail = createFakeUserEmail(
-                        userToAdd.nickName,
-                        userToAdd.adminEmailOrPhone
-                    )
-                )
-            } else {
-                userToAdd
-            }
+            val newUser = formatUser(userToAdd)
             val userCollection =
-                usersCollection.document(newUser.adminEmailOrPhone).collection(newUser.nickName)
-                    .document(newUser.nickName)
+                usersCollection.document(newUser.adminEmailOrPhone)
+                    .collection(newUser.nickName.lowercase())
+                    .document(newUser.nickName.lowercase())
             userCollection.set(newUser).await()
             Storage.saveUser(
                 context,
@@ -553,7 +572,12 @@ class RegLogRepositoryImpl @Inject constructor(
         Storage.clearPreferences(context)
     }
 
-    override fun storageSavePreferences(email: String, nickName: String, password: String, language: String) {
+    override fun storageSavePreferences(
+        email: String,
+        nickName: String,
+        password: String,
+        language: String
+    ) {
         val fakeEmail = createFakeUserEmail(nickName, email)
         Storage.saveAllPreferences(
             context,
@@ -728,8 +752,8 @@ class RegLogRepositoryImpl @Inject constructor(
         return try {
             val document =
                 usersCollection.document(userToFind.adminEmailOrPhone)
-                    .collection(formatStringFirstLetterUppercase( userToFind.nickName))
-                    .document(userToFind.nickName)
+                    .collection(userToFind.nickName.lowercase())
+                    .document(userToFind.nickName.lowercase())
                     .get()
                     .await()
 
@@ -744,9 +768,18 @@ class RegLogRepositoryImpl @Inject constructor(
         }
     }
 
+    private fun phoneNumberDeleteFirstNullAndAddPlus(phoneNumber: String): String {
+        var updatedPhoneNumber = phoneNumber.trim().replaceFirst("^0+".toRegex(), "")
+        if (Regex(REGEX_PATTERN_ONLY_NUMBERS_FIRST_NOT_ZERO).matches(phoneNumber)) {
+            updatedPhoneNumber = "+$phoneNumber"
+        }
+        return updatedPhoneNumber.lowercase()
+    }
+
     override suspend fun findAdminInCollectionByDocumentName(documentName: String): Admin? {
+        val updatedDocumentName = phoneNumberDeleteFirstNullAndAddPlus(documentName)
         return try {
-            val document = adminsCollection.document(documentName)
+            val document = adminsCollection.document(updatedDocumentName)
                 .get()
                 .await()
 
@@ -839,8 +872,9 @@ class RegLogRepositoryImpl @Inject constructor(
         nickName: String,
         password: String
     ): User {
-        val admin = findAdminInCollectionByDocumentName(adminEmailOrPhone)
-        if (admin == null || admin.emailOrPhoneNumber.trim() != adminEmailOrPhone.trim()) {
+        val adminEmailOrPhoneWithPlus = phoneNumberDeleteFirstNullAndAddPlus(adminEmailOrPhone)
+        val admin = findAdminInCollectionByDocumentName(adminEmailOrPhoneWithPlus)
+        if (admin == null || admin.emailOrPhoneNumber.trim() != adminEmailOrPhoneWithPlus.trim()) {
             return User(
                 isError = true,
                 errorMessage = CheckUserInCollectionAndLoginIfExistErrorMessages.ADMIN_NOT_FOUND.name
@@ -848,8 +882,8 @@ class RegLogRepositoryImpl @Inject constructor(
         } else {
             val userFromCollection = findUserInCollection(
                 User(
-                    adminEmailOrPhone = adminEmailOrPhone,
-                    nickName = formatStringFirstLetterUppercase(nickName)
+                    adminEmailOrPhone = adminEmailOrPhoneWithPlus,
+                    nickName = nickName.formatStringFirstLetterUppercase()
                 )
             )
             if (userFromCollection != null) {
@@ -862,9 +896,9 @@ class RegLogRepositoryImpl @Inject constructor(
                 } else {
                     val trySignIn = signToFirebaseWithFakeEmail(
                         User(
-                            adminEmailOrPhone = adminEmailOrPhone,
+                            adminEmailOrPhone = adminEmailOrPhoneWithPlus,
                             nickName = admin.nickName,
-                            fakeEmail = createFakeUserEmail(nickName, adminEmailOrPhone),
+                            fakeEmail = createFakeUserEmail(nickName, adminEmailOrPhoneWithPlus),
                             password = password
                         )
                     )
@@ -886,48 +920,44 @@ class RegLogRepositoryImpl @Inject constructor(
 
     }
 
-    private fun formatStringFirstLetterUppercase(s: String): String {
-        return s.lowercase().replaceFirstChar { it.uppercase() }.trim()
-    }
+    companion object {
+        const val TIMEOUT_VERIFICATION_MAIL = 60000L * 60L * 24L
+        const val TIMEOUT_VERIFICATION_CHECK = 15000L
 
-        companion object {
-            const val TIMEOUT_VERIFICATION_MAIL = 60000L * 60L * 24L
-            const val TIMEOUT_VERIFICATION_CHECK = 15000L
+        const val FIREBASE_ADMINS_COLLECTION = "admins"
+        const val FIREBASE_USERS_COLLECTION = "users"
+        const val FIREBASE_ADMINS_AND_USERS_COLLECTION = "adminsAndUsers"
 
-            const val FIREBASE_ADMINS_COLLECTION = "admins"
-            const val FIREBASE_USERS_COLLECTION = "users"
-            const val FIREBASE_ADMINS_AND_USERS_COLLECTION = "adminsAndUsers"
+        const val SMS_VERIFICATION_ERROR_INITIAL = "SMS_VERIFICATION_ERROR_INITIAL"
+        const val FAKE_EMAIL_DOMAIN = "balexvic.com"
 
-            const val SMS_VERIFICATION_ERROR_INITIAL = "SMS_VERIFICATION_ERROR_INITIAL"
-            const val FAKE_EMAIL_DOMAIN = "balexvic.com"
+        const val ERROR_LOADING_USER_DATA_FROM_FIREBASE =
+            "ERROR_LOADING_USER_DATA_FROM_FIREBASE"
+        const val ERROR_ADD_USER_TO_FIREBASE = "ERROR_ADD_USER_TO_FIREBASE"
+        const val ERROR_ADD_ADMIN_TO_FIREBASE = "ERROR_ADD_ADMIN_TO_FIREBASE"
+        const val USER_ALREADY_EXIST_IN_AUTH =
+            "user already exist in AUTH"
+        const val REGISTRATION_ERROR = "REGISTRATION ERROR"
 
-            const val ERROR_LOADING_USER_DATA_FROM_FIREBASE =
-                "ERROR_LOADING_USER_DATA_FROM_FIREBASE"
-            const val ERROR_ADD_USER_TO_FIREBASE = "ERROR_ADD_USER_TO_FIREBASE"
-            const val ERROR_ADD_ADMIN_TO_FIREBASE = "ERROR_ADD_ADMIN_TO_FIREBASE"
-            const val USER_ALREADY_EXIST_IN_AUTH =
-                "user already exist in AUTH"
-            const val REGISTRATION_ERROR = "REGISTRATION ERROR"
+        const val AUTH_USER_NOT_FOUND = "ERROR_USER_NOT_FOUND"
 
-            const val AUTH_USER_NOT_FOUND = "ERROR_USER_NOT_FOUND"
-
-            enum class CheckUserInCollectionAndLoginIfExistErrorMessages {
-                ADMIN_NOT_FOUND,
-                NICK_NAME_NOT_FOUND,
-                WRONG_PASSWORD,
-            }
+        enum class CheckUserInCollectionAndLoginIfExistErrorMessages {
+            ADMIN_NOT_FOUND,
+            NICK_NAME_NOT_FOUND,
+            WRONG_PASSWORD,
+        }
 
 
-            enum class StatusFakeEmailSignIn {
-                USER_SIGNED_IN,
-                USER_NOT_FOUND,
-                OTHER_FAKE_EMAIL_SIGN_IN_ERROR
-            }
+        enum class StatusFakeEmailSignIn {
+            USER_SIGNED_IN,
+            USER_NOT_FOUND,
+            OTHER_FAKE_EMAIL_SIGN_IN_ERROR
+        }
 
-            enum class StatusEmailSignIn {
-                ADMIN_SIGNED_IN_AND_VERIFIED,
-                ADMIN_NOT_FOUND,
-                OTHER_SIGN_IN_ERROR
-            }
+        enum class StatusEmailSignIn {
+            ADMIN_SIGNED_IN_AND_VERIFIED,
+            ADMIN_NOT_FOUND,
+            OTHER_SIGN_IN_ERROR
         }
     }
+}

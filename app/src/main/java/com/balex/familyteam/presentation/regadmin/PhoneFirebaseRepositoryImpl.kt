@@ -237,8 +237,8 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
                 }
 
             } catch (e: Exception) {
-                Log.e("signInWithCredential", "Error: ${e.message}")
-                setUserWithErrorUseCase("registerAndSignInWithCredential, auth.signInWithCredential, error: ${e.message}")
+//                Log.e("signInWithCredential", "Error: ${e.message}")
+//                setUserWithErrorUseCase("registerAndSignInWithCredential, auth.signInWithCredential, error: ${e.message}")
 
             }
         }

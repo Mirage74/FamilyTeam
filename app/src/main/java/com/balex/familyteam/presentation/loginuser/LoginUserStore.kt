@@ -18,6 +18,7 @@ import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.SaveLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.StorageSavePreferencesUseCase
+import com.balex.familyteam.extentions.formatStringFirstLetterUppercase
 import com.balex.familyteam.presentation.loginuser.LoginUserStore.Intent
 import com.balex.familyteam.presentation.loginuser.LoginUserStore.Label
 import com.balex.familyteam.presentation.loginuser.LoginUserStore.State
@@ -297,7 +298,7 @@ class LoginUserStoreFactory @Inject constructor(
 
                         val loggedUser = checkUserInCollectionAndLoginIfExistUseCase(
                             adminEmailOrPhone,
-                            nickName,
+                            nickName.formatStringFirstLetterUppercase(),
                             password
                         )
                         if (!loggedUser.isError) {
