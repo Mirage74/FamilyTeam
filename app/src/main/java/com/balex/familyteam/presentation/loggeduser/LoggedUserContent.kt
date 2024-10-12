@@ -62,7 +62,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun LoggedUserContent(component: LoggedUserComponent) {
-    val state by component.model.collectAsState()
+    val state by component.model.collectAsState(context = CoroutineScope(Dispatchers.Main.immediate).coroutineContext)
 
     LocalizedContextProvider(languageCode = state.language.lowercase()) {
 

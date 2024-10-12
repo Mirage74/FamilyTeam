@@ -48,6 +48,8 @@ import com.balex.familyteam.R
 import com.balex.familyteam.domain.entity.MenuItems
 import com.balex.familyteam.presentation.SwitchLanguage
 import com.balex.familyteam.presentation.ui.theme.DarkBlue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -55,7 +57,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun NotLoggedContent(component: NotLoggedComponent) {
 
-    val state by component.model.collectAsState()
+    val state by component.model.collectAsState(context = CoroutineScope(Dispatchers.Main.immediate).coroutineContext)
 
     var showLoader by remember { mutableStateOf(false) }
 

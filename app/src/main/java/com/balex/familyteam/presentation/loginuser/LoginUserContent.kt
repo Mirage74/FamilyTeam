@@ -37,10 +37,14 @@ import com.balex.familyteam.presentation.loginuser.content.NickNameTextField
 import com.balex.familyteam.presentation.loginuser.content.PasswordTextField
 import com.balex.familyteam.presentation.rememberImeState
 import com.balex.familyteam.presentation.ui.theme.DarkBlue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 
 @Composable
 fun LoginUserContent(component: LoginUserComponent) {
-    val state by component.model.collectAsState()
+
+    val state by component.model.collectAsState(context = CoroutineScope(Dispatchers.Main.immediate).coroutineContext)
+
     LocalizedContextProvider(languageCode = state.language.lowercase()) {
 
         when (state.loginUserState) {

@@ -45,11 +45,13 @@ import com.balex.familyteam.presentation.regadmin.content.ResendSmsButton
 import com.balex.familyteam.presentation.regadmin.content.VerifyEmailOrPhoneText
 import com.balex.familyteam.presentation.rememberImeState
 import com.balex.familyteam.presentation.ui.theme.DarkBlue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 
 @Composable
 fun RegAdminContent(component: RegAdminComponent, activity: MainActivity) {
 
-    val state by component.model.collectAsState()
+    val state by component.model.collectAsState(context = CoroutineScope(Dispatchers.Main.immediate).coroutineContext)
 
     LocalizedContextProvider(languageCode = state.language.lowercase()) {
         when (state.regAdminState) {
