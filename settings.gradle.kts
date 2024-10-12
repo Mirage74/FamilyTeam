@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Family Team"
 include(":app")
+include(":logged_user")
