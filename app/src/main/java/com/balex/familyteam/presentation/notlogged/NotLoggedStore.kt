@@ -103,7 +103,6 @@ class NotLoggedStoreFactory @Inject constructor(
         }
 
 
-
     private sealed interface Action {
 
         data object UserNotExistInPreference : Action
@@ -170,7 +169,9 @@ class NotLoggedStoreFactory @Inject constructor(
 //                                }
 
                                 else -> {
-                                    if (getWrongPasswordUserUseCase().nickName == User.DEFAULT_NICK_NAME) {
+                                    if (getWrongPasswordUserUseCase().nickName == User.DEFAULT_NICK_NAME
+                                        && login != User.DEFAULT_NICK_NAME
+                                    ) {
                                         signToFirebaseWithFakeEmailUseCase(getUserUseCase())
                                         dispatch(Action.UserExistInPreferenceAndLoadedUserData)
                                     }
