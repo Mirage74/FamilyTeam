@@ -13,16 +13,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.balex.familyteam.R
+import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.presentation.loginuser.LoginUserComponent
 import com.balex.familyteam.presentation.loginuser.LoginUserStore
 
 @Composable
-fun NickNameTextField(state: LoginUserStore.State, component: LoginUserComponent, context: Context) {
+fun NickNameTextField(
+    state: LoginUserStore.State,
+    component: LoginUserComponent,
+    context: Context
+) {
     val nickNamedColor =
         if (state.isPasswordEnabled) Color.Unspecified else Color.Red
 
     TextField(
-        value = state.nickName,
+        value = if (state.nickName == User.DEFAULT_NICK_NAME) {
+            ""
+        } else {
+            state.nickName
+        },
         onValueChange = { component.onNickNameFieldChanged(it) },
         label = { Text(context.getString(R.string.nick_name)) },
         enabled = state.isNickNameEnabled,

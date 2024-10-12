@@ -11,6 +11,7 @@ import com.balex.familyteam.domain.entity.Language
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.LogoutUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.StorageClearPreferencesUseCase
+import com.balex.familyteam.domain.usecase.regLog.StorageSavePreferencesUseCase
 import com.balex.familyteam.extensions.componentScope
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore
 import dagger.assisted.Assisted

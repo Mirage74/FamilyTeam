@@ -225,7 +225,7 @@ class RegAdminStoreFactory @Inject constructor(
 
             passwordJob = scope.launch {
                 observeIsWrongPasswordUseCase().collect {
-                    if (it.nickName != User.DEFAULT_NICK_NAME ) {
+                    if (it.adminEmailOrPhone.isNotEmpty()) {
                         dispatch(Action.AdminExistWrongPassword(it))
                     }
                 }

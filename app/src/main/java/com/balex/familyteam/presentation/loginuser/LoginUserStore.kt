@@ -18,7 +18,7 @@ import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.SaveLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.StorageSavePreferencesUseCase
-import com.balex.familyteam.extentions.formatStringFirstLetterUppercase
+import com.balex.familyteam.extensions.formatStringFirstLetterUppercase
 import com.balex.familyteam.presentation.loginuser.LoginUserStore.Intent
 import com.balex.familyteam.presentation.loginuser.LoginUserStore.Label
 import com.balex.familyteam.presentation.loginuser.LoginUserStore.State
@@ -154,7 +154,7 @@ class LoginUserStoreFactory @Inject constructor(
 
     private sealed interface Msg {
 
-        data object ClickedLoginButton : Msg
+        data class ClickedLoginButton(val adminEmailOrPhone: String, val nickName: String) : Msg
 
         data object EmptyUser : Msg
 
@@ -213,7 +213,8 @@ class LoginUserStoreFactory @Inject constructor(
             }
             passwordJob = scope.launch {
                 observeIsWrongPasswordUseCase().collect {
-                    if (it.nickName != User.DEFAULT_NICK_NAME) {
+                    //if (it.nickName != User.DEFAULT_NICK_NAME) {
+                    if (it.adminEmailOrPhone.isNotBlank()) {
                         dispatch(Action.AdminAndUserExistButWrongPassword(it))
                     }
                 }
@@ -290,11 +291,11 @@ class LoginUserStoreFactory @Inject constructor(
 
                 Intent.ClickedLoginButton -> {
                     scope.launch {
-                        val adminEmailOrPhone = getState().adminEmailOrPhone
-                        val nickName = getState().nickName
+                        val adminEmailOrPhone = getState().adminEmailOrPhone.trim()
+                        val nickName = getState().nickName.trim()
                         val password = getState().password
                         val language = getState().language
-                        dispatch(Msg.ClickedLoginButton)
+                        dispatch(Msg.ClickedLoginButton(adminEmailOrPhone, nickName))
 
                         val loggedUser = checkUserInCollectionAndLoginIfExistUseCase(
                             adminEmailOrPhone,
@@ -374,8 +375,12 @@ class LoginUserStoreFactory @Inject constructor(
     private object ReducerImpl : Reducer<State, Msg> {
         override fun State.reduce(msg: Msg): State =
             when (msg) {
-                Msg.ClickedLoginButton -> {
-                    copy(loginUserState = State.LoginUserState.Loading)
+                is Msg.ClickedLoginButton -> {
+                    copy(
+                        adminEmailOrPhone = msg.adminEmailOrPhone,
+                        nickName = msg.nickName,
+                        loginUserState = State.LoginUserState.Loading
+                    )
                 }
 
                 is Msg.UpdateLoginAdminField -> {

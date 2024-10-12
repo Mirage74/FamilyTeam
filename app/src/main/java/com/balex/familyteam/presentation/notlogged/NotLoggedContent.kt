@@ -61,14 +61,14 @@ fun NotLoggedContent(component: NotLoggedComponent) {
 
     var showLoader by remember { mutableStateOf(false) }
 
-    LaunchedEffect(state.logChooseState) {
-        if (state.logChooseState == NotLoggedStore.State.LogChooseState.Initial) {
-            delay(3000)
-            showLoader = true
-        } else {
-            showLoader = false
-        }
-    }
+//    LaunchedEffect(state.logChooseState) {
+//        if (state.logChooseState == NotLoggedStore.State.LogChooseState.Initial) {
+//            delay(3000)
+//            showLoader = true
+//        } else {
+//            showLoader = false
+//        }
+//    }
 
     when (state.logChooseState) {
 

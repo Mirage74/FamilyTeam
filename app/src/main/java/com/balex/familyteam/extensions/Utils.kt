@@ -26,3 +26,7 @@ fun Calendar.formattedShortDayOfWeek(): String {
     val format = SimpleDateFormat("EEE", Locale.getDefault())
     return format.format(time)
 }
+
+fun String.formatStringFirstLetterUppercase(): String {
+    return this.lowercase().replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+}

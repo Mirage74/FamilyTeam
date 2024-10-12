@@ -17,6 +17,7 @@ import com.balex.familyteam.domain.usecase.regLog.GetUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.SaveLanguageUseCase
+import com.balex.familyteam.domain.usecase.regLog.StorageSavePreferencesUseCase
 import com.balex.familyteam.domain.usecase.user.ObserveExternalTasksUseCase
 import com.balex.familyteam.domain.usecase.user.ObserveListToShopUseCase
 import com.balex.familyteam.domain.usecase.user.ObserveMyTasksForOtherUsersUseCase
@@ -106,6 +107,7 @@ class LoggedUserStoreFactory @Inject constructor(
     private val observeUserUseCase: ObserveUserUseCase,
     private val observeLanguageUseCase: ObserveLanguageUseCase,
     private val addUserToCollectionUseCase: AddUserToCollectionUseCase,
+    private val storageSavePreferencesUseCase: StorageSavePreferencesUseCase,
     private val removeUserUseCase: RemoveUserUseCase,
     private val observeUsersListUseCase: ObserveUsersListUseCase,
     private val observeExternalTasksUseCase: ObserveExternalTasksUseCase,
@@ -377,8 +379,10 @@ class LoggedUserStoreFactory @Inject constructor(
 
                 is Action.UserIsChanged -> {
                     if (action.user.nickName.length >= appContext.resources.getInteger(R.integer.min_nickName_length)
-                        && (action.user.nickName != NO_USER_SAVED_IN_SHARED_PREFERENCES)
+                        && (action.user.nickName != NO_USER_SAVED_IN_SHARED_PREFERENCES
+                                && action.user.nickName != User.DEFAULT_NICK_NAME)
                     ) {
+                        storageSavePreferencesUseCase(action.user.adminEmailOrPhone, action.user.nickName, action.user.password, action.user.language)
                         dispatch(Msg.UserIsChanged(action.user))
                     }
                 }
@@ -422,16 +426,21 @@ class LoggedUserStoreFactory @Inject constructor(
             when (msg) {
 
                 is Msg.UserIsChanged -> {
-                    copy(
-                        user = msg.user,
-                        loggedUserState = State.LoggedUserState.Content
-                    )
+                    if (msg.user.nickName != User.DEFAULT_NICK_NAME) {
+                        copy(
+                            user = msg.user,
+                            loggedUserState = State.LoggedUserState.Content
+                        )
+                    } else {
+                        copy(
+                            user = msg.user
+                        )
+                    }
                 }
 
                 is Msg.UsersListIsChanged -> {
                     copy(
-                        usersList = msg.usersList,
-                        loggedUserState = State.LoggedUserState.Content
+                        usersList = msg.usersList
                     )
                 }
 

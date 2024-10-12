@@ -10,7 +10,7 @@ import com.balex.familyteam.domain.entity.LanguagesList
 import com.balex.familyteam.domain.entity.RegistrationOption
 import com.balex.familyteam.domain.entity.User
 import com.balex.familyteam.domain.repository.RegLogRepository
-import com.balex.familyteam.extentions.formatStringFirstLetterUppercase
+import com.balex.familyteam.extensions.formatStringFirstLetterUppercase
 import com.balex.familyteam.presentation.regadmin.RegAdminStoreFactory.Companion.REGEX_PATTERN_ONLY_NUMBERS_FIRST_NOT_ZERO
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
@@ -505,7 +505,7 @@ class RegLogRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e("signToFirebaseInWithEmailAndPassword, Error", e.message ?: "Unknown error")
-            setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
+            //setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
         }
 
         return StatusEmailSignIn.OTHER_SIGN_IN_ERROR
@@ -626,7 +626,7 @@ class RegLogRepositoryImpl @Inject constructor(
                 setUserWithError("registerAndVerifyNewTeamByEmail: $REGISTRATION_ERROR: ${e.message}")
             }
         } else {
-            storageSavePreferences(email, nickName, password, language)
+            //storageSavePreferences(email, nickName, password, language)
 
         }
     }
@@ -826,6 +826,8 @@ class RegLogRepositoryImpl @Inject constructor(
             setUserWithError(e.message ?: "isNewTeamCheckByEmail: Unknown error")
             return false
         }
+        isWrongPassword = User(adminEmailOrPhone = email)
+        isWrongPasswordNeedRefreshFlow.emit(Unit)
         return false
     }
 
