@@ -27,7 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.balex.familyteam.R
-import com.balex.common.entity.RegistrationOption
+import com.balex.common.domain.entity.RegistrationOption
 import com.balex.common.ANIMATION_DURATION
 import com.balex.familyteam.presentation.MainActivity
 import com.balex.common.TopAppBarOnlyLanguage

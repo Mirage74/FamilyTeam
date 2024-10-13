@@ -7,22 +7,16 @@ import com.arkivanov.essenty.lifecycle.doOnResume
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
-import com.balex.common.entity.Language
-import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
-import com.balex.familyteam.domain.usecase.regLog.LogoutUserUseCase
-import com.balex.familyteam.domain.usecase.regLog.StorageClearPreferencesUseCase
-import com.balex.familyteam.domain.usecase.regLog.StorageSavePreferencesUseCase
-import com.balex.familyteam.extensions.componentScope
-import com.balex.familyteam.presentation.notlogged.NotLoggedStore
+import com.balex.common.domain.usecases.regLog.GetLanguageUseCase
+import com.balex.common.domain.usecases.regLog.LogoutUserUseCase
+import com.balex.common.domain.usecases.regLog.StorageClearPreferencesUseCase
+import com.balex.common.extensions.componentScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelChildren
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 

@@ -7,9 +7,9 @@ import com.arkivanov.essenty.lifecycle.doOnResume
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
-import com.balex.common.entity.User
-import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
-import com.balex.familyteam.extensions.componentScope
+import com.balex.common.domain.entity.User
+import com.balex.common.domain.usecases.regLog.GetLanguageUseCase
+import com.balex.common.extensions.componentScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject

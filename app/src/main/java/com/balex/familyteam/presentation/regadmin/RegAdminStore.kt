@@ -7,15 +7,16 @@ import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.balex.familyteam.R
-import com.balex.familyteam.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
-import com.balex.common.entity.RegistrationOption
-import com.balex.common.entity.User
-import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
-import com.balex.familyteam.domain.usecase.regLog.IsWrongPasswordUseCase
-import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase
-import com.balex.familyteam.domain.usecase.regLog.ObserveUserUseCase
-import com.balex.familyteam.domain.usecase.regLog.RegisterAndVerifyByEmailUseCase
-import com.balex.familyteam.domain.usecase.regLog.SaveLanguageUseCase
+import com.balex.common.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
+import com.balex.common.domain.entity.RegistrationOption
+import com.balex.common.domain.entity.User
+import com.balex.common.extensions.*
+import com.balex.common.domain.usecases.regLog.GetLanguageUseCase
+import com.balex.common.domain.usecases.regLog.IsWrongPasswordUseCase
+import com.balex.common.domain.usecases.regLog.ObserveLanguageUseCase
+import com.balex.common.domain.usecases.regLog.ObserveUserUseCase
+import com.balex.common.domain.usecases.regLog.RegisterAndVerifyByEmailUseCase
+import com.balex.common.domain.usecases.regLog.SaveLanguageUseCase
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.Intent
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.Label
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.State
@@ -512,12 +513,4 @@ class RegAdminStoreFactory @Inject constructor(
         }
     }
 
-    companion object {
-        const val REGEX_PATTERN_EMAIL = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}\$"
-        const val REGEX_PATTERN_NOT_NUMBERS = "\\D"
-        const val REGEX_PATTERN_ONLY_NUMBERS_FIRST_NOT_ZERO = "^[1-9]\\d*$"
-        const val REGEX_PATTERN_NOT_LETTERS = "[^a-zA-Z]"
-        const val REGEX_PATTERN_NOT_LATIN_LETTERS_NUMBERS_UNDERSCORE = "[^a-zA-Z0-9_]"
-        const val REGEX_PATTERN_NOT_ANY_LETTERS_NUMBERS_UNDERSCORE = """[^\p{L}\p{Nd}_]"""
-    }
 }

@@ -46,7 +46,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.balex.common.R
-import com.balex.common.entity.MenuItems
+import com.balex.common.domain.entity.MenuItems
 import com.balex.common.SwitchLanguage
 import com.balex.familyteam.presentation.loggeduser.content.DisplayNameTextField
 import com.balex.familyteam.presentation.loggeduser.content.NickNameTextField

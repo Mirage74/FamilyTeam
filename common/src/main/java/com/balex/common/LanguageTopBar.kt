@@ -36,7 +36,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.balex.common.entity.LanguagesList
+import com.balex.common.domain.entity.LanguagesList
 
 @Composable
 fun SwitchLanguage(

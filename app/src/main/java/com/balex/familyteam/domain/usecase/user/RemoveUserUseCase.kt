@@ -1,6 +1,6 @@
 package com.balex.familyteam.domain.usecase.user
 
-import com.balex.common.entity.User
+import com.balex.common.domain.entity.User
 import com.balex.familyteam.domain.repository.UserRepository
 import javax.inject.Inject
 

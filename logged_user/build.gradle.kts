@@ -42,9 +42,23 @@ android {
 dependencies {
     implementation(project(":app"))
     implementation(project(":common"))
+    implementation(libs.dagger.core)
+    ksp(libs.dagger.compiler)
     implementation(libs.androidx.core.ktx)
     implementation (libs.androidx.navigation.compose)
     implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.icons)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.material)
+
+    implementation(libs.decompose.core)
+    implementation(libs.decompose.jetpack)
+
+    implementation(libs.mvikotlin.main)
+    implementation(libs.mvikotlin.core)
+    implementation(libs.mvikotlin.coroutines)
+    implementation(libs.mvikotlin.logging)
+
     implementation(libs.kotlinx.serialization.core)
     implementation(libs.kotlinx.serialization.json)
     testImplementation(libs.junit)

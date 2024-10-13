@@ -1,14 +1,13 @@
 package com.balex.familyteam.data.repository
 
-import android.util.Log
-import com.balex.familyteam.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_ADMINS_COLLECTION
-import com.balex.familyteam.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_USERS_COLLECTION
-import com.balex.common.entity.ExternalTasks
-import com.balex.common.entity.PrivateTasks
-import com.balex.common.entity.User
+import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_ADMINS_COLLECTION
+import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_USERS_COLLECTION
+import com.balex.common.domain.entity.ExternalTasks
+import com.balex.common.domain.entity.PrivateTasks
+import com.balex.common.domain.entity.User
 import com.balex.familyteam.domain.repository.UserRepository
-import com.balex.familyteam.domain.usecase.regLog.AddUserToCollectionUseCase
-import com.balex.familyteam.domain.usecase.regLog.GetUserUseCase
+import com.balex.common.domain.usecases.regLog.AddUserToCollectionUseCase
+import com.balex.common.domain.usecases.regLog.GetUserUseCase
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
@@ -18,7 +17,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class UserRepositoryImpl @Inject constructor(

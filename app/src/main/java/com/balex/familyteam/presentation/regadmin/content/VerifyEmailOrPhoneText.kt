@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.balex.familyteam.R
 import com.balex.common.R as commonR
-import com.balex.common.entity.RegistrationOption
+import com.balex.common.domain.entity.RegistrationOption
 import com.balex.familyteam.presentation.regadmin.RegAdminComponent
 import com.balex.familyteam.presentation.regadmin.RegAdminStore
 

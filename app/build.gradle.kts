@@ -62,6 +62,7 @@ dependencies {
 
     implementation(project(":common"))
 
+
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
@@ -89,8 +90,6 @@ dependencies {
     implementation(libs.icons)
 
     implementation(libs.logging.interceptor)
-
-    implementation(libs.androidx.security.crypto)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)

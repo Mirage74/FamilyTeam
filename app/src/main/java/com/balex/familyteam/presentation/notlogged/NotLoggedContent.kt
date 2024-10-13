@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.balex.familyteam.R
 import com.balex.common.R as commonR
-import com.balex.common.entity.MenuItems
+import com.balex.common.domain.entity.MenuItems
 import com.balex.common.SwitchLanguage
 import com.balex.familyteam.presentation.ui.theme.DarkBlue
 import kotlinx.coroutines.CoroutineScope

@@ -1,11 +1,11 @@
 package com.balex.familyteam.di
 
 import com.balex.familyteam.data.repository.AdminRepositoryImpl
-import com.balex.familyteam.data.repository.RegLogRepositoryImpl
+import com.balex.common.data.repository.RegLogRepositoryImpl
 import com.balex.familyteam.data.repository.UserRepositoryImpl
 import com.balex.familyteam.domain.repository.AdminRepository
 import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
-import com.balex.familyteam.domain.repository.RegLogRepository
+import com.balex.common.domain.repository.RegLogRepository
 import com.balex.familyteam.domain.repository.UserRepository
 import com.balex.familyteam.presentation.regadmin.PhoneFirebaseRepositoryImpl
 import dagger.Binds
