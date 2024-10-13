@@ -16,7 +16,8 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.balex.familyteam.R
-import com.balex.familyteam.domain.entity.RegistrationOption
+import com.balex.common.R as commonR
+import com.balex.common.entity.RegistrationOption
 import com.balex.familyteam.presentation.regadmin.RegAdminComponent
 import com.balex.familyteam.presentation.regadmin.RegAdminStore
 
@@ -37,12 +38,12 @@ fun VerifyEmailOrPhoneText(state: RegAdminStore.State, component: RegAdminCompon
                 if (state.selectedOption == RegistrationOption.EMAIL) {
                     Text(
                         text = context.getString(R.string.please_verify_email),
-                        fontSize = dimensionResource(id = R.dimen.verify_text_size).value.sp
+                        fontSize = dimensionResource(id = commonR.dimen.verify_text_size).value.sp
                     )
                 } else {
                     Text(
                         text = context.getString(R.string.please_verify_phone),
-                        fontSize = dimensionResource(id = R.dimen.verify_text_size).value.sp
+                        fontSize = dimensionResource(id = commonR.dimen.verify_text_size).value.sp
                     )
                 }
             }

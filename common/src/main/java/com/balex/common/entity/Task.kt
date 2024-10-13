@@ -1,4 +1,4 @@
-package com.balex.familyteam.domain.entity
+package com.balex.common.entity
 
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable

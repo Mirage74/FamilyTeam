@@ -1,4 +1,4 @@
-package com.balex.familyteam.presentation
+package com.balex.common
 
 import android.view.ViewTreeObserver
 import androidx.compose.runtime.*

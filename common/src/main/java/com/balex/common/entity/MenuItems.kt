@@ -1,4 +1,4 @@
-package com.balex.familyteam.domain.entity
+package com.balex.common.entity
 
 data class MenuItems(
     val items: List<String> = listOf(MENU_ITEM_ABOUT)

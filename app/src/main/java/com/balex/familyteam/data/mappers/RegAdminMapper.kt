@@ -1,7 +1,7 @@
 package com.balex.familyteam.data.mappers
 
-import com.balex.familyteam.domain.entity.Admin
-import com.balex.familyteam.domain.entity.RegistrationOption
+import com.balex.common.entity.Admin
+import com.balex.common.entity.RegistrationOption
 
 fun mapperFirebaseAdminToEntity(data: Map<String, Any>?): Admin? {
 //    return data?.let {

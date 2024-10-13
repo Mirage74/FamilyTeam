@@ -1,4 +1,4 @@
-package com.balex.familyteam.presentation
+package com.balex.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -36,8 +36,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.balex.familyteam.R
-import com.balex.familyteam.domain.entity.LanguagesList
+import com.balex.common.entity.LanguagesList
 
 @Composable
 fun SwitchLanguage(

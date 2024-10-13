@@ -3,9 +3,9 @@ package com.balex.familyteam.data.repository
 import android.util.Log
 import com.balex.familyteam.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_ADMINS_COLLECTION
 import com.balex.familyteam.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_USERS_COLLECTION
-import com.balex.familyteam.domain.entity.ExternalTasks
-import com.balex.familyteam.domain.entity.PrivateTasks
-import com.balex.familyteam.domain.entity.User
+import com.balex.common.entity.ExternalTasks
+import com.balex.common.entity.PrivateTasks
+import com.balex.common.entity.User
 import com.balex.familyteam.domain.repository.UserRepository
 import com.balex.familyteam.domain.usecase.regLog.AddUserToCollectionUseCase
 import com.balex.familyteam.domain.usecase.regLog.GetUserUseCase

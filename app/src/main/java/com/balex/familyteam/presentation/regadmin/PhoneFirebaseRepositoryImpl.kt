@@ -3,8 +3,8 @@ package com.balex.familyteam.presentation.regadmin
 import android.util.Log
 import com.balex.familyteam.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_ADMINS_COLLECTION
 import com.balex.familyteam.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_USERS_COLLECTION
-import com.balex.familyteam.domain.entity.Admin
-import com.balex.familyteam.domain.entity.User
+import com.balex.common.entity.Admin
+import com.balex.common.entity.User
 import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
 import com.balex.familyteam.domain.usecase.regLog.EmitUserNeedRefreshUseCase
 import com.balex.familyteam.domain.usecase.regLog.FindAdminInCollectionByDocumentNameUseCase

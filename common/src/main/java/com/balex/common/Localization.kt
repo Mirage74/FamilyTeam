@@ -1,8 +1,7 @@
-package com.balex.familyteam
+package com.balex.common
 
 import android.content.Context
 import android.content.res.Configuration
-import android.util.Log
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider

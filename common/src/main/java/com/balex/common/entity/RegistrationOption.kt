@@ -1,4 +1,4 @@
-package com.balex.familyteam.domain.entity
+package com.balex.common.entity
 
 enum class RegistrationOption {
     EMAIL, PHONE

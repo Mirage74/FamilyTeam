@@ -7,7 +7,7 @@ import com.arkivanov.essenty.lifecycle.doOnResume
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
-import com.balex.familyteam.domain.entity.Language
+import com.balex.common.entity.Language
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.LogoutUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.StorageClearPreferencesUseCase

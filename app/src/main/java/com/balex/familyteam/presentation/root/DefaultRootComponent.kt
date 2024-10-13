@@ -10,7 +10,7 @@ import com.arkivanov.decompose.router.stack.popWhile
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
-import com.balex.familyteam.domain.entity.User
+import com.balex.common.entity.User
 import com.balex.familyteam.presentation.about.DefaultAboutComponent
 import com.balex.familyteam.presentation.loggeduser.DefaultLoggedUserComponent
 import com.balex.familyteam.presentation.loginuser.DefaultLoginUserComponent

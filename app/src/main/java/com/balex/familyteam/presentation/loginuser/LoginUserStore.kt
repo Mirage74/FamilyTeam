@@ -9,8 +9,8 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.balex.familyteam.R
 import com.balex.familyteam.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
 import com.balex.familyteam.data.repository.RegLogRepositoryImpl.Companion.CheckUserInCollectionAndLoginIfExistErrorMessages
-import com.balex.familyteam.domain.entity.User
-import com.balex.familyteam.domain.entity.User.Companion.NO_ERROR_MESSAGE
+import com.balex.common.entity.User
+import com.balex.common.entity.User.Companion.NO_ERROR_MESSAGE
 import com.balex.familyteam.domain.usecase.regLog.CheckUserInCollectionAndLoginIfExistUseCase
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.IsWrongPasswordUseCase

@@ -12,8 +12,6 @@ android {
 
     defaultConfig {
         minSdk = 30
-        targetSdk = 34
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -42,8 +40,13 @@ android {
 }
 
 dependencies {
-
+    implementation(project(":app"))
+    implementation(project(":common"))
     implementation(libs.androidx.core.ktx)
+    implementation (libs.androidx.navigation.compose)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.kotlinx.serialization.core)
+    implementation(libs.kotlinx.serialization.json)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

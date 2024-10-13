@@ -8,8 +8,8 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.balex.familyteam.R
 import com.balex.familyteam.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
-import com.balex.familyteam.domain.entity.RegistrationOption
-import com.balex.familyteam.domain.entity.User
+import com.balex.common.entity.RegistrationOption
+import com.balex.common.entity.User
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.IsWrongPasswordUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase

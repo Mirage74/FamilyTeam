@@ -12,7 +12,8 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.balex.familyteam.R
-import com.balex.familyteam.domain.entity.RegistrationOption
+import com.balex.common.R as commonR
+import com.balex.common.entity.RegistrationOption
 import com.balex.familyteam.presentation.regadmin.RegAdminComponent
 import com.balex.familyteam.presentation.regadmin.RegAdminStore
 
@@ -27,11 +28,11 @@ fun ChooseEmailOrPhoneButton(state: RegAdminStore.State, component: RegAdminComp
             modifier = Modifier
                 .weight(1f)
                 .padding(end = 4.dp)
-                .height(dimensionResource(id = R.dimen.reg_buttons_height).value.dp),
+                .height(dimensionResource(id = commonR.dimen.reg_buttons_height).value.dp),
         ) {
             Text(
                 context.getString(R.string.by_email),
-                fontSize = dimensionResource(id = R.dimen.reg_admin_button_text_size).value.sp
+                fontSize = dimensionResource(id = commonR.dimen.reg_admin_button_text_size).value.sp
             )
         }
         Button(
@@ -42,11 +43,11 @@ fun ChooseEmailOrPhoneButton(state: RegAdminStore.State, component: RegAdminComp
             modifier = Modifier
                 .weight(1f)
                 .padding(start = 4.dp)
-                .height(dimensionResource(id = R.dimen.reg_buttons_height).value.dp),
+                .height(dimensionResource(id = commonR.dimen.reg_buttons_height).value.dp),
         ) {
             Text(
                 context.getString(R.string.by_phone),
-                fontSize = dimensionResource(id = R.dimen.reg_admin_button_text_size).value.sp
+                fontSize = dimensionResource(id = commonR.dimen.reg_admin_button_text_size).value.sp
             )
         }
     }

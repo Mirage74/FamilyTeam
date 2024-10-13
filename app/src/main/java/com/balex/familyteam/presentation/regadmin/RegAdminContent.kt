@@ -26,13 +26,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.balex.familyteam.LocalLocalizedContext
-import com.balex.familyteam.LocalizedContextProvider
 import com.balex.familyteam.R
-import com.balex.familyteam.domain.entity.RegistrationOption
-import com.balex.familyteam.presentation.ANIMATION_DURATION
+import com.balex.common.entity.RegistrationOption
+import com.balex.common.ANIMATION_DURATION
 import com.balex.familyteam.presentation.MainActivity
-import com.balex.familyteam.presentation.TopAppBarOnlyLanguage
+import com.balex.common.TopAppBarOnlyLanguage
 import com.balex.familyteam.presentation.regadmin.content.ChooseEmailOrPhoneButton
 import com.balex.familyteam.presentation.regadmin.content.CodeSmsTextField
 import com.balex.familyteam.presentation.regadmin.content.DisplayNameTextField
@@ -43,7 +41,7 @@ import com.balex.familyteam.presentation.regadmin.content.PhoneTextField
 import com.balex.familyteam.presentation.regadmin.content.RegisterOrTryAgainButton
 import com.balex.familyteam.presentation.regadmin.content.ResendSmsButton
 import com.balex.familyteam.presentation.regadmin.content.VerifyEmailOrPhoneText
-import com.balex.familyteam.presentation.rememberImeState
+import com.balex.common.rememberImeState
 import com.balex.familyteam.presentation.ui.theme.DarkBlue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -53,7 +51,7 @@ fun RegAdminContent(component: RegAdminComponent, activity: MainActivity) {
 
     val state by component.model.collectAsState(context = CoroutineScope(Dispatchers.Main.immediate).coroutineContext)
 
-    LocalizedContextProvider(languageCode = state.language.lowercase()) {
+    com.balex.common.LocalizedContextProvider(languageCode = state.language.lowercase()) {
         when (state.regAdminState) {
             RegAdminStore.State.RegAdminState.Content -> {
                 ContentScreen(component, state, activity)
@@ -113,7 +111,7 @@ fun ContentScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.Center
             ) {
-                val context = LocalLocalizedContext.current
+                val context = com.balex.common.LocalLocalizedContext.current
 
                 ChooseEmailOrPhoneButton(state, component, context)
                 Spacer(modifier = Modifier.height(24.dp))

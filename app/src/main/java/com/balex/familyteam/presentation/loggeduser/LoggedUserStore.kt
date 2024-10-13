@@ -8,10 +8,10 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.balex.familyteam.R
 import com.balex.familyteam.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
-import com.balex.familyteam.domain.entity.ExternalTasks
-import com.balex.familyteam.domain.entity.PrivateTasks
-import com.balex.familyteam.domain.entity.ToDoList
-import com.balex.familyteam.domain.entity.User
+import com.balex.common.entity.ExternalTasks
+import com.balex.common.entity.PrivateTasks
+import com.balex.common.entity.ToDoList
+import com.balex.common.entity.User
 import com.balex.familyteam.domain.usecase.regLog.AddUserToCollectionUseCase
 import com.balex.familyteam.domain.usecase.regLog.GetUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.ObserveLanguageUseCase

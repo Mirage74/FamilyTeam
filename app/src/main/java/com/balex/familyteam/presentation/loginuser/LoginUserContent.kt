@@ -26,16 +26,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.balex.familyteam.LocalLocalizedContext
-import com.balex.familyteam.LocalizedContextProvider
-import com.balex.familyteam.presentation.ANIMATION_DURATION
-import com.balex.familyteam.presentation.TopAppBarOnlyLanguage
+import com.balex.common.ANIMATION_DURATION
+import com.balex.common.TopAppBarOnlyLanguage
 import com.balex.familyteam.presentation.loginuser.content.ClickLoginText
 import com.balex.familyteam.presentation.loginuser.content.EmailTextField
 import com.balex.familyteam.presentation.loginuser.content.LoginButton
 import com.balex.familyteam.presentation.loginuser.content.NickNameTextField
 import com.balex.familyteam.presentation.loginuser.content.PasswordTextField
-import com.balex.familyteam.presentation.rememberImeState
+import com.balex.common.rememberImeState
 import com.balex.familyteam.presentation.ui.theme.DarkBlue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -45,7 +43,7 @@ fun LoginUserContent(component: LoginUserComponent) {
 
     val state by component.model.collectAsState(context = CoroutineScope(Dispatchers.Main.immediate).coroutineContext)
 
-    LocalizedContextProvider(languageCode = state.language.lowercase()) {
+    com.balex.common.LocalizedContextProvider(languageCode = state.language.lowercase()) {
 
         when (state.loginUserState) {
 
@@ -106,7 +104,7 @@ fun MainLoginUserContent(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.Center
             ) {
-                val context = LocalLocalizedContext.current
+                val context = com.balex.common.LocalLocalizedContext.current
 
                 EmailTextField(state, component, context)
                 Spacer(modifier = Modifier.height(24.dp))

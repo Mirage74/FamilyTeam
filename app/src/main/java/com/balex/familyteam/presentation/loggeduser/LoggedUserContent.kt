@@ -45,17 +45,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import com.balex.familyteam.LocalLocalizedContext
-import com.balex.familyteam.LocalizedContextProvider
-import com.balex.familyteam.R
-import com.balex.familyteam.domain.entity.MenuItems
-import com.balex.familyteam.presentation.SwitchLanguage
+import com.balex.common.R
+import com.balex.common.entity.MenuItems
+import com.balex.common.SwitchLanguage
 import com.balex.familyteam.presentation.loggeduser.content.DisplayNameTextField
 import com.balex.familyteam.presentation.loggeduser.content.NickNameTextField
 import com.balex.familyteam.presentation.loggeduser.content.PasswordTextField
 import com.balex.familyteam.presentation.loggeduser.content.RegisterNewUserButton
 import com.balex.familyteam.presentation.notlogged.DrawerContent
 import com.balex.familyteam.presentation.ui.theme.DarkBlue
+import com.balex.familyteam.R as familyTeamR
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -64,7 +63,7 @@ import kotlinx.coroutines.launch
 fun LoggedUserContent(component: LoggedUserComponent) {
     val state by component.model.collectAsState(context = CoroutineScope(Dispatchers.Main.immediate).coroutineContext)
 
-    LocalizedContextProvider(languageCode = state.language.lowercase()) {
+    com.balex.common.LocalizedContextProvider(languageCode = state.language.lowercase()) {
 
         when (state.loggedUserState) {
             LoggedUserStore.State.LoggedUserState.Content -> {
@@ -358,7 +357,7 @@ fun AdminPanelContent(
         verticalArrangement = Arrangement.SpaceEvenly
     ) {
 
-        val context = LocalLocalizedContext.current
+        val context = com.balex.common.LocalLocalizedContext.current
 
         Text(text = "Admin Page")
         if (!state.isEditUsersListClicked) {
@@ -391,7 +390,7 @@ fun AdminPanelContent(
         if (state.isCreateNewUserClicked) {
             NickNameTextField(state, component, context)
             Text(
-                text = context.getString(R.string.optional)
+                text = context.getString(familyTeamR.string.optional)
             )
             DisplayNameTextField(state, component, context)
             PasswordTextField(state, component, context)

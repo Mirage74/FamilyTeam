@@ -1,4 +1,4 @@
-package com.balex.familyteam.domain.entity
+package com.balex.common.entity
 
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable

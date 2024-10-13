@@ -23,7 +23,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,15 +41,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.balex.familyteam.LocalLocalizedContext
-import com.balex.familyteam.LocalizedContextProvider
 import com.balex.familyteam.R
-import com.balex.familyteam.domain.entity.MenuItems
-import com.balex.familyteam.presentation.SwitchLanguage
+import com.balex.common.R as commonR
+import com.balex.common.entity.MenuItems
+import com.balex.common.SwitchLanguage
 import com.balex.familyteam.presentation.ui.theme.DarkBlue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
@@ -124,7 +121,7 @@ fun NotLoggedScreen(component: NotLoggedComponent) {
                 TopAppBar(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(dimensionResource(id = R.dimen.top_bar_height).value.dp),
+                        .height(dimensionResource(id = commonR.dimen.top_bar_height).value.dp),
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.LightGray
                     ),
@@ -136,10 +133,10 @@ fun NotLoggedScreen(component: NotLoggedComponent) {
                             IconButton(
                                 onClick = { scope.launch { drawerState.open() } },
                                 modifier = Modifier
-                                    .size(dimensionResource(id = R.dimen.top_bar_height).value.dp)
+                                    .size(dimensionResource(id = commonR.dimen.top_bar_height).value.dp)
                             ) {
                                 Icon(
-                                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_menu_hamburger),
+                                    imageVector = ImageVector.vectorResource(id = commonR.drawable.ic_menu_hamburger),
                                     contentDescription = "Open Drawer"
                                 )
                             }
@@ -151,7 +148,7 @@ fun NotLoggedScreen(component: NotLoggedComponent) {
                     }
                 )
                 //MainContent(component)
-                LocalizedContextProvider(languageCode = state.language.lowercase()) {
+                com.balex.common.LocalizedContextProvider(languageCode = state.language.lowercase()) {
                     ShowContent(true, component)
                 }
             }
@@ -170,9 +167,9 @@ fun DrawerContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp, dimensionResource(id = R.dimen.top_bar_height).value.dp, 0.dp, 0.dp)
+            .padding(16.dp, dimensionResource(id = commonR.dimen.top_bar_height).value.dp, 0.dp, 0.dp)
     ) {
-        val textSize = dimensionResource(id = R.dimen.hamburger_text_size).value.sp
+        val textSize = dimensionResource(id = commonR.dimen.hamburger_text_size).value.sp
         items.forEach { item ->
             Text(
                 text = item,
@@ -201,11 +198,11 @@ fun ShowContent(
         verticalArrangement = Arrangement.SpaceEvenly
     ) {
 
-        val context = LocalLocalizedContext.current
+        val context = com.balex.common.LocalLocalizedContext.current
         val regAdmText = context.getString(R.string.reg_adm)
         //val logAdmText = context.getString(R.string.log_adm)
         val logUserText = context.getString(R.string.log_user)
-        val textSize = dimensionResource(id = R.dimen.button_text_size).value.sp
+        val textSize = dimensionResource(id = commonR.dimen.button_text_size).value.sp
 
         Button(
             onClick = { component.onClickRegAdmin() },

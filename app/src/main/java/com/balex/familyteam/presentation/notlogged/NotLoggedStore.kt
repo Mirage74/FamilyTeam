@@ -7,7 +7,7 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.balex.familyteam.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
 import com.balex.familyteam.data.repository.RegLogRepositoryImpl
-import com.balex.familyteam.domain.entity.User
+import com.balex.common.entity.User
 import com.balex.familyteam.domain.usecase.regLog.GetLanguageUseCase
 import com.balex.familyteam.domain.usecase.regLog.GetUserUseCase
 import com.balex.familyteam.domain.usecase.regLog.GetWrongPasswordUserUseCase

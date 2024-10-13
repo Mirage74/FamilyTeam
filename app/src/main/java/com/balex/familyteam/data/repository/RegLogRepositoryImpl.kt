@@ -4,11 +4,11 @@ import android.content.Context
 import android.content.res.Configuration
 import android.util.Log
 import com.balex.familyteam.data.datastore.Storage
-import com.balex.familyteam.domain.entity.Admin
-import com.balex.familyteam.domain.entity.Language
-import com.balex.familyteam.domain.entity.LanguagesList
-import com.balex.familyteam.domain.entity.RegistrationOption
-import com.balex.familyteam.domain.entity.User
+import com.balex.common.entity.Admin
+import com.balex.common.entity.Language
+import com.balex.common.entity.LanguagesList
+import com.balex.common.entity.RegistrationOption
+import com.balex.common.entity.User
 import com.balex.familyteam.domain.repository.RegLogRepository
 import com.balex.familyteam.extensions.formatStringFirstLetterUppercase
 import com.balex.familyteam.presentation.regadmin.RegAdminStoreFactory.Companion.REGEX_PATTERN_ONLY_NUMBERS_FIRST_NOT_ZERO
