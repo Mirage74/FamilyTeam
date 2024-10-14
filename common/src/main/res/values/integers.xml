@@ -5,4 +5,8 @@
     <integer name="min_nickName_length">2</integer>
     <integer name="max_displayName_length">20</integer>
     <integer name="sms_code_length">6</integer>
+    <integer name="available_tasks_default">5</integer>
+    <integer name="available_tasks_max_not_premium">100</integer>
+    <integer name="available_tasks_max_premium">999999999</integer>
+    <integer name="available_FCM_default">10</integer>
 </resources>

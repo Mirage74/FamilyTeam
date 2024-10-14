@@ -2,13 +2,15 @@ package com.balex.common.domain.entity
 
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
+import java.util.Calendar
+import java.util.Date
 
 @Serializable
 data class User(
     @SerializedName("nickName")
     val nickName: String = DEFAULT_NICK_NAME,
-    @SerializedName("admin")
-    val admin: Boolean = false,
+    @SerializedName("hasAdminRights")
+    val hasAdminRights: Boolean = false,
     @SerializedName("fakeEmail")
     val fakeEmail: String = DEFAULT_FAKE_EMAIL,
     @SerializedName("adminEmailOrPhone")
@@ -19,11 +21,28 @@ data class User(
     val password: String = "",
     @SerializedName("language")
     val language: String = Language.DEFAULT_LANGUAGE.symbol,
+    @SerializedName("availableFCM")
+    val availableFCM: Int = 0,
+    @SerializedName("lastAvailableFCMUpdate")
+    val lastAvailableFCMUpdate: Long = System.currentTimeMillis(),
+    @SerializedName("availableTasksToAdd")
+    val availableTasksToAdd: Int = 0,
     @SerializedName("listToDo")
     val listToDo: ToDoList = ToDoList(),
-    val isError: Boolean = false,
+    @SerializedName("existErrorInData")
+    val existErrorInData: Boolean = false,
+    @SerializedName("errorMessage")
     val errorMessage: String = NO_ERROR_MESSAGE
 ) {
+
+
+    fun getCalendar(): Calendar {
+        return Calendar.getInstance().apply {
+            time = Date(this@User.lastAvailableFCMUpdate)
+        }
+    }
+
+
     companion object {
         const val NO_ERROR_MESSAGE = "NO_ERROR_MESSAGE"
         const val DEFAULT_NICK_NAME = "DEFAULT_NICK_NAME"

@@ -3,6 +3,7 @@ package com.balex.common.data.repository
 import android.content.Context
 import android.content.res.Configuration
 import android.util.Log
+import com.balex.common.R
 import com.balex.common.data.datastore.Storage
 import com.balex.common.domain.entity.Admin
 import com.balex.common.domain.entity.Language
@@ -38,6 +39,8 @@ class RegLogRepositoryImpl @Inject constructor(
 
     private val context: Context
 ) : RegLogRepository {
+
+    private val appContext: Context = context.applicationContext
 
     private var admin = Admin()
 
@@ -186,7 +189,7 @@ class RegLogRepositoryImpl @Inject constructor(
     }
 
     override suspend fun setUserWithError(message: String) {
-        user = User(isError = true, errorMessage = message)
+        user = User(existErrorInData = true, errorMessage = message)
         isCurrentUserNeedRefreshFlow.emit(Unit)
     }
 
@@ -708,13 +711,14 @@ class RegLogRepositoryImpl @Inject constructor(
         )
         val newUser = User(
             nickName = nickName,
-            admin = true,
+            hasAdminRights = true,
             fakeEmail = fakeEmail,
             adminEmailOrPhone = emailOrPhoneNumber,
             displayName = displayName,
+            password = password,
             language = language,
-            password = password
-
+            availableTasksToAdd = appContext.resources.getInteger(R.integer.available_tasks_default),
+            availableFCM = appContext.resources.getInteger(R.integer.available_FCM_default)
         )
 
         coroutineScope.launch {
@@ -878,7 +882,7 @@ class RegLogRepositoryImpl @Inject constructor(
         val admin = findAdminInCollectionByDocumentName(adminEmailOrPhoneWithPlus)
         if (admin == null || admin.emailOrPhoneNumber.trim() != adminEmailOrPhoneWithPlus.trim()) {
             return User(
-                isError = true,
+                existErrorInData = true,
                 errorMessage = CheckUserInCollectionAndLoginIfExistErrorMessages.ADMIN_NOT_FOUND.name
             )
         } else {
@@ -891,7 +895,7 @@ class RegLogRepositoryImpl @Inject constructor(
             if (userFromCollection != null) {
                 if (userFromCollection.password != password) {
                     return User(
-                        isError = true,
+                        existErrorInData = true,
                         errorMessage = CheckUserInCollectionAndLoginIfExistErrorMessages.WRONG_PASSWORD.name
                     )
 
@@ -913,7 +917,7 @@ class RegLogRepositoryImpl @Inject constructor(
 
             } else {
                 return User(
-                    isError = true,
+                    existErrorInData = true,
                     errorMessage = CheckUserInCollectionAndLoginIfExistErrorMessages.NICK_NAME_NOT_FOUND.name
                 )
             }

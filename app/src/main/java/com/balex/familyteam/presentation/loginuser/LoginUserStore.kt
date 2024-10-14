@@ -299,7 +299,7 @@ class LoginUserStoreFactory @Inject constructor(
                             nickName.formatStringFirstLetterUppercase(),
                             password
                         )
-                        if (!loggedUser.isError) {
+                        if (!loggedUser.existErrorInData) {
                             storageSavePreferencesUseCase(adminEmailOrPhone, nickName, password, language)
                             publish(Label.UserIsLogged)
                         } else {

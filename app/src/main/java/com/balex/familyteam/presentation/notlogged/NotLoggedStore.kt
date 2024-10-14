@@ -150,7 +150,7 @@ class NotLoggedStoreFactory @Inject constructor(
         fun start() {
             userJob = scope.launch {
                 observeUserUseCase().collect {
-                    if (it.isError) {
+                    if (it.existErrorInData) {
                         if (it.errorMessage == RegLogRepositoryImpl.ERROR_LOADING_USER_DATA_FROM_FIREBASE) {
                             dispatch(Action.UserExistInPreferenceButErrorLoadingUserData)
                         } else {

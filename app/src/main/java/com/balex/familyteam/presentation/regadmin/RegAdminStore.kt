@@ -501,7 +501,7 @@ class RegAdminStoreFactory @Inject constructor(
             }
 
             is Msg.UserInfoIsChanged -> {
-                if (msg.user.isError) {
+                if (msg.user.existErrorInData) {
                     copy(
                         errorMessage = msg.user.errorMessage,
                         regAdminState = State.RegAdminState.Error)
