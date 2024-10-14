@@ -14,7 +14,6 @@ import com.balex.common.domain.usecases.regLog.RemoveRecordFromCollectionUseCase
 import com.balex.common.domain.usecases.regLog.SetUserAsVerifiedUseCase
 import com.balex.common.domain.usecases.regLog.SetUserWithErrorUseCase
 import com.balex.common.domain.usecases.regLog.SignToFirebaseWithFakeEmailUseCase
-import com.balex.familyteam.presentation.MainActivity
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
@@ -59,7 +58,7 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
         nickName: String,
         displayName: String,
         password: String,
-        activity: MainActivity
+        activity: com.balex.familyteam.presentation.MainActivity
     ) {
 
         if (FirebaseAuth.getInstance().currentUser != null) {
@@ -123,7 +122,7 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
         nickName: String,
         displayName: String,
         password: String,
-        activity: MainActivity
+        activity: com.balex.familyteam.presentation.MainActivity
     ) {
         val token = resendTokenForSmsVerification
             ?: throw RuntimeException("resendTokenForSmsVerification is null")

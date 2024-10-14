@@ -60,7 +60,9 @@ dependencies {
     implementation(libs.mvikotlin.core)
     implementation(libs.mvikotlin.coroutines)
     implementation(libs.mvikotlin.logging)
+
     implementation(libs.dagger.core)
+    ksp(libs.dagger.compiler)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)

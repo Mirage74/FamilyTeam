@@ -1,4 +1,4 @@
-package com.balex.familyteam.di
+package com.balex.common.di
 
 import javax.inject.Scope
 

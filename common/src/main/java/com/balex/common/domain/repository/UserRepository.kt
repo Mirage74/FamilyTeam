@@ -1,4 +1,4 @@
-package com.balex.familyteam.domain.repository
+package com.balex.common.domain.repository
 
 import com.balex.common.domain.entity.ExternalTasks
 import com.balex.common.domain.entity.PrivateTasks

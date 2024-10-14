@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.balex.familyteam.R
-import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
 import com.balex.familyteam.presentation.regadmin.RegAdminComponent
 import com.balex.familyteam.presentation.regadmin.RegAdminStore
 import kotlinx.coroutines.CoroutineScope

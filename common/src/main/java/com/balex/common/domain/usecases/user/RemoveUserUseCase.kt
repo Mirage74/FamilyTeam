@@ -1,7 +1,6 @@
-package com.balex.familyteam.domain.usecase.user
+package com.balex.common.domain.usecases.user
 
-import com.balex.common.domain.entity.User
-import com.balex.familyteam.domain.repository.UserRepository
+import com.balex.common.domain.repository.UserRepository
 import javax.inject.Inject
 
 class RemoveUserUseCase @Inject constructor(

@@ -1,7 +1,5 @@
 package com.balex.familyteam.domain.repository
 
-import com.balex.familyteam.presentation.MainActivity
-
 interface PhoneFirebaseRepository {
 
     suspend fun sendSmsVerifyCode(
@@ -9,7 +7,7 @@ interface PhoneFirebaseRepository {
         nickName: String,
         displayName: String,
         password: String,
-        activity: MainActivity
+        activity: com.balex.familyteam.presentation.MainActivity
     )
 
     suspend fun resendVerificationCode(
@@ -17,7 +15,7 @@ interface PhoneFirebaseRepository {
         nickName: String,
         displayName: String,
         password: String,
-        activity: MainActivity
+        activity: com.balex.familyteam.presentation.MainActivity
     )
 
     suspend fun verifySmsCode(

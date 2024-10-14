@@ -1,11 +1,11 @@
-package com.balex.familyteam.data.repository
+package com.balex.common.data.repository
 
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_ADMINS_COLLECTION
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_USERS_COLLECTION
 import com.balex.common.domain.entity.ExternalTasks
 import com.balex.common.domain.entity.PrivateTasks
 import com.balex.common.domain.entity.User
-import com.balex.familyteam.domain.repository.UserRepository
+import com.balex.common.domain.repository.UserRepository
 import com.balex.common.domain.usecases.regLog.AddUserToCollectionUseCase
 import com.balex.common.domain.usecases.regLog.GetUserUseCase
 import com.google.firebase.firestore.ktx.firestore

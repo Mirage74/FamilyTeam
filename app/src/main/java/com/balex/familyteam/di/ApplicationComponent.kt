@@ -1,7 +1,9 @@
 package com.balex.familyteam.di
 
 import android.content.Context
-import com.balex.familyteam.presentation.MainActivity
+import com.balex.common.di.ApplicationScope
+import com.balex.common.di.DataModule
+import com.balex.common.di.PresentationModule
 import com.balex.familyteam.presentation.regadmin.DefaultRegAdminComponent
 import dagger.BindsInstance
 import dagger.Component
@@ -10,12 +12,13 @@ import dagger.Component
 @Component(
     modules = [
         DataModule::class,
-        PresentationModule::class
+        PresentationModule::class,
+        RegPhoneFirebaseModule::class
     ]
 )
 interface ApplicationComponent {
 
-    fun inject(activity: MainActivity)
+    fun inject(activity: com.balex.familyteam.presentation.MainActivity)
 
     fun provideDefaultRegAdminComponentFactory(): DefaultRegAdminComponent.Factory
 

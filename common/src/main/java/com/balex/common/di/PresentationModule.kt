@@ -1,4 +1,4 @@
-package com.balex.familyteam.di
+package com.balex.common.di
 
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.logging.store.LoggingStoreFactory
