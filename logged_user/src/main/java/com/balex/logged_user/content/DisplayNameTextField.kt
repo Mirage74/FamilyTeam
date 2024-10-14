@@ -1,4 +1,4 @@
-package com.balex.familyteam.presentation.loggeduser.content
+package com.balex.logged_user.content
 
 import android.content.Context
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,9 +10,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.balex.familyteam.R
-import com.balex.familyteam.presentation.loggeduser.LoggedUserComponent
-import com.balex.familyteam.presentation.loggeduser.LoggedUserStore
+import com.balex.common.R
+import com.balex.logged_user.LoggedUserComponent
+import com.balex.logged_user.LoggedUserStore
 
 @Composable
 fun DisplayNameTextField(state: LoggedUserStore.State, component: LoggedUserComponent, context: Context) {

@@ -1,4 +1,4 @@
-package com.balex.familyteam.presentation.ui.theme
+package com.balex.common.theme
 
 import androidx.compose.ui.graphics.Color
 

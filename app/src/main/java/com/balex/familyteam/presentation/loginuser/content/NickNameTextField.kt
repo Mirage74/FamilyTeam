@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.balex.familyteam.R
+import com.balex.common.R
 import com.balex.common.domain.entity.User
 import com.balex.familyteam.presentation.loginuser.LoginUserComponent
 import com.balex.familyteam.presentation.loginuser.LoginUserStore

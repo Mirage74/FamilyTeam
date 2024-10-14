@@ -40,7 +40,6 @@ android {
 }
 
 dependencies {
-    implementation(project(":app"))
     implementation(project(":common"))
     implementation(libs.dagger.core)
     ksp(libs.dagger.compiler)

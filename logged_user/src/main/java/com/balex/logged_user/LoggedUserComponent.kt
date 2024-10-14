@@ -1,4 +1,4 @@
-package com.balex.familyteam.presentation.loggeduser
+package com.balex.logged_user
 
 import kotlinx.coroutines.flow.StateFlow
 

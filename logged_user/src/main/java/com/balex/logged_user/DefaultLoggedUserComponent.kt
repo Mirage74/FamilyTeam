@@ -1,4 +1,4 @@
-package com.balex.familyteam.presentation.loggeduser
+package com.balex.logged_user
 
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.lifecycle.doOnDestroy

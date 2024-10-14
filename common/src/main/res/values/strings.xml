@@ -1,3 +1,27 @@
 <resources>
-    <string name="app_name">common</string>
+    <string name="app_name">Family Team</string>
+    <string name="about_app">About</string>
+    <string name="reg_adm" >Reg. new Family</string>
+    <string name="log_adm">Login as admin</string>
+    <string name="log_user">Login as user</string>
+
+    <string name="by_email">by Email</string>
+    <string name="by_phone">by Phone</string>
+    <string name="e_mail">Email</string>
+    <string name="phone">Phone, only digits with country code</string>
+    <string name="email_or_phone">Email/Phone, only digits with country code</string>
+    <string name="nick_name">Nick, only letters, numbers and \'_\'</string>
+    <string name="display_name">(optional) Display name</string>
+    <string name="optional">optional:</string>
+    <string name="password">Password, minimum 6 characters</string>
+    <string name="reg_button">Register</string>
+    <string name="login_button">Login</string>
+    <string name="cancel_button">Cancel</string>
+    <string name="try_again_button">Try again</string>
+    <string name="please_verify_email">Please verify your email</string>
+    <string name="please_verify_phone">Please verify your phone</string>
+
+    <string name="enter_code_from_sms">Enter 6-digit code from SMS</string>
+    <string name="button_ok">OK</string>
+    <string name="button_resend_sms">Resend SMS code</string>
 </resources>

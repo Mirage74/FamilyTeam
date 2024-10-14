@@ -1,4 +1,4 @@
-package com.balex.familyteam.presentation.loggeduser.content
+package com.balex.logged_user.content
 
 import android.content.Context
 import androidx.compose.foundation.layout.Spacer
@@ -11,10 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.balex.familyteam.R as familyTeamR
-import com.balex.common.R as commonR
-import com.balex.familyteam.presentation.loggeduser.LoggedUserComponent
-import com.balex.familyteam.presentation.loggeduser.LoggedUserStore
+import com.balex.common.R
+import com.balex.logged_user.LoggedUserComponent
+import com.balex.logged_user.LoggedUserStore
 
 @Composable
 fun RegisterNewUserButton(
@@ -30,11 +29,11 @@ fun RegisterNewUserButton(
         },
         modifier = Modifier
             .fillMaxWidth()
-            .height(dimensionResource(id = commonR.dimen.reg_buttons_height).value.dp)
+            .height(dimensionResource(id = R.dimen.reg_buttons_height).value.dp)
     ) {
         Text(
-            text = context.getString(familyTeamR.string.reg_button),
-            fontSize = dimensionResource(id = commonR.dimen.reg_admin_button_text_size).value.sp
+            text = context.getString(R.string.reg_button),
+            fontSize = dimensionResource(id = R.dimen.reg_admin_button_text_size).value.sp
         )
     }
 
@@ -47,11 +46,11 @@ fun RegisterNewUserButton(
         },
         modifier = Modifier
             .fillMaxWidth()
-            .height(dimensionResource(id = commonR.dimen.reg_buttons_height).value.dp)
+            .height(dimensionResource(id = R.dimen.reg_buttons_height).value.dp)
     ) {
         Text(
-            text = context.getString(familyTeamR.string.cancel_button),
-            fontSize = dimensionResource(id = commonR.dimen.reg_admin_button_text_size).value.sp
+            text = context.getString(R.string.cancel_button),
+            fontSize = dimensionResource(id = R.dimen.reg_admin_button_text_size).value.sp
         )
     }
 

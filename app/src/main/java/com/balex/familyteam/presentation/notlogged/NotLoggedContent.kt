@@ -1,6 +1,5 @@
 package com.balex.familyteam.presentation.notlogged
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,14 +40,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.balex.familyteam.R
-import com.balex.common.R as commonR
-import com.balex.common.domain.entity.MenuItems
+import com.balex.common.DrawerContent
+import com.balex.common.R
 import com.balex.common.SwitchLanguage
-import com.balex.familyteam.presentation.ui.theme.DarkBlue
+import com.balex.common.domain.entity.MenuItems
+import com.balex.common.theme.DarkBlue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.balex.common.R as commonR
 
 
 @Composable
@@ -154,33 +154,6 @@ fun NotLoggedScreen(component: NotLoggedComponent) {
             }
 
 
-        }
-    }
-}
-
-
-@Composable
-fun DrawerContent(
-    items: List<String>,
-    onItemClick: (String) -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp, dimensionResource(id = commonR.dimen.top_bar_height).value.dp, 0.dp, 0.dp)
-    ) {
-        val textSize = dimensionResource(id = commonR.dimen.hamburger_text_size).value.sp
-        items.forEach { item ->
-            Text(
-                text = item,
-                fontSize = textSize,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-                    .clickable {
-                        onItemClick(item)
-                    }
-            )
         }
     }
 }

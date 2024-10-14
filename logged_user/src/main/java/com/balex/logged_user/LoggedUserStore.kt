@@ -1,4 +1,4 @@
-package com.balex.familyteam.presentation.loggeduser
+package com.balex.logged_user
 
 import android.content.Context
 import com.arkivanov.mvikotlin.core.store.Reducer
@@ -6,7 +6,6 @@ import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
-import com.balex.familyteam.R
 import com.balex.common.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
 import com.balex.common.domain.entity.ExternalTasks
 import com.balex.common.domain.entity.PrivateTasks
@@ -25,9 +24,10 @@ import com.balex.common.domain.usecases.user.ObserveMyTasksForOtherUsersUseCase
 import com.balex.common.domain.usecases.user.ObservePrivateTasksUseCase
 import com.balex.common.domain.usecases.user.ObserveUsersListUseCase
 import com.balex.common.domain.usecases.user.RemoveUserUseCase
-import com.balex.familyteam.presentation.loggeduser.LoggedUserStore.Intent
-import com.balex.familyteam.presentation.loggeduser.LoggedUserStore.Label
-import com.balex.familyteam.presentation.loggeduser.LoggedUserStore.State
+import com.balex.common.R
+import com.balex.logged_user.LoggedUserStore.Intent
+import com.balex.logged_user.LoggedUserStore.Label
+import com.balex.logged_user.LoggedUserStore.State
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject

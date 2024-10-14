@@ -12,7 +12,7 @@ import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
 import com.balex.common.domain.entity.User
 import com.balex.familyteam.presentation.about.DefaultAboutComponent
-import com.balex.familyteam.presentation.loggeduser.DefaultLoggedUserComponent
+import com.balex.logged_user.DefaultLoggedUserComponent
 import com.balex.familyteam.presentation.loginuser.DefaultLoginUserComponent
 import com.balex.familyteam.presentation.notlogged.DefaultNotLoggedComponent
 import com.balex.familyteam.presentation.regadmin.DefaultRegAdminComponent

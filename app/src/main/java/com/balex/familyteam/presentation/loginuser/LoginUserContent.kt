@@ -34,7 +34,7 @@ import com.balex.familyteam.presentation.loginuser.content.LoginButton
 import com.balex.familyteam.presentation.loginuser.content.NickNameTextField
 import com.balex.familyteam.presentation.loginuser.content.PasswordTextField
 import com.balex.common.rememberImeState
-import com.balex.familyteam.presentation.ui.theme.DarkBlue
+import com.balex.common.theme.DarkBlue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 

@@ -1,4 +1,4 @@
-package com.balex.familyteam.presentation.ui.theme
+package com.balex.common.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

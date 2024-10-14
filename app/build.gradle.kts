@@ -61,6 +61,7 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
 
     implementation(project(":common"))
+    implementation(project(":logged_user"))
 
 
     implementation(libs.androidx.ui)

@@ -1,4 +1,4 @@
-package com.balex.familyteam.presentation.loggeduser
+package com.balex.logged_user
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,16 +45,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import com.balex.common.DrawerContent
 import com.balex.common.R
 import com.balex.common.domain.entity.MenuItems
 import com.balex.common.SwitchLanguage
-import com.balex.familyteam.presentation.loggeduser.content.DisplayNameTextField
-import com.balex.familyteam.presentation.loggeduser.content.NickNameTextField
-import com.balex.familyteam.presentation.loggeduser.content.PasswordTextField
-import com.balex.familyteam.presentation.loggeduser.content.RegisterNewUserButton
-import com.balex.familyteam.presentation.notlogged.DrawerContent
-import com.balex.familyteam.presentation.ui.theme.DarkBlue
-import com.balex.familyteam.R as familyTeamR
+import com.balex.logged_user.content.DisplayNameTextField
+import com.balex.logged_user.content.NickNameTextField
+import com.balex.logged_user.content.PasswordTextField
+import com.balex.logged_user.content.RegisterNewUserButton
+import com.balex.common.theme.DarkBlue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -390,7 +389,7 @@ fun AdminPanelContent(
         if (state.isCreateNewUserClicked) {
             NickNameTextField(state, component, context)
             Text(
-                text = context.getString(familyTeamR.string.optional)
+                text = context.getString(R.string.optional)
             )
             DisplayNameTextField(state, component, context)
             PasswordTextField(state, component, context)

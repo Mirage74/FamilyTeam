@@ -1,4 +1,4 @@
-package com.balex.familyteam.presentation.ui.theme
+package com.balex.common.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
