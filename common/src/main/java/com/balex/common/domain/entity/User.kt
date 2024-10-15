@@ -1,5 +1,6 @@
 package com.balex.common.domain.entity
 
+import com.google.firebase.database.Exclude
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
 import java.util.Calendar
@@ -23,8 +24,8 @@ data class User(
     val language: String = Language.DEFAULT_LANGUAGE.symbol,
     @SerializedName("availableFCM")
     val availableFCM: Int = 0,
-    @SerializedName("lastAvailableFCMUpdate")
-    val lastAvailableFCMUpdate: Long = System.currentTimeMillis(),
+    @SerializedName("lastTimeAvailableFCMWasUpdated")
+    val lastTimeAvailableFCMWasUpdated: Long = System.currentTimeMillis(),
     @SerializedName("availableTasksToAdd")
     val availableTasksToAdd: Int = 0,
     @SerializedName("listToDo")
@@ -34,13 +35,6 @@ data class User(
     @SerializedName("errorMessage")
     val errorMessage: String = NO_ERROR_MESSAGE
 ) {
-
-
-    fun getCalendar(): Calendar {
-        return Calendar.getInstance().apply {
-            time = Date(this@User.lastAvailableFCMUpdate)
-        }
-    }
 
 
     companion object {

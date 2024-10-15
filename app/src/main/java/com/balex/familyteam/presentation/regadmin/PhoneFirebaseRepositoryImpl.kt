@@ -13,7 +13,10 @@ import com.balex.common.domain.usecases.regLog.RegUserWithFakeEmailUseCase
 import com.balex.common.domain.usecases.regLog.RemoveRecordFromCollectionUseCase
 import com.balex.common.domain.usecases.regLog.SetUserAsVerifiedUseCase
 import com.balex.common.domain.usecases.regLog.SetUserWithErrorUseCase
+import com.balex.common.domain.usecases.regLog.SetWrongPasswordUserUseCase
 import com.balex.common.domain.usecases.regLog.SignToFirebaseWithFakeEmailUseCase
+import com.balex.common.extensions.formatStringPhoneDelLeadNullAndAddPlus
+import com.balex.familyteam.presentation.MainActivity
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
@@ -38,6 +41,7 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
     private val regUserWithFakeEmailUseCase: RegUserWithFakeEmailUseCase,
     private val setUserAsVerifiedUseCase: SetUserAsVerifiedUseCase,
     private val setUserWithErrorUseCase: SetUserWithErrorUseCase,
+    private val setWrongPasswordUserUseCase: SetWrongPasswordUserUseCase,
     private val emitUserNeedRefreshUseCase: EmitUserNeedRefreshUseCase,
     private val findAdminInCollectionByDocumentNameUseCase: FindAdminInCollectionByDocumentNameUseCase,
     private val removeRecordFromCollection: RemoveRecordFromCollectionUseCase,
@@ -58,62 +62,75 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
         nickName: String,
         displayName: String,
         password: String,
-        activity: com.balex.familyteam.presentation.MainActivity
+        activity: MainActivity
     ) {
 
-        if (FirebaseAuth.getInstance().currentUser != null) {
-            FirebaseAuth.getInstance().signOut()
-        }
+        val isEnteredTeamIsNotRegisteredInFirebase = findAdminInCollectionByDocumentNameUseCase(phoneNumber.formatStringPhoneDelLeadNullAndAddPlus())
+        if (isEnteredTeamIsNotRegisteredInFirebase == null) {
 
-        val auth = Firebase.auth
 
-        try {
-            val verificationId = suspendCancellableCoroutine { continuation ->
-                val options = PhoneAuthOptions.newBuilder(auth)
-                    .setPhoneNumber(phoneNumber)
-                    .setTimeout(TIMEOUT_VERIFICATION_PHONE, TimeUnit.SECONDS)
-                    .setActivity(activity)
-                    .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
-                        override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-                            //called only when verification without user action
-                            CoroutineScope(Dispatchers.Default).launch {
-                                try {
-                                    registerAndSignInWithCredential(
-                                        credential,
-                                        phoneNumber,
-                                        nickName,
-                                        displayName,
-                                        password
-                                    )
-                                } catch (e: Exception) {
-                                    Log.e("sendSmsVerifyCode", "Error: ${e.message}")
-                                    setUserWithErrorUseCase("sendSmsVerifyCode, registerAndSignInWithCredential, error: ${e.message}")
-                                }
-                            }
-                        }
-
-                        override fun onVerificationFailed(e: FirebaseException) {
-                            continuation.resumeWithException(e)
-                        }
-
-                        override fun onCodeSent(
-                            verifId: String,
-                            token: PhoneAuthProvider.ForceResendingToken
-                        ) {
-                            storedSmsVerificationId = verifId
-                            resendTokenForSmsVerification = token
-                            continuation.resume(verifId)
-                        }
-                    })
-                    .build()
-                PhoneAuthProvider.verifyPhoneNumber(options)
+            if (FirebaseAuth.getInstance().currentUser != null) {
+                FirebaseAuth.getInstance().signOut()
             }
 
-            //Log.d("sendSmsVerifyCode", "Code sent successfully: $verificationId")
+            val auth = Firebase.auth
 
-        } catch (e: Exception) {
-            Log.e("sendSmsVerifyCode", "Error: ${e.message}")
-            setUserWithErrorUseCase("sendSmsVerifyCode, PhoneAuthProvider.verifyPhoneNumber(options), error: ${e.message}")
+            try {
+                val verificationId = suspendCancellableCoroutine { continuation ->
+                    val options = PhoneAuthOptions.newBuilder(auth)
+                        .setPhoneNumber(phoneNumber)
+                        .setTimeout(TIMEOUT_VERIFICATION_PHONE, TimeUnit.SECONDS)
+                        .setActivity(activity)
+                        .setCallbacks(object :
+                            PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+                            override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+                                //called only when verification without user action
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    try {
+                                        registerAndSignInWithCredential(
+                                            credential,
+                                            phoneNumber,
+                                            nickName,
+                                            displayName,
+                                            password
+                                        )
+                                    } catch (e: Exception) {
+                                        Log.e("sendSmsVerifyCode", "Error: ${e.message}")
+                                        setUserWithErrorUseCase("sendSmsVerifyCode, registerAndSignInWithCredential, error: ${e.message}")
+                                    }
+                                }
+                            }
+
+                            override fun onVerificationFailed(e: FirebaseException) {
+                                continuation.resumeWithException(e)
+                            }
+
+                            override fun onCodeSent(
+                                verifId: String,
+                                token: PhoneAuthProvider.ForceResendingToken
+                            ) {
+                                storedSmsVerificationId = verifId
+                                resendTokenForSmsVerification = token
+                                continuation.resume(verifId)
+                            }
+                        })
+                        .build()
+                    PhoneAuthProvider.verifyPhoneNumber(options)
+                }
+
+                //Log.d("sendSmsVerifyCode", "Code sent successfully: $verificationId")
+
+            } catch (e: Exception) {
+                Log.e("sendSmsVerifyCode", "Error: ${e.message}")
+                setUserWithErrorUseCase("sendSmsVerifyCode, PhoneAuthProvider.verifyPhoneNumber(options), error: ${e.message}")
+            }
+        } else {
+            val phoneWithoutPlus =  if (phoneNumber.startsWith("+")) {
+                phoneNumber.substring(1)
+            } else {
+                phoneNumber
+            }
+            setWrongPasswordUserUseCase(User(adminEmailOrPhone = phoneWithoutPlus))
         }
     }
 

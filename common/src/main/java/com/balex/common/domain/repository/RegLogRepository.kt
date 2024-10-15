@@ -19,6 +19,8 @@ interface RegLogRepository {
 
     suspend fun setUserWithError(message: String)
 
+    suspend fun setWrongPasswordUser(user: User)
+
     fun observeUser(): StateFlow<User>
 
     suspend fun findAdminInCollectionByDocumentName(documentName: String): Admin?

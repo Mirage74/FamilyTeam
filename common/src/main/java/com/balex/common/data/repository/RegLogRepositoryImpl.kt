@@ -13,6 +13,7 @@ import com.balex.common.domain.entity.User
 import com.balex.common.domain.repository.RegLogRepository
 import com.balex.common.extensions.REGEX_PATTERN_ONLY_NUMBERS_FIRST_NOT_ZERO
 import com.balex.common.extensions.formatStringFirstLetterUppercase
+import com.balex.common.extensions.formatStringPhoneDelLeadNullAndAddPlus
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
@@ -100,6 +101,7 @@ class RegLogRepositoryImpl @Inject constructor(
                 phoneLang
             )
         }
+
         emit(user)
         isCurrentUserNeedRefreshFlow.collect {
             emit(user)
@@ -268,7 +270,10 @@ class RegLogRepositoryImpl @Inject constructor(
                 displayName = user.displayName.formatStringFirstLetterUppercase()
             )
         }
-        return newUser
+        val userForFirebase = newUser.copy(
+            lastTimeAvailableFCMWasUpdated = newUser.lastTimeAvailableFCMWasUpdated
+        )
+        return userForFirebase
     }
 
     override suspend fun addUserToCollection(userToAdd: User): Result<Unit> {
@@ -581,6 +586,7 @@ class RegLogRepositoryImpl @Inject constructor(
         password: String,
         language: String
     ) {
+
         val fakeEmail = createFakeUserEmail(nickName, email)
         Storage.saveAllPreferences(
             context,
@@ -772,16 +778,9 @@ class RegLogRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun phoneNumberDeleteFirstNullAndAddPlus(phoneNumber: String): String {
-        var updatedPhoneNumber = phoneNumber.trim().replaceFirst("^0+".toRegex(), "")
-        if (Regex(REGEX_PATTERN_ONLY_NUMBERS_FIRST_NOT_ZERO).matches(phoneNumber)) {
-            updatedPhoneNumber = "+$phoneNumber"
-        }
-        return updatedPhoneNumber.lowercase()
-    }
 
     override suspend fun findAdminInCollectionByDocumentName(documentName: String): Admin? {
-        val updatedDocumentName = phoneNumberDeleteFirstNullAndAddPlus(documentName)
+        val updatedDocumentName = documentName.formatStringPhoneDelLeadNullAndAddPlus()
         return try {
             val document = adminsCollection.document(updatedDocumentName)
                 .get()
@@ -835,6 +834,11 @@ class RegLogRepositoryImpl @Inject constructor(
         return false
     }
 
+    override suspend fun setWrongPasswordUser(user: User) {
+        isWrongPassword = user
+        isWrongPasswordNeedRefreshFlow.emit(Unit)
+
+    }
 
     private fun createFakeUserEmail(nick: String, data: String): String {
         val nameLowCase = nick.lowercase()
@@ -842,7 +846,8 @@ class RegLogRepositoryImpl @Inject constructor(
         return if (dataLowCase.contains("@", true)) {
             "$nameLowCase-$dataLowCase".trim()
         } else {
-            nameLowCase + "-" + dataLowCase.substring(1) + "@" + FAKE_EMAIL_DOMAIN.trim()
+            val phone = dataLowCase.formatStringPhoneDelLeadNullAndAddPlus()
+            nameLowCase + "-" + phone.substring(1) + "@" + FAKE_EMAIL_DOMAIN.trim()
         }
     }
 
@@ -850,7 +855,7 @@ class RegLogRepositoryImpl @Inject constructor(
         if (fakeEmail.endsWith(FAKE_EMAIL_DOMAIN, false)) {
             val parts = fakeEmail.split("@")
             val nick = parts[0].split("-").first()
-            val phone = parts[1].split("-").first()
+            val phone = parts[0].split("-").last()
             return User(
                 nickName = nick,
                 fakeEmail = fakeEmail,
@@ -878,7 +883,7 @@ class RegLogRepositoryImpl @Inject constructor(
         nickName: String,
         password: String
     ): User {
-        val adminEmailOrPhoneWithPlus = phoneNumberDeleteFirstNullAndAddPlus(adminEmailOrPhone)
+        val adminEmailOrPhoneWithPlus = adminEmailOrPhone.formatStringPhoneDelLeadNullAndAddPlus()
         val admin = findAdminInCollectionByDocumentName(adminEmailOrPhoneWithPlus)
         if (admin == null || admin.emailOrPhoneNumber.trim() != adminEmailOrPhoneWithPlus.trim()) {
             return User(

@@ -12,7 +12,7 @@ object Storage {
     private const val USER_PASSWORD_KEY = "shared_prefs_user_password_family_app"
     private const val LANGUAGE_KEY = "shared_prefs_language_family_app"
     const val NO_USER_SAVED_IN_SHARED_PREFERENCES = "NO_USER_SAVED_IN_SHARED_PREFERENCES"
-    const val NO_USER_PASSWORD_SAVED_IN_SHARED_PREFERENCES = "NO_USER_PASSWORD_SAVED_IN_SHARED_PREFERENCES"
+    private const val NO_USER_PASSWORD_SAVED_IN_SHARED_PREFERENCES = "NO_USER_PASSWORD_SAVED_IN_SHARED_PREFERENCES"
     const val NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES = "NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES"
 
     private val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
