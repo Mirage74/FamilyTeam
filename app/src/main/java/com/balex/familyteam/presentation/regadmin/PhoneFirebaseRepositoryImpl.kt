@@ -215,6 +215,7 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
 
         if (isNewTeamCheckInCollections(
                 phoneNumber,
+                nickName,
                 password
             ) == NO_ADMIN_IN_COLLECTION_FOUND_BY_PHONE
         ) {
@@ -289,18 +290,19 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
 
     private suspend fun isNewTeamCheckInCollections(
         phone: String,
+        nickName: String,
         password: String
     ): String {
         val admin = findAdminInCollectionByDocumentNameUseCase(phone)
 
         if (admin == null) {
-            removeRecordFromCollection(FIREBASE_USERS_COLLECTION, phone)
+            removeRecordFromCollection(FIREBASE_USERS_COLLECTION, phone, nickName)
             return NO_ADMIN_IN_COLLECTION_FOUND_BY_PHONE
         } else {
             val adminAsUser = findUserAsAdminInCollection(admin)
 
             if (adminAsUser == null) {
-                removeRecordFromCollection(FIREBASE_ADMINS_COLLECTION, phone)
+                removeRecordFromCollection(FIREBASE_ADMINS_COLLECTION, phone, nickName)
                 return NO_ADMIN_IN_COLLECTION_FOUND_BY_PHONE
             } else {
                 if (adminAsUser.password != password) {

@@ -19,6 +19,9 @@ import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
+import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
@@ -206,7 +209,8 @@ class RegLogRepositoryImpl @Inject constructor(
 
     override suspend fun removeRecordFromCollection(
         collectionName: String,
-        emailOrPhoneNumber: String
+        emailOrPhoneNumber: String,
+        nickName: String
     ) {
 
         if (collectionName == FIREBASE_ADMINS_COLLECTION || collectionName == FIREBASE_ADMINS_AND_USERS_COLLECTION) {
@@ -225,11 +229,11 @@ class RegLogRepositoryImpl @Inject constructor(
         if (collectionName == FIREBASE_USERS_COLLECTION || collectionName == FIREBASE_ADMINS_AND_USERS_COLLECTION) {
             try {
                 val document = usersCollection.document(emailOrPhoneNumber.trim())
-                val documentSnapshot = document.get().await()
+                    .collection(nickName)
+                    .document(nickName)
 
-                if (documentSnapshot.exists()) {
-                    document.delete().await()
-                }
+                document.delete().await()
+
             } catch (e: Exception) {
                 Log.d("removeRecordFromCollection, usersCollection ", "Error: ${e.message}")
             }
@@ -820,7 +824,7 @@ class RegLogRepositoryImpl @Inject constructor(
                 return false
             } else {
                 if (sigInResultAdmin == StatusEmailSignIn.ADMIN_NOT_FOUND) {
-                    removeRecordFromCollection(FIREBASE_ADMINS_AND_USERS_COLLECTION, email)
+                    removeRecordFromCollection(FIREBASE_ADMINS_AND_USERS_COLLECTION, email, nickName)
                     return true
                 }
             }

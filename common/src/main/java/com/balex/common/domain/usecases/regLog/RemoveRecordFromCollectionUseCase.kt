@@ -6,5 +6,6 @@ import javax.inject.Inject
 class RemoveRecordFromCollectionUseCase @Inject constructor(
     private val repository: RegLogRepository
 ) {
-    suspend operator fun invoke(collectionName: String, emailOrPhoneNumber: String) = repository.removeRecordFromCollection(collectionName, emailOrPhoneNumber)
+    suspend operator fun invoke(collectionName: String, emailOrPhoneNumber: String, nickName: String) =
+        repository.removeRecordFromCollection(collectionName, emailOrPhoneNumber, nickName)
 }

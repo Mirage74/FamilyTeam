@@ -35,13 +35,11 @@ fun String.formatStringFirstLetterUppercase(): String {
 }
 
 fun String.formatStringPhoneDelLeadNullAndAddPlus(): String {
-    val s =
-    if (this.startsWith("+")) {
-        "+" + this.drop(1).trimStart('0')
-    } else {
+    return if (Regex(REGEX_PATTERN_ONLY_NUMBERS).matches(this)) {
         "+" + this.trimStart('0')
-    }
-    return s
+    } else
+        this
+
 }
 
 
