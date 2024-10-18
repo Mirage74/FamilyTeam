@@ -77,10 +77,11 @@ class DefaultRootComponent @AssistedInject constructor(
                     }, onAbout = {
                         navigation.push(Config.About)
                     }, onAdminExistButWrongPassword = { userLogin ->
+                        navigation.replaceAll(Config.NotLogged)
                         navigation.push(Config.LoginUser(userLogin))
-                        navigation.popWhile {
-                            it == Config.RegAdmin
-                        }
+//                        navigation.popWhile {
+//                            it == Config.NotLogged
+//                        }
                     },
                     onBackClicked = {
                         navigation.pop()

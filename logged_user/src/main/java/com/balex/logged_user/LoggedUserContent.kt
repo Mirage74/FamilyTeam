@@ -46,6 +46,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.balex.common.DrawerContent
+import com.balex.common.LocalLocalizedContext
 import com.balex.common.R
 import com.balex.common.domain.entity.MenuItems
 import com.balex.common.SwitchLanguage
@@ -300,6 +301,8 @@ fun TodoListContent(
     state: LoggedUserStore.State,
     paddingValues: PaddingValues
 ) {
+
+    val context = LocalLocalizedContext.current
     val displayName = state.user.displayName.ifEmpty { state.user.nickName }
 
     Column(
@@ -325,7 +328,7 @@ fun TodoListContent(
                 )
             }
         } else {
-            InputMyNewTaskForm()
+            InputMyNewTaskForm(state, component, context)
         }
 
 
@@ -385,7 +388,7 @@ fun AdminPanelContent(
         verticalArrangement = Arrangement.SpaceEvenly
     ) {
 
-        val context = com.balex.common.LocalLocalizedContext.current
+        val context = LocalLocalizedContext.current
 
         Text(text = "Admin Page")
         if (!state.isEditUsersListClicked) {

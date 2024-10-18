@@ -25,6 +25,7 @@ import com.balex.common.domain.usecases.user.ObservePrivateTasksUseCase
 import com.balex.common.domain.usecases.user.ObserveUsersListUseCase
 import com.balex.common.domain.usecases.user.RemoveUserUseCase
 import com.balex.common.R
+import com.balex.common.domain.entity.Task
 import com.balex.logged_user.LoggedUserStore.Intent
 import com.balex.logged_user.LoggedUserStore.Label
 import com.balex.logged_user.LoggedUserStore.State
@@ -39,6 +40,8 @@ interface LoggedUserStore : Store<Intent, State, Label> {
     sealed interface Intent {
 
         data object ClickedAddMyTask : Intent
+
+        data class ClickedAddTaskToFirebase(val task: Task) : Intent
 
         data object ClickedCreateNewUser : Intent
 
@@ -72,6 +75,8 @@ interface LoggedUserStore : Store<Intent, State, Label> {
         val user: User,
         val usersList: List<User>,
         val isAddTodoItemClicked: Boolean,
+        val isAddTaskToFirebaseClicked: Boolean,
+        val isWrongTaskData: Boolean,
         val isCreateNewUserClicked: Boolean,
         val isEditUsersListClicked: Boolean,
         val passwordVisible: Boolean,
@@ -128,6 +133,8 @@ class LoggedUserStoreFactory @Inject constructor(
                 getUserUseCase(),
                 listOf(),
                 isAddTodoItemClicked = false,
+                isAddTaskToFirebaseClicked = false,
+                isWrongTaskData = false,
                 isCreateNewUserClicked = false,
                 isEditUsersListClicked = false,
                 passwordVisible = false,
@@ -178,6 +185,10 @@ class LoggedUserStoreFactory @Inject constructor(
     private sealed interface Msg {
 
         data object ButtonAddMyTaskClicked : Msg
+
+        data object ButtonAddTaskToFirebaseClickedAndTaskDataIsCorrect : Msg
+
+        data object ButtonAddTaskToFirebaseClickedButTaskDataIsIncorrect : Msg
 
         data class UserIsChanged(val user: User) : Msg
 
@@ -291,6 +302,16 @@ class LoggedUserStoreFactory @Inject constructor(
                     dispatch(Msg.ButtonAddMyTaskClicked)
                 }
 
+                is Intent.ClickedAddTaskToFirebase -> {
+                    if (intent.task.checkData()) {
+                        //TODO add task to firebase
+                        dispatch(Msg.ButtonAddTaskToFirebaseClickedAndTaskDataIsCorrect)
+                    } else {
+                        dispatch(Msg.ButtonAddTaskToFirebaseClickedButTaskDataIsIncorrect)
+                    }
+
+                }
+
                 Intent.ClickedCreateNewUser -> {
                     dispatch(Msg.ButtonCreateNewUserClicked)
                 }
@@ -390,7 +411,12 @@ class LoggedUserStoreFactory @Inject constructor(
                         && (action.user.nickName != NO_USER_SAVED_IN_SHARED_PREFERENCES
                                 && action.user.nickName != User.DEFAULT_NICK_NAME)
                     ) {
-                        storageSavePreferencesUseCase(action.user.adminEmailOrPhone, action.user.nickName, action.user.password, action.user.language)
+                        storageSavePreferencesUseCase(
+                            action.user.adminEmailOrPhone,
+                            action.user.nickName,
+                            action.user.password,
+                            action.user.language
+                        )
                         dispatch(Msg.UserIsChanged(action.user))
                     }
                 }
@@ -435,6 +461,21 @@ class LoggedUserStoreFactory @Inject constructor(
 
                 Msg.ButtonAddMyTaskClicked -> {
                     copy(isAddTodoItemClicked = true)
+                }
+
+                Msg.ButtonAddTaskToFirebaseClickedAndTaskDataIsCorrect -> {
+                    copy(
+                        isAddTodoItemClicked = false,
+                        isAddTaskToFirebaseClicked = false,
+                        isWrongTaskData = false
+                    )
+                }
+
+                Msg.ButtonAddTaskToFirebaseClickedButTaskDataIsIncorrect -> {
+                    copy(
+                        isAddTaskToFirebaseClicked = false,
+                        isWrongTaskData = true
+                    )
                 }
 
                 is Msg.UserIsChanged -> {

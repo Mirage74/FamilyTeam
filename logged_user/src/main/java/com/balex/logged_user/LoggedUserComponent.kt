@@ -1,5 +1,6 @@
 package com.balex.logged_user
 
+import com.balex.common.domain.entity.Task
 import kotlinx.coroutines.flow.StateFlow
 
 interface LoggedUserComponent {
@@ -7,6 +8,8 @@ interface LoggedUserComponent {
     val model: StateFlow<LoggedUserStore.State>
 
     fun onClickAddNewTaskForMe()
+
+    fun onClickAddNewTaskForMeToFirebase(task: Task)
 
     fun onClickEditUsersList()
 

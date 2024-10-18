@@ -9,4 +9,5 @@
     <integer name="available_tasks_max_not_premium">100</integer>
     <integer name="available_tasks_max_premium">999999999</integer>
     <integer name="available_FCM_default">10</integer>
+    <integer name="min_time_task_from_current_in_min">30</integer>
 </resources>

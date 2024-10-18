@@ -229,13 +229,10 @@ class RegLogRepositoryImpl @Inject constructor(
         if (collectionName == FIREBASE_USERS_COLLECTION || collectionName == FIREBASE_ADMINS_AND_USERS_COLLECTION) {
             try {
                 val document = usersCollection.document(emailOrPhoneNumber.trim())
-                    .collection(nickName)
-                    .document(nickName)
 
                 document.delete().await()
-
             } catch (e: Exception) {
-                Log.d("removeRecordFromCollection, usersCollection ", "Error: ${e.message}")
+                Log.d("removeRecordFromCollection, usersCollection", "Error: ${e.message}")
             }
         }
     }

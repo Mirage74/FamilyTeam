@@ -3,8 +3,6 @@ package com.balex.common.domain.entity
 import com.google.firebase.database.Exclude
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
-import java.util.Calendar
-import java.util.Date
 
 @Serializable
 data class User(
@@ -30,9 +28,9 @@ data class User(
     val availableTasksToAdd: Int = 0,
     @SerializedName("listToDo")
     val listToDo: ToDoList = ToDoList(),
-    @SerializedName("existErrorInData")
+    @Exclude
     val existErrorInData: Boolean = false,
-    @SerializedName("errorMessage")
+    @Exclude
     val errorMessage: String = NO_ERROR_MESSAGE
 ) {
 

@@ -7,6 +7,7 @@ import com.arkivanov.essenty.lifecycle.doOnResume
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
+import com.balex.common.domain.entity.Task
 import com.balex.common.domain.usecases.regLog.GetLanguageUseCase
 import com.balex.common.domain.usecases.regLog.LogoutUserUseCase
 import com.balex.common.domain.usecases.regLog.StorageClearPreferencesUseCase
@@ -72,6 +73,10 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
 
     override fun onClickAddNewTaskForMe() {
         store.accept(LoggedUserStore.Intent.ClickedAddMyTask)
+    }
+
+    override fun onClickAddNewTaskForMeToFirebase(task: Task) {
+        store.accept(LoggedUserStore.Intent.ClickedAddTaskToFirebase(task))
     }
 
     override fun onClickEditUsersList() {

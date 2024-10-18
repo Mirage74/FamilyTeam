@@ -1,7 +1,6 @@
 package com.balex.logged_user.content
 
-import android.app.DatePickerDialog
-import android.app.TimePickerDialog
+import android.content.Context
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -35,9 +34,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import com.balex.common.R
+import com.balex.common.domain.entity.Task
+import com.balex.logged_user.LoggedUserComponent
+import com.balex.logged_user.LoggedUserStore
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -45,29 +47,24 @@ import java.util.Locale
 
 
 @Composable
-fun InputMyNewTaskForm() {
+fun InputMyNewTaskForm(
+    state: LoggedUserStore.State,
+    component: LoggedUserComponent,
+    context: Context
+) {
+
     var description by remember { mutableStateOf(TextFieldValue("")) }
-    var timeText by remember { mutableStateOf("") }
+    var selectedDateInMillis by remember { mutableStateOf(0L) }
+    var selectedTimeInMillis by remember { mutableStateOf(0L) }
+    var selectedAlarmInMillis1 by remember { mutableStateOf(0L) }
+    var selectedAlarmInMillis2 by remember { mutableStateOf(0L) }
+    var selectedAlarmInMillis3 by remember { mutableStateOf(0L) }
 
-    val context = LocalContext.current
-    val calendar = Calendar.getInstance()
-
-    val datePickerDialog = DatePickerDialog(
-        context,
-        { _, year, month, dayOfMonth ->
-            TimePickerDialog(
-                context,
-                { _, hourOfDay, minute ->
-                    timeText = "$year-${month + 1}-$dayOfMonth $hourOfDay:$minute"
-                },
-                calendar.get(Calendar.HOUR_OF_DAY),
-                calendar.get(Calendar.MINUTE),
-                true
-            ).show()
-        },
-        calendar.get(Calendar.YEAR),
-        calendar.get(Calendar.MONTH),
-        calendar.get(Calendar.DAY_OF_MONTH)
+    val errorInputText = context.getString(
+        R.string.wrong_input_data_for_one_task,
+        Task.MIN_CUTOFF_TIME_FROM_NOW_IN_MINUTES,
+        Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIME_AND_ALARMS_IN_MINUTES,
+        Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIMES_IN_MINUTES
     )
 
     Column(
@@ -90,11 +87,29 @@ fun InputMyNewTaskForm() {
         )
 
         Text("Open modal picker on click")
-        //DatePickerFieldToModal()
-        TimePickerForNewTask()
+        DatePickerFieldToModal(onDateSelected = {
+            selectedDateInMillis = it
+        })
+        TimePickerForNewTask(
+            onTimeSelected = {
+                selectedTimeInMillis = it
+            },
+            onAlarmTimeSelected1 = {
+                selectedAlarmInMillis1 = it
+            },
+            onAlarmTimeSelected2 = {
+                selectedAlarmInMillis2 = it
+            },
+            onAlarmTimeSelected3 = {
+                selectedAlarmInMillis3 = it
+            }
+        )
 
         Button(
-            onClick = { },
+            onClick = {
+//                val task = Task()
+//                component.onClickAddNewTaskForMeToFirebase(task)
+            },
             modifier = Modifier.align(Alignment.End)
         ) {
             Text("OK")
@@ -103,15 +118,16 @@ fun InputMyNewTaskForm() {
 }
 
 
-
-
 @Composable
-fun DatePickerFieldToModal(modifier: Modifier = Modifier) {
+fun DatePickerFieldToModal(onDateSelected: (Long) -> Unit, modifier: Modifier = Modifier) {
     var selectedDate by remember { mutableStateOf<Long?>(null) }
     var showModal by remember { mutableStateOf(false) }
 
     OutlinedTextField(
-        value = selectedDate?.let { convertMillisToDate(it) } ?: "",
+        value = selectedDate?.let {
+            onDateSelected(it)
+            convertMillisToDate(it)
+        } ?: "",
         onValueChange = { },
         placeholder = { Text("MM/DD/YYYY") },
         trailingIcon = {
@@ -175,61 +191,86 @@ private fun convertMillisToDate(millis: Long): String {
     return formatter.format(Date(millis))
 }
 
+private fun convertMillisToTime(millis: Long): String {
+    val formatter = SimpleDateFormat("hh:mm a", Locale.getDefault())
+    return formatter.format(Date(millis))
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
-fun getTimeInMillis(timeState: TimePickerState): Long {
-    return timeState.hour * MILLIS_IN_HOUR + timeState.minute * MILLIS_IN_MINUTE
+fun getTimeInMillis(timeState: TimePickerState?): Long {
+    return if (timeState == null) {
+        0
+    } else {
+        timeState.hour * MILLIS_IN_HOUR + timeState.minute * MILLIS_IN_MINUTE
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TimePickerForNewTask() {
-    var showDialWithDialogExample by remember { mutableStateOf(false) }
-    var selectedTime: TimePickerState? by remember { mutableStateOf(null) }
-    val formatter = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }
+fun TimePickerForNewTask(
+    onTimeSelected: (Long) -> Unit,
+    onAlarmTimeSelected1: (Long) -> Unit,
+    onAlarmTimeSelected2: (Long) -> Unit,
+    onAlarmTimeSelected3: (Long) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var showDialWithDialog by remember { mutableStateOf(false) }
+    //var selectedTime: TimePickerState? by remember { mutableStateOf(null) }
+    var selectedTime by remember { mutableStateOf<Long?>(null) }
+
 
     Box(
         Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(24.dp),
-            ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+        ) {
 
-                Button(onClick = {
-                    showDialWithDialogExample = true
+            OutlinedTextField(
+                value = selectedTime?.let {
+                    onTimeSelected(it)
+                    convertMillisToTime(it)
+                } ?: "",
+                onValueChange = { },
+                placeholder = { Text("HH:MM") },
+                trailingIcon = {
+                    Icon(Icons.Default.DateRange, contentDescription = "Select time")
+                },
+                modifier = modifier
+                    .fillMaxWidth()
+                    .pointerInput(selectedTime) {
+                        awaitEachGesture {
+                            // Modifier.clickable doesn't work for text fields, so we use Modifier.pointerInput
+                            // in the Initial pass to observe events before the text field consumes them
+                            // in the Main pass.
+                            awaitFirstDown(pass = PointerEventPass.Initial)
+                            val upEvent = waitForUpOrCancellation(pass = PointerEventPass.Initial)
+                            if (upEvent != null) {
+                                showDialWithDialog = true
+                            }
+                        }
+                    }
+            )
 
-                }) {
-                    Text("Time picker with dialog")
-                }
 
-                if (selectedTime != null) {
-                    val cal = Calendar.getInstance()
-                    cal.set(Calendar.HOUR_OF_DAY, selectedTime!!.hour)
-                    cal.set(Calendar.MINUTE, selectedTime!!.minute)
-                    cal.isLenient = false
-                    //Text("Selected time = ${formatter.format(cal.time)}")
-                    Text("Selected time = ${getTimeInMillis(selectedTime!!)}}")
-                } else {
-                    Text("No time selected.")
-                }
-            }
+        }
 
 
-        if (showDialWithDialogExample) {
+        if (showDialWithDialog) {
             DialWithDialogExample(
                 onDismiss = {
-                    showDialWithDialogExample = false
+                    showDialWithDialog = false
 
                 },
-                onConfirm = {
-                        time ->
-                    selectedTime = time
-                    showDialWithDialogExample = false
+                onConfirm = { time ->
+                    selectedTime = time.hour * MILLIS_IN_HOUR + time.minute * MILLIS_IN_MINUTE
+                    showDialWithDialog = false
 
                 },
             )

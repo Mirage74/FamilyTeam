@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import kotlin.math.abs
 
 fun ComponentContext.componentScope() = CoroutineScope(
     Dispatchers.Main.immediate + SupervisorJob()
@@ -44,16 +45,24 @@ fun String.formatStringPhoneDelLeadNullAndAddPlus(): String {
 }
 
 
-fun User.calendar(): Calendar
-    {
-        return Calendar.getInstance().apply {
-            time = Date(this@calendar.lastTimeAvailableFCMWasUpdated)
-        }
+fun User.calendar(): Calendar {
+    return Calendar.getInstance().apply {
+        time = Date(this@calendar.lastTimeAvailableFCMWasUpdated)
     }
+}
 
-fun Task.calendar(): Calendar
-{
+fun Task.calendar(): Calendar {
     return Calendar.getInstance().apply {
         time = Date(this@calendar.cutoffTime)
     }
+}
+
+fun Task.checkData(): Boolean {
+    return this.cutoffTime - System.currentTimeMillis() >= Task.MIN_CUTOFF_TIME_FROM_NOW_IN_MILLIS &&
+            this.cutoffTime - this.alarmTime1 >= Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIME_AND_ALARMS_IN_MILLIS &&
+            this.cutoffTime - this.alarmTime2 >= Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIME_AND_ALARMS_IN_MILLIS &&
+            this.cutoffTime - this.alarmTime3 >= Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIME_AND_ALARMS_IN_MILLIS &&
+            abs(this.alarmTime1 - this.alarmTime2) >= Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIMES_IN_MILLIS &&
+            abs(this.alarmTime1 - this.alarmTime3) >= Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIMES_IN_MILLIS &&
+            abs(this.alarmTime2 - this.alarmTime3) >= Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIMES_IN_MILLIS
 }
