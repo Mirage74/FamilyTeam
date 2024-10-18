@@ -54,6 +54,7 @@ import com.balex.logged_user.content.NickNameTextField
 import com.balex.logged_user.content.PasswordTextField
 import com.balex.logged_user.content.RegisterNewUserButton
 import com.balex.common.theme.DarkBlue
+import com.balex.logged_user.content.InputMyNewTaskForm
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -139,6 +140,9 @@ fun LoggedUserScreen(component: LoggedUserComponent, state: LoggedUserStore.Stat
 
 @Composable
 fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
+    val selectedColor = androidx.compose.material.MaterialTheme.colors.secondary
+    val unSelectedColor = androidx.compose.material.MaterialTheme.colors.onSecondary
+
     Scaffold(
         bottomBar = {
             BottomNavigation {
@@ -148,17 +152,22 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                     icon = {
                         Icon(
                             Icons.AutoMirrored.Filled.List,
-                            contentDescription = "To-Do list"
+                            contentDescription = "To-Do list",
+                            tint = if (state.activeBottomItem == PagesNames.TodoList) selectedColor else unSelectedColor
+
                         )
                     },
                     label = {
                         Text(
                             "My",
-                            maxLines = 1
+                            maxLines = 1,
+                            color = if (state.activeBottomItem == PagesNames.TodoList) selectedColor else unSelectedColor
                         )
                     },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
                     unselectedContentColor = androidx.compose.material.MaterialTheme.colors.onSecondary
+
+
                 )
                 BottomNavigationItem(
                     selected = state.activeBottomItem == PagesNames.MyTasksForOtherUsers,
@@ -166,13 +175,15 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                     icon = {
                         Icon(
                             Icons.AutoMirrored.Filled.List,
-                            contentDescription = "Tasks to other"
+                            contentDescription = "Tasks to other",
+                            tint = if (state.activeBottomItem == PagesNames.MyTasksForOtherUsers) selectedColor else unSelectedColor
                         )
                     },
                     label = {
                         Text(
                             "Others",
-                            maxLines = 1
+                            maxLines = 1,
+                            color = if (state.activeBottomItem == PagesNames.MyTasksForOtherUsers) selectedColor else unSelectedColor
                         )
                     },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
@@ -184,13 +195,15 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                     icon = {
                         Icon(
                             Icons.Default.ShoppingCart,
-                            contentDescription = "Shop list"
+                            contentDescription = "Shop list",
+                            tint = if (state.activeBottomItem == PagesNames.ShopList) selectedColor else unSelectedColor
                         )
                     },
                     label = {
                         Text(
                             "Shop",
-                            maxLines = 1
+                            maxLines = 1,
+                            color = if (state.activeBottomItem == PagesNames.ShopList) selectedColor else unSelectedColor
                         )
                     },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
@@ -199,11 +212,18 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                 BottomNavigationItem(
                     selected = state.activeBottomItem == PagesNames.AdminPanel,
                     onClick = { component.onNavigateToBottomItem(PagesNames.AdminPanel) },
-                    icon = { Icon(Icons.Default.Settings, contentDescription = "Admin panel") },
+                    icon = {
+                        Icon(
+                            Icons.Default.Settings,
+                            contentDescription = "Admin panel",
+                            tint = if (state.activeBottomItem == PagesNames.AdminPanel) selectedColor else unSelectedColor
+                        )
+                    },
                     label = {
                         Text(
                             "Admin",
-                            maxLines = 1
+                            maxLines = 1,
+                            color = if (state.activeBottomItem == PagesNames.AdminPanel) selectedColor else unSelectedColor
                         )
                     },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
@@ -219,13 +239,15 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                     icon = {
                         Icon(
                             Icons.AutoMirrored.Filled.Logout,
-                            contentDescription = "Logout"
+                            contentDescription = "Logout",
+                            tint = if (state.activeBottomItem == PagesNames.Logout) selectedColor else unSelectedColor
                         )
                     },
                     label = {
                         Text(
                             "Logout",
-                            maxLines = 1
+                            maxLines = 1,
+                            color = if (state.activeBottomItem == PagesNames.Logout) selectedColor else unSelectedColor
                         )
                     },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
@@ -290,16 +312,23 @@ fun TodoListContent(
             text = "Hello, $displayName!",
             style = MaterialTheme.typography.headlineMedium
         )
-        Button(
-            onClick = { },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp)
-        ) {
-            Text(
-                text = "Add Todo Item"
-            )
+
+        if (!state.isAddTodoItemClicked) {
+            Button(
+                onClick = { component.onClickAddNewTaskForMe() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp)
+            ) {
+                Text(
+                    text = "Add Todo Item"
+                )
+            }
+        } else {
+            InputMyNewTaskForm()
         }
+
+
         LazyColumn(
             modifier = Modifier.padding(paddingValues),
         ) {

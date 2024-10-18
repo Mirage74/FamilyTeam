@@ -38,6 +38,8 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 
     sealed interface Intent {
 
+        data object ClickedAddMyTask : Intent
+
         data object ClickedCreateNewUser : Intent
 
         data object ClickedEditUsersList : Intent
@@ -69,6 +71,7 @@ interface LoggedUserStore : Store<Intent, State, Label> {
     data class State(
         val user: User,
         val usersList: List<User>,
+        val isAddTodoItemClicked: Boolean,
         val isCreateNewUserClicked: Boolean,
         val isEditUsersListClicked: Boolean,
         val passwordVisible: Boolean,
@@ -124,6 +127,7 @@ class LoggedUserStoreFactory @Inject constructor(
             initialState = State(
                 getUserUseCase(),
                 listOf(),
+                isAddTodoItemClicked = false,
                 isCreateNewUserClicked = false,
                 isEditUsersListClicked = false,
                 passwordVisible = false,
@@ -172,6 +176,8 @@ class LoggedUserStoreFactory @Inject constructor(
     }
 
     private sealed interface Msg {
+
+        data object ButtonAddMyTaskClicked : Msg
 
         data class UserIsChanged(val user: User) : Msg
 
@@ -280,6 +286,10 @@ class LoggedUserStoreFactory @Inject constructor(
     private inner class ExecutorImpl : CoroutineExecutor<Intent, Action, State, Msg, Label>() {
         override fun executeIntent(intent: Intent, getState: () -> State) {
             when (intent) {
+
+                Intent.ClickedAddMyTask -> {
+                    dispatch(Msg.ButtonAddMyTaskClicked)
+                }
 
                 Intent.ClickedCreateNewUser -> {
                     dispatch(Msg.ButtonCreateNewUserClicked)
@@ -422,6 +432,10 @@ class LoggedUserStoreFactory @Inject constructor(
     private object ReducerImpl : Reducer<State, Msg> {
         override fun State.reduce(msg: Msg): State =
             when (msg) {
+
+                Msg.ButtonAddMyTaskClicked -> {
+                    copy(isAddTodoItemClicked = true)
+                }
 
                 is Msg.UserIsChanged -> {
                     if (msg.user.nickName != User.DEFAULT_NICK_NAME) {

@@ -6,6 +6,8 @@ interface LoggedUserComponent {
 
     val model: StateFlow<LoggedUserStore.State>
 
+    fun onClickAddNewTaskForMe()
+
     fun onClickEditUsersList()
 
     fun onClickRemoveUserFromFirebase(nickName: String)

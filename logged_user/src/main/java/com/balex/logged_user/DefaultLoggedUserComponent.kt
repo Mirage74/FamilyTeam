@@ -70,6 +70,10 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     override val model: StateFlow<LoggedUserStore.State> = store.stateFlow
 
 
+    override fun onClickAddNewTaskForMe() {
+        store.accept(LoggedUserStore.Intent.ClickedAddMyTask)
+    }
+
     override fun onClickEditUsersList() {
         store.accept(LoggedUserStore.Intent.ClickedEditUsersList)
     }

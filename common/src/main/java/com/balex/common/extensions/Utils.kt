@@ -2,6 +2,7 @@ package com.balex.common.extensions
 
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.lifecycle.doOnDestroy
+import com.balex.common.domain.entity.Task
 import com.balex.common.domain.entity.User
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -49,3 +50,10 @@ fun User.calendar(): Calendar
             time = Date(this@calendar.lastTimeAvailableFCMWasUpdated)
         }
     }
+
+fun Task.calendar(): Calendar
+{
+    return Calendar.getInstance().apply {
+        time = Date(this@calendar.cutoffTime)
+    }
+}
