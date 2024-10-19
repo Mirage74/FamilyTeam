@@ -47,7 +47,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.balex.common.DrawerContent
 import com.balex.common.LocalLocalizedContext
-import com.balex.common.R
+import com.balex.common.R as commonR
 import com.balex.common.domain.entity.MenuItems
 import com.balex.common.SwitchLanguage
 import com.balex.logged_user.content.DisplayNameTextField
@@ -107,7 +107,7 @@ fun LoggedUserScreen(component: LoggedUserComponent, state: LoggedUserStore.Stat
             TopAppBar(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(dimensionResource(id = R.dimen.top_bar_height).value.dp),
+                    .height(dimensionResource(id = commonR.dimen.top_bar_height).value.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.LightGray
                 ),
@@ -119,10 +119,10 @@ fun LoggedUserScreen(component: LoggedUserComponent, state: LoggedUserStore.Stat
                         IconButton(
                             onClick = { scope.launch { drawerState.open() } },
                             modifier = Modifier
-                                .size(dimensionResource(id = R.dimen.top_bar_height).value.dp)
+                                .size(dimensionResource(id = commonR.dimen.top_bar_height).value.dp)
                         ) {
                             Icon(
-                                imageVector = ImageVector.vectorResource(id = R.drawable.ic_menu_hamburger),
+                                imageVector = ImageVector.vectorResource(id = commonR.drawable.ic_menu_hamburger),
                                 contentDescription = "Open Drawer"
                             )
                         }
@@ -143,7 +143,7 @@ fun LoggedUserScreen(component: LoggedUserComponent, state: LoggedUserStore.Stat
 fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
     val selectedColor = androidx.compose.material.MaterialTheme.colors.secondary
     val unSelectedColor = androidx.compose.material.MaterialTheme.colors.onSecondary
-
+    val context = LocalLocalizedContext.current
     Scaffold(
         bottomBar = {
             BottomNavigation {
@@ -160,7 +160,7 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                     },
                     label = {
                         Text(
-                            "My",
+                            context.getString(R.string.bottom_text_my_tasks),
                             maxLines = 1,
                             color = if (state.activeBottomItem == PagesNames.TodoList) selectedColor else unSelectedColor
                         )
@@ -182,7 +182,7 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                     },
                     label = {
                         Text(
-                            "Others",
+                            context.getString(R.string.bottom_text_tasks_for_other),
                             maxLines = 1,
                             color = if (state.activeBottomItem == PagesNames.MyTasksForOtherUsers) selectedColor else unSelectedColor
                         )
@@ -202,7 +202,7 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                     },
                     label = {
                         Text(
-                            "Shop",
+                            context.getString(R.string.bottom_text_shop_list),
                             maxLines = 1,
                             color = if (state.activeBottomItem == PagesNames.ShopList) selectedColor else unSelectedColor
                         )
@@ -222,7 +222,7 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                     },
                     label = {
                         Text(
-                            "Admin",
+                            context.getString(R.string.bottom_text_admin),
                             maxLines = 1,
                             color = if (state.activeBottomItem == PagesNames.AdminPanel) selectedColor else unSelectedColor
                         )
@@ -246,7 +246,7 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                     },
                     label = {
                         Text(
-                            "Logout",
+                            context.getString(R.string.bottom_text_logout),
                             maxLines = 1,
                             color = if (state.activeBottomItem == PagesNames.Logout) selectedColor else unSelectedColor
                         )
@@ -308,11 +308,12 @@ fun TodoListContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 64.dp),
+            .padding(8.dp),
         verticalArrangement = Arrangement.SpaceEvenly
     ) {
         Text(
-            text = "Hello, $displayName!",
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            text = context.getString(R.string.hello_text, displayName),
             style = MaterialTheme.typography.headlineMedium
         )
 
@@ -322,9 +323,10 @@ fun TodoListContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(150.dp)
+                    .padding(horizontal = 64.dp)
             ) {
                 Text(
-                    text = "Add Todo Item"
+                    text = context.getString(R.string.add_button_text),
                 )
             }
         } else {
@@ -335,11 +337,14 @@ fun TodoListContent(
         LazyColumn(
             modifier = Modifier.padding(paddingValues),
         ) {
-            items(state.todoList.thingsToDoShared.externalTasks) { task ->
-                Text(text = "Shared Task: ${task.task.description}")
+            items(state.todoList.thingsToDoShared.externalTasks) { externalTask ->
+                val description = externalTask.task.description
+                val taskOwner = externalTask.taskOwner
+                Text(text = context.getString(R.string.text_external_tasks, description, taskOwner ))
             }
-            items(state.todoList.thingsToDoPrivate.privateTasks) { task ->
-                Text(text = "Private Task: ${task.description}")
+            items(state.todoList.thingsToDoPrivate.privateTasks) { privateTask ->
+                val description = privateTask.description
+                Text(text = context.getString(R.string.text_private_tasks, description))
             }
         }
     }
@@ -355,7 +360,7 @@ fun ShopListContent(
         modifier = Modifier.padding(paddingValues),
     ) {
         items(state.todoList.listToShop) { item ->
-            Text(text = "Shop Item: $item")
+            Text(text = item)
         }
     }
 }
@@ -366,11 +371,14 @@ fun MyTasksForOtherUsersContent(
     state: LoggedUserStore.State,
     paddingValues: PaddingValues
 ) {
+    val context = LocalLocalizedContext.current
     LazyColumn(
         modifier = Modifier.padding(paddingValues),
     ) {
-        items(state.myTasksForOtherUsersList.externalTasks) { item ->
-            Text(text = "Task: $item")
+        items(state.myTasksForOtherUsersList.externalTasks) { myTask ->
+            val description = myTask.task.description
+            val taskOwner = myTask.taskOwner
+            Text(text = context.getString(R.string.text_my_tasks_for_other, description, taskOwner ))
         }
     }
 }
@@ -390,7 +398,10 @@ fun AdminPanelContent(
 
         val context = LocalLocalizedContext.current
 
-        Text(text = "Admin Page")
+        Text(
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            text = context.getString(R.string.title_admin_panel),
+        )
         if (!state.isEditUsersListClicked) {
             Button(
                 onClick = { component.onAdminPageCreateNewUserClicked() },
@@ -399,7 +410,7 @@ fun AdminPanelContent(
                     .height(150.dp)
             ) {
                 Text(
-                    text = "Create new user"
+                    text = context.getString(R.string.button_text_create_new_user)
                 )
             }
         }
@@ -412,7 +423,7 @@ fun AdminPanelContent(
                     .height(150.dp)
             ) {
                 Text(
-                    text = "Edit user's list"
+                    text = context.getString(R.string.button_text_edit_users_list)
                 )
             }
         }
@@ -421,7 +432,7 @@ fun AdminPanelContent(
         if (state.isCreateNewUserClicked) {
             NickNameTextField(state, component, context)
             Text(
-                text = context.getString(R.string.optional)
+                text = context.getString(commonR.string.optional)
             )
             DisplayNameTextField(state, component, context)
             PasswordTextField(state, component, context)

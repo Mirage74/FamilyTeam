@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="time_padding_size">4dp</dimen>
+    <dimen name="alarm_date_and_time_text_size">12sp</dimen>
+</resources>
