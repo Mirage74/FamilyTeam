@@ -342,7 +342,7 @@ fun TodoListContent(
                 val taskOwner = externalTask.taskOwner
                 Text(text = context.getString(R.string.text_external_tasks, description, taskOwner ))
             }
-            items(state.todoList.thingsToDoPrivate.privateTasks) { privateTask ->
+            items(state.user.listToDo.thingsToDoPrivate.privateTasks) { privateTask ->
                 val description = privateTask.description
                 Text(text = context.getString(R.string.text_private_tasks, description))
             }

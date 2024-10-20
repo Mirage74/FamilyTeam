@@ -26,6 +26,7 @@ import com.balex.common.domain.usecases.user.ObserveUsersListUseCase
 import com.balex.common.domain.usecases.user.RemoveUserUseCase
 import com.balex.common.R
 import com.balex.common.domain.entity.Task
+import com.balex.common.domain.usecases.user.AddPrivateTaskToFirebaseUseCase
 import com.balex.logged_user.LoggedUserStore.Intent
 import com.balex.logged_user.LoggedUserStore.Label
 import com.balex.logged_user.LoggedUserStore.State
@@ -120,6 +121,7 @@ class LoggedUserStoreFactory @Inject constructor(
     private val observePrivateTasksUseCase: ObservePrivateTasksUseCase,
     private val observeListToShopUseCase: ObserveListToShopUseCase,
     private val observeMyTasksForOtherUsersUseCase: ObserveMyTasksForOtherUsersUseCase,
+    private val addPrivateTaskToFirebaseUseCase: AddPrivateTaskToFirebaseUseCase,
     private val storeFactory: StoreFactory,
     context: Context
 ) {
@@ -304,7 +306,9 @@ class LoggedUserStoreFactory @Inject constructor(
 
                 is Intent.ClickedAddTaskToFirebase -> {
                     if (intent.task.checkData()) {
-                        //TODO add task to firebase
+                        scope.launch {
+                            addPrivateTaskToFirebaseUseCase(intent.task)
+                        }
                         dispatch(Msg.ButtonAddTaskToFirebaseClickedAndTaskDataIsCorrect)
                     } else {
                         dispatch(Msg.ButtonAddTaskToFirebaseClickedButTaskDataIsIncorrect)

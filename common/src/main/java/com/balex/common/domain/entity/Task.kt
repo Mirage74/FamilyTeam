@@ -4,8 +4,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Task(
-    val description: String,
-    val cutoffTime: Long,
+    val description: String = "",
+    val cutoffTime: Long = 0,
     val alarmTime1: Long = NO_ALARM,
     val alarmTime2: Long = NO_ALARM,
     val alarmTime3: Long = NO_ALARM

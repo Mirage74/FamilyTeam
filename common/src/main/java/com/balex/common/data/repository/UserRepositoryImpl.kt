@@ -1,9 +1,11 @@
 package com.balex.common.data.repository
 
+import android.util.Log
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_ADMINS_COLLECTION
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_USERS_COLLECTION
 import com.balex.common.domain.entity.ExternalTasks
 import com.balex.common.domain.entity.PrivateTasks
+import com.balex.common.domain.entity.Task
 import com.balex.common.domain.entity.User
 import com.balex.common.domain.repository.UserRepository
 import com.balex.common.domain.usecases.regLog.AddUserToCollectionUseCase
@@ -17,6 +19,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class UserRepositoryImpl @Inject constructor(
@@ -91,7 +94,27 @@ class UserRepositoryImpl @Inject constructor(
         TODO("Not yet implemented")
     }
 
-//    private suspend fun getUsersListFromFirebase(): List<User> {
+    override suspend fun addPrivateTaskToFirebase(task: Task) {
+        try {
+            val userForModify = getUserUseCase()
+            val toDoOld = userForModify.listToDo
+            val updatedTodoList = toDoOld.copy(
+                thingsToDoPrivate = toDoOld.thingsToDoPrivate.copy(
+                    privateTasks = toDoOld.thingsToDoPrivate.privateTasks + task
+                )
+            )
+            val userCollection =
+                usersCollection.document(userForModify.adminEmailOrPhone)
+                    .collection(userForModify.nickName.lowercase())
+                    .document(userForModify.nickName.lowercase())
+            userCollection.update("listToDo", updatedTodoList).await()
+
+        } catch (e: Exception) {
+            Log.d("addPrivateTaskToFirebase error", e.toString())
+        }
+    }
+
+    //    private suspend fun getUsersListFromFirebase(): List<User> {
 //        try {
 //
 //

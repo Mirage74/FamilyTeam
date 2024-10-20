@@ -147,8 +147,21 @@ fun InputMyNewTaskForm(
 
         Button(
             onClick = {
-//                val task = Task()
-//                component.onClickAddNewTaskForMeToFirebase(task)
+                var task = Task(
+                    description = description.text,
+                    cutoffTime = selectedDateInMillis + selectedTimeInMillis
+                )
+                if (isCheckBoxSelected1) {
+                    task = task.copy(alarmTime1 = selectedAlarmInMillisDate1 + selectedAlarmInMillisTime1)
+                }
+                if (isCheckBoxSelected2) {
+                    task = task.copy(alarmTime2 = selectedAlarmInMillisDate2 + selectedAlarmInMillisTime2)
+                }
+                if (isCheckBoxSelected3) {
+                    task = task.copy(alarmTime3 = selectedAlarmInMillisDate3 + selectedAlarmInMillisTime3)
+                }
+
+                component.onClickAddNewTaskForMeToFirebase(task.copy())
             },
             modifier = Modifier.align(Alignment.End)
         ) {

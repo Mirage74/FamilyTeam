@@ -58,11 +58,38 @@ fun Task.calendar(): Calendar {
 }
 
 fun Task.checkData(): Boolean {
+    var isCompareAlarm1AndAlarm2Correct = true
+    var isCompareAlarm1AndAlarm3Correct = true
+    var isCompareAlarm2AndAlarm3Correct = true
+    var isCompareAlarmAndCutoffTimeCorrect1 = true
+    var isCompareAlarmAndCutoffTimeCorrect2 = true
+    var isCompareAlarmAndCutoffTimeCorrect3 = true
+
+    if (this.alarmTime1 != Task.NO_ALARM) {
+        isCompareAlarmAndCutoffTimeCorrect1 = this.cutoffTime - this.alarmTime1 >= Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIME_AND_ALARMS_IN_MILLIS
+    }
+
+    if (this.alarmTime1 != Task.NO_ALARM) {
+        isCompareAlarmAndCutoffTimeCorrect2 = this.cutoffTime - this.alarmTime2 >= Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIME_AND_ALARMS_IN_MILLIS
+    }
+
+    if (this.alarmTime1 != Task.NO_ALARM) {
+        isCompareAlarmAndCutoffTimeCorrect3 = this.cutoffTime - this.alarmTime3 >= Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIME_AND_ALARMS_IN_MILLIS
+    }
+
+    if ( (this.alarmTime1 != Task.NO_ALARM) && (this.alarmTime2 != Task.NO_ALARM) ) {
+        isCompareAlarm1AndAlarm2Correct = abs(this.alarmTime1 - this.alarmTime2) >= Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIMES_IN_MILLIS
+    }
+
+    if ( (this.alarmTime1 != Task.NO_ALARM) && (this.alarmTime3 != Task.NO_ALARM) ) {
+        isCompareAlarm1AndAlarm3Correct = abs(this.alarmTime1 - this.alarmTime3) >= Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIMES_IN_MILLIS
+    }
+
+    if ( (this.alarmTime2 != Task.NO_ALARM) && (this.alarmTime3 != Task.NO_ALARM) ) {
+        isCompareAlarm2AndAlarm3Correct = abs(this.alarmTime2 - this.alarmTime3) >= Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIMES_IN_MILLIS
+    }
+
     return this.cutoffTime - System.currentTimeMillis() >= Task.MIN_CUTOFF_TIME_FROM_NOW_IN_MILLIS &&
-            this.cutoffTime - this.alarmTime1 >= Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIME_AND_ALARMS_IN_MILLIS &&
-            this.cutoffTime - this.alarmTime2 >= Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIME_AND_ALARMS_IN_MILLIS &&
-            this.cutoffTime - this.alarmTime3 >= Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIME_AND_ALARMS_IN_MILLIS &&
-            abs(this.alarmTime1 - this.alarmTime2) >= Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIMES_IN_MILLIS &&
-            abs(this.alarmTime1 - this.alarmTime3) >= Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIMES_IN_MILLIS &&
-            abs(this.alarmTime2 - this.alarmTime3) >= Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIMES_IN_MILLIS
+            isCompareAlarmAndCutoffTimeCorrect1 && isCompareAlarmAndCutoffTimeCorrect2 && isCompareAlarmAndCutoffTimeCorrect3 &&
+            isCompareAlarm1AndAlarm2Correct && isCompareAlarm1AndAlarm3Correct && isCompareAlarm2AndAlarm3Correct
 }
