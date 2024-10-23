@@ -7,7 +7,7 @@ data class Admin(
     val nickName: String = DEFAULT_NICK_NAME,
     val registrationOption: RegistrationOption = RegistrationOption.EMAIL,
     val emailOrPhoneNumber: String = "",
-    val isEmailOrPhoneNumberVerified: Boolean = false,
+    val emailOrPhoneNumberVerified: Boolean = false,
     val usersNickNamesList: List<String> = emptyList()
 ) {
     companion object {

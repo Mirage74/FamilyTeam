@@ -3,16 +3,11 @@ package com.balex.logged_user
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
@@ -20,7 +15,6 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -47,18 +41,17 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.balex.common.DrawerContent
 import com.balex.common.LocalLocalizedContext
-import com.balex.common.R as commonR
-import com.balex.common.domain.entity.MenuItems
 import com.balex.common.SwitchLanguage
-import com.balex.logged_user.content.DisplayNameTextField
-import com.balex.logged_user.content.NickNameTextField
-import com.balex.logged_user.content.PasswordTextField
-import com.balex.logged_user.content.RegisterNewUserButton
+import com.balex.common.domain.entity.MenuItems
 import com.balex.common.theme.DarkBlue
-import com.balex.logged_user.content.InputMyNewTaskForm
+import com.balex.logged_user.content.AdminPanelContent
+import com.balex.logged_user.content.MyTasksForOtherUsersContent
+import com.balex.logged_user.content.ShopListContent
+import com.balex.logged_user.content.TodoListContent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.balex.common.R as commonR
 
 @Composable
 fun LoggedUserContent(component: LoggedUserComponent) {
@@ -295,152 +288,6 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
     }
 }
 
-@Composable
-fun TodoListContent(
-    component: LoggedUserComponent,
-    state: LoggedUserStore.State,
-    paddingValues: PaddingValues
-) {
-
-    val context = LocalLocalizedContext.current
-    val displayName = state.user.displayName.ifEmpty { state.user.nickName }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(8.dp),
-        verticalArrangement = Arrangement.SpaceEvenly
-    ) {
-        Text(
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            text = context.getString(R.string.hello_text, displayName),
-            style = MaterialTheme.typography.headlineMedium
-        )
-
-        if (!state.isAddTodoItemClicked) {
-            Button(
-                onClick = { component.onClickAddNewTaskForMe() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp)
-                    .padding(horizontal = 64.dp)
-            ) {
-                Text(
-                    text = context.getString(R.string.add_button_text),
-                )
-            }
-        } else {
-            InputMyNewTaskForm(state, component, context)
-        }
 
 
-        LazyColumn(
-            modifier = Modifier.padding(paddingValues),
-        ) {
-            items(state.todoList.thingsToDoShared.externalTasks) { externalTask ->
-                val description = externalTask.task.description
-                val taskOwner = externalTask.taskOwner
-                Text(text = context.getString(R.string.text_external_tasks, description, taskOwner ))
-            }
-            items(state.user.listToDo.thingsToDoPrivate.privateTasks) { privateTask ->
-                val description = privateTask.description
-                Text(text = context.getString(R.string.text_private_tasks, description))
-            }
-        }
-    }
-}
-
-@Composable
-fun ShopListContent(
-    component: LoggedUserComponent,
-    state: LoggedUserStore.State,
-    paddingValues: PaddingValues
-) {
-    LazyColumn(
-        modifier = Modifier.padding(paddingValues),
-    ) {
-        items(state.todoList.listToShop) { item ->
-            Text(text = item)
-        }
-    }
-}
-
-@Composable
-fun MyTasksForOtherUsersContent(
-    component: LoggedUserComponent,
-    state: LoggedUserStore.State,
-    paddingValues: PaddingValues
-) {
-    val context = LocalLocalizedContext.current
-    LazyColumn(
-        modifier = Modifier.padding(paddingValues),
-    ) {
-        items(state.myTasksForOtherUsersList.externalTasks) { myTask ->
-            val description = myTask.task.description
-            val taskOwner = myTask.taskOwner
-            Text(text = context.getString(R.string.text_my_tasks_for_other, description, taskOwner ))
-        }
-    }
-}
-
-@Composable
-fun AdminPanelContent(
-    component: LoggedUserComponent,
-    state: LoggedUserStore.State,
-    paddingValues: PaddingValues
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 64.dp),
-        verticalArrangement = Arrangement.SpaceEvenly
-    ) {
-
-        val context = LocalLocalizedContext.current
-
-        Text(
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            text = context.getString(R.string.title_admin_panel),
-        )
-        if (!state.isEditUsersListClicked) {
-            Button(
-                onClick = { component.onAdminPageCreateNewUserClicked() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp)
-            ) {
-                Text(
-                    text = context.getString(R.string.button_text_create_new_user)
-                )
-            }
-        }
-
-        if (!state.isCreateNewUserClicked) {
-            Button(
-                onClick = { },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp)
-            ) {
-                Text(
-                    text = context.getString(R.string.button_text_edit_users_list)
-                )
-            }
-        }
-
-
-        if (state.isCreateNewUserClicked) {
-            NickNameTextField(state, component, context)
-            Text(
-                text = context.getString(commonR.string.optional)
-            )
-            DisplayNameTextField(state, component, context)
-            PasswordTextField(state, component, context)
-            Spacer(modifier = Modifier.height(24.dp))
-            RegisterNewUserButton(state, component, context)
-        }
-    }
-
-
-}
 

@@ -3,6 +3,7 @@ package com.balex.common.data.repository
 import android.util.Log
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_ADMINS_COLLECTION
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_USERS_COLLECTION
+import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.ExternalTasks
 import com.balex.common.domain.entity.PrivateTasks
 import com.balex.common.domain.entity.Task
@@ -114,6 +115,46 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun deleteTaskFromFirebase(externalTask: ExternalTask) {
+        try {
+            val userForModify = getUserUseCase()
+
+            val userCollection =
+                usersCollection.document(userForModify.adminEmailOrPhone)
+                    .collection(userForModify.nickName.lowercase())
+                    .document(userForModify.nickName.lowercase())
+
+            val documentSnapshot = userCollection.get().await()
+
+
+            val userData = documentSnapshot?.toObject(User::class.java)
+
+            val listsName = "listToDo"
+            var pathName = "thingsToDoPrivate"
+            var pathNameVar = "privateTasks"
+            if (externalTask.taskOwner != userForModify.nickName) {
+                pathName = "thingsToDoShared"
+                pathNameVar = "externalTasks"
+            }
+
+            if (userData != null) {
+
+                val privateTasksToUpdate =
+                    userData.listToDo.thingsToDoPrivate.privateTasks.filterNot { task ->
+                        task.cutoffTime == externalTask.task.cutoffTime
+
+                    }
+
+                val listToDoForUpdate = userData.listToDo.copy(
+                    thingsToDoPrivate = PrivateTasks(privateTasks = privateTasksToUpdate)
+                )
+                userCollection.update("listToDo", listToDoForUpdate).await()
+            }
+        } catch (e: Exception) {
+            Log.d("deleteTaskFromFirebase error", e.toString())
+        }
+    }
+
     //    private suspend fun getUsersListFromFirebase(): List<User> {
 //        try {
 //
@@ -139,7 +180,6 @@ class UserRepositoryImpl @Inject constructor(
 //            throw RuntimeException("getUsersListFromFirebase: $ERROR_GET_USERS_LIST_FROM_FIREBASE")
 //        }
 //    }
-
 
 
     companion object {

@@ -11,7 +11,6 @@ import com.balex.common.domain.entity.LanguagesList
 import com.balex.common.domain.entity.RegistrationOption
 import com.balex.common.domain.entity.User
 import com.balex.common.domain.repository.RegLogRepository
-import com.balex.common.extensions.REGEX_PATTERN_ONLY_NUMBERS_FIRST_NOT_ZERO
 import com.balex.common.extensions.formatStringFirstLetterUppercase
 import com.balex.common.extensions.formatStringPhoneDelLeadNullAndAddPlus
 import com.google.firebase.auth.FirebaseAuth
@@ -19,9 +18,6 @@ import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FirebaseFirestoreException
-import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
@@ -311,7 +307,7 @@ class RegLogRepositoryImpl @Inject constructor(
         val newAdmin = Admin(
             nickName = adminNickName,
             emailOrPhoneNumber = adminEmail,
-            isEmailOrPhoneNumberVerified = true
+            emailOrPhoneNumberVerified = true
         )
         if (firebaseAuthUser.isEmailVerified) {
             val result = addAdminToCollection(newAdmin)
@@ -714,7 +710,7 @@ class RegLogRepositoryImpl @Inject constructor(
             nickName = nickName,
             registrationOption = registrationOption,
             emailOrPhoneNumber = emailOrPhoneNumber,
-            isEmailOrPhoneNumberVerified = true
+            emailOrPhoneNumberVerified = true
         )
         val newUser = User(
             nickName = nickName,

@@ -25,8 +25,10 @@ import com.balex.common.domain.usecases.user.ObservePrivateTasksUseCase
 import com.balex.common.domain.usecases.user.ObserveUsersListUseCase
 import com.balex.common.domain.usecases.user.RemoveUserUseCase
 import com.balex.common.R
+import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.Task
 import com.balex.common.domain.usecases.user.AddPrivateTaskToFirebaseUseCase
+import com.balex.common.domain.usecases.user.DeleteTaskFromFirebaseUseCase
 import com.balex.logged_user.LoggedUserStore.Intent
 import com.balex.logged_user.LoggedUserStore.Label
 import com.balex.logged_user.LoggedUserStore.State
@@ -43,6 +45,8 @@ interface LoggedUserStore : Store<Intent, State, Label> {
         data object ClickedAddMyTask : Intent
 
         data class ClickedAddTaskToFirebase(val task: Task) : Intent
+
+        data class ClickedDeleteTask(val externalTask: ExternalTask) : Intent
 
         data object ClickedCreateNewUser : Intent
 
@@ -116,6 +120,7 @@ class LoggedUserStoreFactory @Inject constructor(
     private val addUserToCollectionUseCase: AddUserToCollectionUseCase,
     private val storageSavePreferencesUseCase: StorageSavePreferencesUseCase,
     private val removeUserUseCase: RemoveUserUseCase,
+    private val deleteTaskFromFirebaseUseCase: DeleteTaskFromFirebaseUseCase,
     private val observeUsersListUseCase: ObserveUsersListUseCase,
     private val observeExternalTasksUseCase: ObserveExternalTasksUseCase,
     private val observePrivateTasksUseCase: ObservePrivateTasksUseCase,
@@ -302,6 +307,12 @@ class LoggedUserStoreFactory @Inject constructor(
 
                 Intent.ClickedAddMyTask -> {
                     dispatch(Msg.ButtonAddMyTaskClicked)
+                }
+
+                is Intent.ClickedDeleteTask -> {
+                    scope.launch {
+                        deleteTaskFromFirebaseUseCase(intent.externalTask)
+                    }
                 }
 
                 is Intent.ClickedAddTaskToFirebase -> {

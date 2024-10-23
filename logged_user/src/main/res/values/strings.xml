@@ -2,7 +2,6 @@
     <string name="app_name">Logged User</string>
 
     <string name="text_private_tasks">%s, My Task</string>
-    <string name="text_external_tasks">%s, Task from: %s</string>
     <string name="text_my_tasks_for_other">%s, Task for: %s</string>
 
     <string name="title_admin_panel">Admin panel</string>
