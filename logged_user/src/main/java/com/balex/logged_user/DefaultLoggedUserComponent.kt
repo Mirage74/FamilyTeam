@@ -11,7 +11,9 @@ import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.Task
 import com.balex.common.domain.usecases.regLog.GetLanguageUseCase
 import com.balex.common.domain.usecases.regLog.LogoutUserUseCase
+import com.balex.common.domain.usecases.regLog.RefreshFCMLastTimeUpdatedUseCase
 import com.balex.common.domain.usecases.regLog.StorageClearPreferencesUseCase
+import com.balex.common.domain.usecases.user.EmitUsersNicknamesListNeedRefreshUseCase
 import com.balex.common.extensions.componentScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -28,6 +30,8 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     private val getLanguageUseCase: GetLanguageUseCase,
     private val logoutUserUseCase: LogoutUserUseCase,
     private val storageClearPreferencesUseCase: StorageClearPreferencesUseCase,
+    private val refreshFCMLastTimeUpdatedUseCase: RefreshFCMLastTimeUpdatedUseCase,
+    private val emitUsersNicknamesListNeedRefreshUseCase: EmitUsersNicknamesListNeedRefreshUseCase,
     @Assisted("onAbout") private val onAbout: () -> Unit,
     @Assisted("onLogout") private val onLogout: () -> Unit,
     @Assisted("componentContext") componentContext: ComponentContext
@@ -38,6 +42,10 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     private val scope = componentScope()
 
     init {
+        scope.launch {
+            refreshFCMLastTimeUpdatedUseCase()
+        }
+
         lifecycle.doOnResume {
             onRefreshLanguage()
             startCollectingLabels()
@@ -63,6 +71,8 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
             }
         }
     }
+
+
 
     private fun stopCollectingLabels() {
         scope.coroutineContext.cancelChildren()

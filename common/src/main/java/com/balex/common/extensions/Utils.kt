@@ -49,17 +49,13 @@ fun String.formatStringPhoneDelLeadNullAndAddPlus(): String {
 }
 
 
-fun User.calendar(): Calendar {
+fun User.calendarLastTimeAvailableFCMWasUpdated(): Calendar {
     return Calendar.getInstance().apply {
-        time = Date(this@calendar.lastTimeAvailableFCMWasUpdated)
+        time = Date(this@calendarLastTimeAvailableFCMWasUpdated.lastTimeAvailableFCMWasUpdated)
     }
 }
 
-fun Task.calendar(): Calendar {
-    return Calendar.getInstance().apply {
-        time = Date(this@calendar.cutoffTime)
-    }
-}
+
 
 fun Task.checkData(): Boolean {
     var isCompareAlarm1AndAlarm2Correct = true
@@ -114,9 +110,13 @@ fun PrivateTasks.toExternalTasks(taskOwner: String): ExternalTasks {
 
 fun ToDoList.allMyTasks(myNickName: String): ExternalTasks {
     return ExternalTasks(
-        externalTasks = this.thingsToDoShared.externalTasks.union(
-            this.thingsToDoPrivate.toExternalTasks(
-                myNickName
-            ).externalTasks
-        ).toList().sortedBy { it.task.cutoffTime })
+        externalTasks = this.thingsToDoShared.externalTasks.toMutableList().apply {addAll(this@allMyTasks.thingsToDoPrivate.toExternalTasks(
+            myNickName
+        ).externalTasks)}.sortedBy { it.task.cutoffTime })
+
+//        externalTasks = this.thingsToDoShared.externalTasks.union(
+//            this.thingsToDoPrivate.toExternalTasks(
+//                myNickName
+//            ).externalTasks
+//        ).toList().sortedBy { it.task.cutoffTime })
 }

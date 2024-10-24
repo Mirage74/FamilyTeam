@@ -18,6 +18,10 @@ data class User(
     val displayName: String = "",
     @SerializedName("password")
     val password: String = "",
+    @SerializedName("hasPremiumAccount")
+    val hasPremiumAccount: Boolean = false,
+    @SerializedName("premiumAccountExpirationDate")
+    val premiumAccountExpirationDate: Long = 0,
     @SerializedName("language")
     val language: String = Language.DEFAULT_LANGUAGE.symbol,
     @SerializedName("availableFCM")

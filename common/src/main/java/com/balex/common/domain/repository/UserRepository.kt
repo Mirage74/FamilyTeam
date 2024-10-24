@@ -4,7 +4,6 @@ import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.ExternalTasks
 import com.balex.common.domain.entity.PrivateTasks
 import com.balex.common.domain.entity.Task
-import com.balex.common.domain.entity.User
 import kotlinx.coroutines.flow.StateFlow
 
 interface UserRepository {
@@ -13,7 +12,9 @@ interface UserRepository {
 
     suspend fun deleteTaskFromFirebase(externalTask: ExternalTask)
 
-    fun observeUsersList(): StateFlow<List<User>>
+    fun observeUsersList(): StateFlow<List<String>>
+
+    suspend fun emitUsersNicknamesListNeedRefresh()
 
     fun observeExternalTasks(): StateFlow<ExternalTasks>
 

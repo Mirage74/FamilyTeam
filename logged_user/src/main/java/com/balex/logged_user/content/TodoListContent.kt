@@ -4,16 +4,21 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Message
+import androidx.compose.material.icons.filled.AddTask
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Message
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,7 +47,6 @@ fun TodoListContent(
 ) {
 
     val context = LocalLocalizedContext.current
-    val displayName = state.user.displayName.ifEmpty { state.user.nickName }
 
     Column(
         modifier = Modifier
@@ -50,11 +54,8 @@ fun TodoListContent(
             .padding(8.dp),
         verticalArrangement = Arrangement.SpaceEvenly
     ) {
-        Text(
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            text = context.getString(R.string.hello_text, displayName),
-            style = MaterialTheme.typography.headlineMedium
-        )
+
+        GreetingRow(component, state)
 
         if (!state.isAddTodoItemClicked) {
 
@@ -76,6 +77,56 @@ fun TodoListContent(
         }
 
 
+    }
+}
+
+@Composable
+fun GreetingRow(
+    component: LoggedUserComponent,
+    state: LoggedUserStore.State
+) {
+    val context = LocalLocalizedContext.current
+    val displayName = state.user.displayName.ifEmpty { state.user.nickName }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = context.getString(R.string.hello_text, displayName),
+            style = MaterialTheme.typography.headlineMedium
+        )
+
+        Spacer(modifier = Modifier.width(24.dp))
+
+        Icon(
+            imageVector = Icons.Default.AddTask,
+            contentDescription = "Tasks available"
+        )
+
+        Spacer(modifier = Modifier.width(4.dp))
+
+        Text(
+            text = state.user.availableTasksToAdd.toString(),
+            style = MaterialTheme.typography.headlineMedium
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.Message,
+            contentDescription = "FCM available"
+        )
+
+        Spacer(modifier = Modifier.width(4.dp))
+
+        Text(
+            text = state.user.availableFCM.toString(),
+            style = MaterialTheme.typography.headlineMedium
+        )
     }
 }
 
@@ -103,7 +154,6 @@ fun ShowTasksList(
 
                         drawRect(
                             color = Color.Black,
-
                             style = Stroke(width = strokeWidth)
                         )
                     },

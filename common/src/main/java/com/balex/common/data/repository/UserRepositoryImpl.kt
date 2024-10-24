@@ -3,13 +3,14 @@ package com.balex.common.data.repository
 import android.util.Log
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_ADMINS_COLLECTION
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_USERS_COLLECTION
+import com.balex.common.domain.entity.Admin
 import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.ExternalTasks
 import com.balex.common.domain.entity.PrivateTasks
 import com.balex.common.domain.entity.Task
 import com.balex.common.domain.entity.User
 import com.balex.common.domain.repository.UserRepository
-import com.balex.common.domain.usecases.regLog.AddUserToCollectionUseCase
+import com.balex.common.domain.usecases.regLog.GetRepoAdminUseCase
 import com.balex.common.domain.usecases.regLog.GetUserUseCase
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -20,16 +21,16 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class UserRepositoryImpl @Inject constructor(
     private val getUserUseCase: GetUserUseCase,
-
-    private val addUserToCollectionUseCase: AddUserToCollectionUseCase
+    private val getRepoAdminUseCase: GetRepoAdminUseCase,
 ) : UserRepository {
 
-    private var usersList = mutableListOf(User())
+    private var usersNicknamesList: MutableList<String> = mutableListOf()
 
     private val externalTasksList = ExternalTasks()
 
@@ -51,29 +52,26 @@ class UserRepositoryImpl @Inject constructor(
     private val usersCollection = db.collection(FIREBASE_USERS_COLLECTION)
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-    override fun observeUsersList(): StateFlow<List<User>> = flow {
-        //val teamList = getUsersListFromFirebase()
-        //Log.d("documents:", teamList.toString())
-//        if (documents.isNotEmpty()) {
-//            val list = mutableListOf<User>()
-//            documents.forEach { document ->
-//                document?.toObject(User::class.java)?.let {
-//                    list.add(it)
-//                }
-//            }
-//            usersList = list.toMutableList()
-//        }
-
+    override fun observeUsersList(): StateFlow<List<String>> = flow {
+        usersNicknamesList = getUsersListFromFirebase()
         isCurrentUsersListNeedRefreshFlow.emit(Unit)
         isCurrentUsersListNeedRefreshFlow.collect {
-            emit(usersList)
+            emit(usersNicknamesList)
         }
     }
         .stateIn(
             scope = coroutineScope,
             started = SharingStarted.Lazily,
-            initialValue = usersList
+            initialValue = usersNicknamesList
         )
+
+
+    override suspend fun emitUsersNicknamesListNeedRefresh() {
+        coroutineScope.launch {
+            usersNicknamesList = getUsersListFromFirebase()
+            isCurrentUsersListNeedRefreshFlow.emit(Unit)
+        }
+    }
 
     override suspend fun removeUser(nickName: String) {
         TODO("Not yet implemented")
@@ -96,22 +94,32 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     override suspend fun addPrivateTaskToFirebase(task: Task) {
-        try {
-            val userForModify = getUserUseCase()
-            val toDoOld = userForModify.listToDo
-            val updatedTodoList = toDoOld.copy(
-                thingsToDoPrivate = toDoOld.thingsToDoPrivate.copy(
-                    privateTasks = toDoOld.thingsToDoPrivate.privateTasks + task
-                )
-            )
-            val userCollection =
-                usersCollection.document(userForModify.adminEmailOrPhone)
-                    .collection(userForModify.nickName.lowercase())
-                    .document(userForModify.nickName.lowercase())
-            userCollection.update("listToDo", updatedTodoList).await()
 
-        } catch (e: Exception) {
-            Log.d("addPrivateTaskToFirebase error", e.toString())
+        val userForModify = getUserUseCase()
+
+        if (userForModify.availableTasksToAdd > 0) {
+            try {
+                val toDoOld = userForModify.listToDo
+                val updatedTodoList = toDoOld.copy(
+                    thingsToDoPrivate = toDoOld.thingsToDoPrivate.copy(
+                        privateTasks = toDoOld.thingsToDoPrivate.privateTasks + task
+                    )
+                )
+                val userForUpdate = userForModify.copy(
+                    listToDo = updatedTodoList,
+                    availableTasksToAdd = userForModify.availableTasksToAdd - 1
+                )
+                val userCollection =
+                    usersCollection.document(userForModify.adminEmailOrPhone)
+                        .collection(userForModify.nickName.lowercase())
+                        .document(userForModify.nickName.lowercase())
+                userCollection.set(userForUpdate).await()
+
+            } catch (e: Exception) {
+                Log.d("addPrivateTaskToFirebase error", e.toString())
+            }
+        } else {
+            Log.d("addPrivateTaskToFirebase error", "No available tasks to add")
         }
     }
 
@@ -125,24 +133,12 @@ class UserRepositoryImpl @Inject constructor(
                     .document(userForModify.nickName.lowercase())
 
             val documentSnapshot = userCollection.get().await()
-
-
             val userData = documentSnapshot?.toObject(User::class.java)
 
-            val listsName = "listToDo"
-            var pathName = "thingsToDoPrivate"
-            var pathNameVar = "privateTasks"
-            if (externalTask.taskOwner != userForModify.nickName) {
-                pathName = "thingsToDoShared"
-                pathNameVar = "externalTasks"
-            }
-
             if (userData != null) {
-
                 val privateTasksToUpdate =
                     userData.listToDo.thingsToDoPrivate.privateTasks.filterNot { task ->
                         task.cutoffTime == externalTask.task.cutoffTime
-
                     }
 
                 val listToDoForUpdate = userData.listToDo.copy(
@@ -155,31 +151,30 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    //    private suspend fun getUsersListFromFirebase(): List<User> {
-//        try {
-//
-//
-//            val teamData = usersCollection.document(getUserUseCase().adminEmailOrPhone)
-//                .get()
-//                .await()
-//
-//            val dt = teamData.data
-//
-//            val userList = mutableListOf<User>()
-//            if (teamData.data != null) {
-//            for (collection in teamData.data!!) {
-//
-//                    collection.value?.let { toObject(User::class.java)?.let { userList.add(it) }}
-//
-//            }
-//}
-//            return userList
-//
-//        } catch (exception: Exception) {
-//            exception.printStackTrace()
-//            throw RuntimeException("getUsersListFromFirebase: $ERROR_GET_USERS_LIST_FROM_FIREBASE")
-//        }
-//    }
+    private suspend fun getUsersListFromFirebase(): MutableList<String> {
+        val admin = getRepoAdminUseCase()
+        return try {
+            val adminDocumentSnapshot = adminsCollection
+                .document(admin.emailOrPhoneNumber)
+                .get()
+                .await()
+
+            val adminData = adminDocumentSnapshot?.toObject(Admin::class.java)
+            val usersList = mutableListOf<String>()
+
+            if (adminData != null) {
+                usersList.addAll(adminData.usersNickNamesList)
+            } else {
+                usersList.add(admin.nickName)
+            }
+
+            usersList
+
+        } catch (exception: Exception) {
+            exception.printStackTrace()
+            throw RuntimeException("getUsersListFromFirebase: $ERROR_GET_USERS_LIST_FROM_FIREBASE")
+        }
+    }
 
 
     companion object {

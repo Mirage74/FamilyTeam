@@ -13,6 +13,8 @@ interface RegLogRepository {
 
     fun getRepoUser(): User
 
+    fun getRepoAdmin(): Admin
+
     fun getWrongPasswordUser(): User
 
     fun setUserAsVerified()
@@ -44,6 +46,10 @@ interface RegLogRepository {
     fun observeSmsVerificationError(): StateFlow<String>
 
     fun storageClearPreferences()
+
+    suspend fun refreshFCMLastTimeUpdated()
+
+    fun createFakeUserEmail(nick: String, data: String): String
 
     fun storageSavePreferences(email: String, nickName: String, password: String, language: String)
 

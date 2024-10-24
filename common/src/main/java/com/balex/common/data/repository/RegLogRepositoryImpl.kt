@@ -36,7 +36,6 @@ import javax.inject.Inject
 
 
 class RegLogRepositoryImpl @Inject constructor(
-
     private val context: Context
 ) : RegLogRepository {
 
@@ -179,6 +178,10 @@ class RegLogRepositoryImpl @Inject constructor(
 
     override fun getRepoUser(): User {
         return user
+    }
+
+    override fun getRepoAdmin(): Admin {
+        return admin
     }
 
     override fun getWrongPasswordUser(): User {
@@ -329,6 +332,57 @@ class RegLogRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun refreshFCMLastTimeUpdated() {
+        var isPremiumAccount = user.hasPremiumAccount
+        if (isPremiumAccount) {
+            if (user.premiumAccountExpirationDate < System.currentTimeMillis()) {
+                isPremiumAccount = false
+            }
+        }
+        if (user.lastTimeAvailableFCMWasUpdated - System.currentTimeMillis() > MILLIS_IN_DAY) {
+
+            var maxTaskPerDay = if (user.hasPremiumAccount) {
+                context.resources.getInteger(R.integer.max_available_tasks_per_day_premium)
+            } else {
+                context.resources.getInteger(R.integer.max_available_tasks_per_day_default)
+            }
+
+            var maxFCMPerDay = if (user.hasPremiumAccount) {
+                context.resources.getInteger(R.integer.max_available_FCM_per_day_premium)
+            } else {
+                context.resources.getInteger(R.integer.max_available_FCM_per_day_default)
+            }
+
+            if (maxTaskPerDay < user.availableTasksToAdd) {
+                maxTaskPerDay = user.availableTasksToAdd
+            }
+
+            if (maxFCMPerDay < user.availableFCM) {
+                maxFCMPerDay = user.availableFCM
+            }
+
+
+            val userForUpdate = user.copy(
+                hasPremiumAccount = isPremiumAccount,
+                availableTasksToAdd = maxTaskPerDay,
+                availableFCM = maxFCMPerDay,
+                lastTimeAvailableFCMWasUpdated = System.currentTimeMillis()
+            )
+
+            val userCollection =
+                usersCollection.document(user.adminEmailOrPhone)
+                    .collection(user.nickName.lowercase())
+                    .document(user.nickName.lowercase())
+
+            try {
+                userCollection.set(userForUpdate).await()
+
+            } catch (e: Exception) {
+                Log.d("refreshFCMLastTimeUpdated error", e.toString())
+            }
+        }
+    }
+
     private suspend fun signToFirebaseWithEmailAndPasswordFromPreferences(
         fakeEmail: String,
         password: String,
@@ -344,10 +398,11 @@ class RegLogRepositoryImpl @Inject constructor(
                 findAdminInCollectionByDocumentName(extractedUser.adminEmailOrPhone)
 
             if (adminFromCollection != null && adminFromCollection.nickName != Admin.DEFAULT_NICK_NAME) {
+                admin = adminFromCollection
                 val userFromCollection = findUserInCollection(
                     User(
-                        adminEmailOrPhone = adminFromCollection.emailOrPhoneNumber,
-                        nickName = adminFromCollection.nickName
+                        adminEmailOrPhone = extractedUser.adminEmailOrPhone,
+                        nickName = extractedUser.nickName
                     )
                 )
                 if (userFromCollection != null) {
@@ -357,7 +412,8 @@ class RegLogRepositoryImpl @Inject constructor(
                             FirebaseAuth.getInstance().signOut()
                         }
 
-                        val authRes = auth.signInWithEmailAndPassword(fakeEmail, password).await()
+                        val authRes =
+                            auth.signInWithEmailAndPassword(fakeEmail, password).await()
                         val firebaseAuthUser = authRes.user
                         if (firebaseAuthUser != null) {
                             user = userFromCollection
@@ -368,7 +424,8 @@ class RegLogRepositoryImpl @Inject constructor(
                         }
                     } else {
                         user = userFromCollection.copy(password = User.WRONG_PASSWORD)
-                        isWrongPassword = userFromCollection.copy(password = User.WRONG_PASSWORD)
+                        isWrongPassword =
+                            userFromCollection.copy(password = User.WRONG_PASSWORD)
 
                         isWrongPasswordNeedRefreshFlow.emit(Unit)
                     }
@@ -532,7 +589,10 @@ class RegLogRepositoryImpl @Inject constructor(
                 )
 
                 val authRes =
-                    auth.signInWithEmailAndPassword(userToSignIn.fakeEmail, userToSignIn.password)
+                    auth.signInWithEmailAndPassword(
+                        userToSignIn.fakeEmail,
+                        userToSignIn.password
+                    )
                         .await()
                 val firebaseUser = authRes.user
                 if (firebaseUser != null) {
@@ -720,8 +780,8 @@ class RegLogRepositoryImpl @Inject constructor(
             displayName = displayName,
             password = password,
             language = language,
-            availableTasksToAdd = appContext.resources.getInteger(R.integer.available_tasks_default),
-            availableFCM = appContext.resources.getInteger(R.integer.available_FCM_default)
+            availableTasksToAdd = appContext.resources.getInteger(R.integer.max_available_tasks_per_day_default),
+            availableFCM = appContext.resources.getInteger(R.integer.max_available_FCM_per_day_default)
         )
 
         coroutineScope.launch {
@@ -817,7 +877,11 @@ class RegLogRepositoryImpl @Inject constructor(
                 return false
             } else {
                 if (sigInResultAdmin == StatusEmailSignIn.ADMIN_NOT_FOUND) {
-                    removeRecordFromCollection(FIREBASE_ADMINS_AND_USERS_COLLECTION, email, nickName)
+                    removeRecordFromCollection(
+                        FIREBASE_ADMINS_AND_USERS_COLLECTION,
+                        email,
+                        nickName
+                    )
                     return true
                 }
             }
@@ -837,7 +901,7 @@ class RegLogRepositoryImpl @Inject constructor(
 
     }
 
-    private fun createFakeUserEmail(nick: String, data: String): String {
+    override fun createFakeUserEmail(nick: String, data: String): String {
         val nameLowCase = nick.lowercase()
         val dataLowCase = data.lowercase()
         return if (dataLowCase.contains("@", true)) {
@@ -880,7 +944,8 @@ class RegLogRepositoryImpl @Inject constructor(
         nickName: String,
         password: String
     ): User {
-        val adminEmailOrPhoneWithPlus = adminEmailOrPhone.formatStringPhoneDelLeadNullAndAddPlus()
+        val adminEmailOrPhoneWithPlus =
+            adminEmailOrPhone.formatStringPhoneDelLeadNullAndAddPlus()
         val admin = findAdminInCollectionByDocumentName(adminEmailOrPhoneWithPlus)
         if (admin == null || admin.emailOrPhoneNumber.trim() != adminEmailOrPhoneWithPlus.trim()) {
             return User(
@@ -906,7 +971,10 @@ class RegLogRepositoryImpl @Inject constructor(
                         User(
                             adminEmailOrPhone = adminEmailOrPhoneWithPlus,
                             nickName = admin.nickName,
-                            fakeEmail = createFakeUserEmail(nickName, adminEmailOrPhoneWithPlus),
+                            fakeEmail = createFakeUserEmail(
+                                nickName,
+                                adminEmailOrPhoneWithPlus
+                            ),
                             password = password
                         )
                     )
@@ -948,6 +1016,10 @@ class RegLogRepositoryImpl @Inject constructor(
         const val REGISTRATION_ERROR = "REGISTRATION ERROR"
 
         const val AUTH_USER_NOT_FOUND = "ERROR_USER_NOT_FOUND"
+
+        const val MILLIS_IN_MINUTE = 60 * 1_000L
+        const val MILLIS_IN_HOUR = MILLIS_IN_MINUTE * 60
+        const val MILLIS_IN_DAY = MILLIS_IN_HOUR * 24
 
         enum class CheckUserInCollectionAndLoginIfExistErrorMessages {
             ADMIN_NOT_FOUND,

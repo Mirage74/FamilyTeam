@@ -3,17 +3,24 @@ package com.balex.logged_user.content
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.balex.common.LocalLocalizedContext
 import com.balex.logged_user.LoggedUserComponent
 import com.balex.logged_user.LoggedUserStore
@@ -38,7 +45,7 @@ fun AdminPanelContent(
             modifier = Modifier.align(Alignment.CenterHorizontally),
             text = context.getString(R.string.title_admin_panel),
         )
-        if (!state.isEditUsersListClicked) {
+        if (!state.isCreateNewUserClicked) {
             Button(
                 onClick = { component.onAdminPageCreateNewUserClicked() },
                 modifier = Modifier
@@ -49,9 +56,7 @@ fun AdminPanelContent(
                     text = context.getString(R.string.button_text_create_new_user)
                 )
             }
-        }
 
-        if (!state.isCreateNewUserClicked) {
             Button(
                 onClick = { },
                 modifier = Modifier
@@ -62,6 +67,7 @@ fun AdminPanelContent(
                     text = context.getString(R.string.button_text_edit_users_list)
                 )
             }
+            ShowUsersList(state, paddingValues)
         }
 
 
@@ -77,3 +83,37 @@ fun AdminPanelContent(
         }
     }
 }
+
+@Composable
+fun ShowUsersList(
+    state: LoggedUserStore.State,
+    paddingValues: PaddingValues
+) {
+    LazyColumn(
+        modifier = Modifier.padding(paddingValues),
+    ) {
+        items(state.usersNicknamesList) { userNickname ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(4.dp)
+                    .drawBehind {
+                        val strokeWidth = 1.dp.toPx()
+
+                        drawRect(
+                            color = Color.Black,
+                            style = Stroke(width = strokeWidth)
+                        )
+                    },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = userNickname,
+                    fontSize = 20.sp
+                )
+
+            }
+        }
+    }
+}
+
