@@ -1,5 +1,6 @@
 package com.balex.common.domain.repository
 
+import com.balex.common.data.repository.UserRepositoryImpl
 import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.ExternalTasks
 import com.balex.common.domain.entity.PrivateTasks
@@ -12,7 +13,7 @@ interface UserRepository {
 
     suspend fun addExternalTaskToFirebase(externalTask: ExternalTask)
 
-    suspend fun deleteTaskFromFirebase(externalTask: ExternalTask)
+    suspend fun deleteTaskFromFirebase(externalTask: ExternalTask, taskType: UserRepositoryImpl.Companion.TaskType)
 
     fun observeUsersList(): StateFlow<List<String>>
 

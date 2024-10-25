@@ -51,7 +51,7 @@ fun TodoListContent(
             }
             Spacer(modifier = Modifier.height(16.dp))
             val tasks = state.user.listToDo.allMyTasks(state.user.nickName).externalTasks
-            ShowTasksList(tasks, state, component,  modifier = Modifier.weight(4f).padding(paddingValues))
+            ShowTasksList(tasks, state, component, true,  modifier = Modifier.weight(4f).padding(paddingValues))
         } else {
             InputNewTaskForm(component, state, true, context)
         }

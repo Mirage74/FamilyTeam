@@ -21,7 +21,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.balex.common.data.repository.UserRepositoryImpl
 import com.balex.common.domain.entity.ExternalTask
+import com.balex.common.domain.entity.ExternalTasks
 import com.balex.logged_user.LoggedUserComponent
 import com.balex.logged_user.LoggedUserStore
 
@@ -30,11 +32,13 @@ fun ShowTasksList(
     tasks:  List<ExternalTask>,
     state: LoggedUserStore.State,
     component: LoggedUserComponent,
+    isMyTask: Boolean,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
         modifier = modifier
     ) {
+
         items(tasks) { externalTask ->
             val description = externalTask.task.description
             val taskOwner = externalTask.taskOwner
@@ -91,7 +95,7 @@ fun ShowTasksList(
                 }
 
                 IconButton(
-                    onClick = { component.onClickDeleteTask(externalTask) },
+                    onClick = { component.onClickDeleteTask(externalTask, getTaskType(externalTask, isMyTask, state.user.nickName)) },
                     modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
@@ -102,6 +106,21 @@ fun ShowTasksList(
                 }
 
             }
+        }
+    }
+}
+
+fun getTaskType(externalTask: ExternalTask, isMyTask: Boolean, currentUserNickname: String): UserRepositoryImpl.Companion.TaskType {
+    return when (isMyTask) {
+        true -> {
+            if (externalTask.taskOwner.trim() == currentUserNickname.trim()) {
+                UserRepositoryImpl.Companion.TaskType.PRIVATE
+            } else {
+                UserRepositoryImpl.Companion.TaskType.FROM_OTHER_USER_FOR_ME
+            }
+        }
+        false -> {
+            UserRepositoryImpl.Companion.TaskType.MY_TO_OTHER_USER
         }
     }
 }

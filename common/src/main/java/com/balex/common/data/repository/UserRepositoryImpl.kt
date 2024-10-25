@@ -62,7 +62,6 @@ class UserRepositoryImpl @Inject constructor(
     }
 
 
-
     override suspend fun emitUsersNicknamesListNeedRefresh() {
         coroutineScope.launch {
             usersNicknamesList = getUsersListFromFirebase()
@@ -73,7 +72,6 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun removeUser(nickName: String) {
         TODO("Not yet implemented")
     }
-
 
 
     override suspend fun addPrivateTaskToFirebase(task: Task) {
@@ -145,7 +143,9 @@ class UserRepositoryImpl @Inject constructor(
                     val toDoOldExternal = externalUser.listToDo
                     val updatedTodoListExternal = toDoOldExternal.copy(
                         thingsToDoShared = toDoOldExternal.thingsToDoShared.copy(
-                            externalTasks = toDoOldExternal.thingsToDoShared.externalTasks + externalTask.copy(taskOwner = currentUser.nickName)
+                            externalTasks = toDoOldExternal.thingsToDoShared.externalTasks + externalTask.copy(
+                                taskOwner = currentUser.nickName
+                            )
                         )
                     )
                     val userForUpdateExternal = externalUser.copy(
@@ -164,31 +164,100 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteTaskFromFirebase(externalTask: ExternalTask) {
-        try {
-            val userForModify = getUserUseCase()
+    override suspend fun deleteTaskFromFirebase(
+        externalTask: ExternalTask,
+        taskType: TaskType
+    ) {
 
-            val userCollection =
-                usersCollection.document(userForModify.adminEmailOrPhone)
-                    .collection(userForModify.nickName.lowercase())
-                    .document(userForModify.nickName.lowercase())
+        val currentUser = getUserUseCase()
 
-            val documentSnapshot = userCollection.get().await()
-            val userData = documentSnapshot?.toObject(User::class.java)
+        val userCollectionCurrentUser =
+            usersCollection.document(currentUser.adminEmailOrPhone)
+                .collection(currentUser.nickName.lowercase())
+                .document(currentUser.nickName.lowercase())
 
-            if (userData != null) {
+        val externalUserCollection =
+            usersCollection.document(currentUser.adminEmailOrPhone)
+                .collection(externalTask.taskOwner.lowercase())
+                .document(externalTask.taskOwner.lowercase())
+
+        val documentSnapshotCurrentUser = userCollectionCurrentUser.get().await()
+        val currentUserData = documentSnapshotCurrentUser?.toObject(User::class.java)
+        val externalUserSnapshot = externalUserCollection.get().await()
+        val externalUserData = externalUserSnapshot?.toObject(User::class.java)
+
+        if (currentUserData != null) {
+            if (taskType == TaskType.PRIVATE) {
                 val privateTasksToUpdate =
-                    userData.listToDo.thingsToDoPrivate.privateTasks.filterNot { task ->
+                    currentUserData.listToDo.thingsToDoPrivate.privateTasks.filterNot { task ->
                         task.cutoffTime == externalTask.task.cutoffTime
                     }
-
-                val listToDoForUpdate = userData.listToDo.copy(
+                val listToDoForUpdate = currentUserData.listToDo.copy(
                     thingsToDoPrivate = PrivateTasks(privateTasks = privateTasksToUpdate)
                 )
-                userCollection.update("listToDo", listToDoForUpdate).await()
+                try {
+                    userCollectionCurrentUser.update("listToDo", listToDoForUpdate).await()
+                } catch (e: Exception) {
+                    Log.d("deleteTaskFromFirebase, TaskType.PRIVATE, error", e.toString())
+                }
+            } else if (taskType == TaskType.MY_TO_OTHER_USER) {
+                val externalTasksToUpdate =
+                    currentUserData.listToDo.thingsToDoForOtherUsers.externalTasks.filterNot { externalTasksItem ->
+                        externalTasksItem.task.cutoffTime == externalTask.task.cutoffTime
+                    }
+                val listToDoForUpdate = currentUserData.listToDo.copy(
+                    thingsToDoForOtherUsers = ExternalTasks(externalTasks = externalTasksToUpdate)
+                )
+                try {
+                    userCollectionCurrentUser.update("listToDo", listToDoForUpdate).await()
+                } catch (e: Exception) {
+                    Log.d("deleteTaskFromFirebase, TaskType.MY_TO_OTHER_USER, my list error", e.toString())
+                }
+
+                if (externalUserData != null) {
+                    val otherUserSharedTasks =
+                        externalUserData.listToDo.thingsToDoShared.externalTasks.filterNot { externalTasksItem ->
+                            externalTasksItem.task.cutoffTime == externalTask.task.cutoffTime
+                        }
+                    val listToDoOtherUserForUpdate = externalUserData.listToDo.copy(
+                        thingsToDoShared = ExternalTasks(externalTasks = otherUserSharedTasks)
+                    )
+                    try {
+                        externalUserCollection.update("listToDo", listToDoOtherUserForUpdate).await()
+                    } catch (e: Exception) {
+                        Log.d("deleteTaskFromFirebase, TaskType.MY_TO_OTHER_USER, other user list error", e.toString())
+                    }
+                }
+            } else if (taskType == TaskType.FROM_OTHER_USER_FOR_ME) {
+                val externalTasksToUpdate =
+                    currentUserData.listToDo.thingsToDoShared.externalTasks.filterNot { externalTasksItem ->
+                        externalTasksItem.task.cutoffTime == externalTask.task.cutoffTime
+                    }
+                val listToDoForUpdate = currentUserData.listToDo.copy(
+                    thingsToDoShared = ExternalTasks(externalTasks = externalTasksToUpdate)
+                )
+                try {
+                    userCollectionCurrentUser.update("listToDo", listToDoForUpdate).await()
+                } catch (e: Exception) {
+                    Log.d("deleteTaskFromFirebase, TaskType.FROM_OTHER_USER_FOR_ME, my list error", e.toString())
+                }
+
+                if (externalUserData != null) {
+                    val otherUserSharedTasks =
+                        externalUserData.listToDo.thingsToDoForOtherUsers.externalTasks.filterNot { externalTasksItem ->
+                            externalTasksItem.task.cutoffTime == externalTask.task.cutoffTime
+                        }
+                    val listToDoOtherUserForUpdate = externalUserData.listToDo.copy(
+                        thingsToDoForOtherUsers = ExternalTasks(externalTasks = otherUserSharedTasks)
+                    )
+                    try {
+                        externalUserCollection.update("listToDo", listToDoOtherUserForUpdate).await()
+                    } catch (e: Exception) {
+                        Log.d("deleteTaskFromFirebase, TaskType.FROM_OTHER_USER_FOR_ME, other user list error", e.toString())
+                    }
+                }
             }
-        } catch (e: Exception) {
-            Log.d("deleteTaskFromFirebase error", e.toString())
+
         }
     }
 
@@ -224,5 +293,11 @@ class UserRepositoryImpl @Inject constructor(
 
     companion object {
         const val ERROR_GET_USERS_LIST_FROM_FIREBASE = "ERROR_GET_USERS_LIST_FROM_FIREBASE"
+
+        enum class TaskType {
+            PRIVATE,
+            FROM_OTHER_USER_FOR_ME,
+            MY_TO_OTHER_USER
+        }
     }
 }

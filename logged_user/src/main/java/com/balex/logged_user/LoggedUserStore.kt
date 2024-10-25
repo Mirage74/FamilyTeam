@@ -20,6 +20,7 @@ import com.balex.common.domain.usecases.regLog.StorageSavePreferencesUseCase
 import com.balex.common.domain.usecases.user.ObserveUsersListUseCase
 import com.balex.common.domain.usecases.user.RemoveUserUseCase
 import com.balex.common.R
+import com.balex.common.data.repository.UserRepositoryImpl
 import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.Task
 import com.balex.common.domain.usecases.admin.CreateNewUserUseCase
@@ -45,7 +46,7 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 
         data class ClickedAddExternalTaskToFirebase(val externalTask: ExternalTask) : Intent
 
-        data class ClickedDeleteTask(val externalTask: ExternalTask) : Intent
+        data class ClickedDeleteTask(val externalTask: ExternalTask, val taskType: UserRepositoryImpl.Companion.TaskType) : Intent
 
         data object ClickedCreateNewUser : Intent
 
@@ -307,7 +308,7 @@ class LoggedUserStoreFactory @Inject constructor(
 
                 is Intent.ClickedDeleteTask -> {
                     scope.launch {
-                        deleteTaskFromFirebaseUseCase(intent.externalTask)
+                        deleteTaskFromFirebaseUseCase(intent.externalTask, intent.taskType)
                     }
                 }
 
