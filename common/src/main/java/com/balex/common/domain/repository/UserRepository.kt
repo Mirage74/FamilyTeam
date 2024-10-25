@@ -10,19 +10,13 @@ interface UserRepository {
 
     suspend fun addPrivateTaskToFirebase(task: Task)
 
+    suspend fun addExternalTaskToFirebase(externalTask: ExternalTask)
+
     suspend fun deleteTaskFromFirebase(externalTask: ExternalTask)
 
     fun observeUsersList(): StateFlow<List<String>>
 
     suspend fun emitUsersNicknamesListNeedRefresh()
-
-    fun observeExternalTasks(): StateFlow<ExternalTasks>
-
-    fun observePrivateTasks(): StateFlow<PrivateTasks>
-
-    fun observeListToShop(): StateFlow<List<String>>
-
-    fun observeMyTasksForOtherUsers(): StateFlow<ExternalTasks>
 
     suspend fun removeUser(nickName: String)
 

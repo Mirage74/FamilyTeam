@@ -64,7 +64,6 @@ class AdminRepositoryImpl @Inject constructor(
                 adminsCollection.document(admin.emailOrPhoneNumber)
 
 
-
             try {
                 auth.createUserWithEmailAndPassword(newUser.fakeEmail, newUser.password).await()
                 userCollection.set(newUser).await()
@@ -72,8 +71,13 @@ class AdminRepositoryImpl @Inject constructor(
                 val documentAdminSnapshot = adminCollection.get().await()
                 val adminData = documentAdminSnapshot?.toObject(Admin::class.java)
                 if (adminData != null) {
-                    val newUsersNickNamesList =
-                        adminData.usersNickNamesList.toMutableList().apply { add(newUser.nickName) }.sortedBy { it }
+//                    val newUsersNickNamesList =
+//                        adminData.usersNickNamesList.toMutableList().apply { add(newUser.nickName) }.sortedBy { it }
+                    val newUsersNickNamesList = adminData.usersNickNamesList
+                        .toMutableList()
+                        .apply { if (!contains(newUser.nickName)) add(newUser.nickName) }
+                        .sortedBy { it }
+
                     adminCollection.update("usersNickNamesList", newUsersNickNamesList).await()
                     emitUsersNicknamesListNeedRefreshUseCase()
                 }

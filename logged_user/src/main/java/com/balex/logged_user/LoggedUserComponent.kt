@@ -8,11 +8,13 @@ interface LoggedUserComponent {
 
     val model: StateFlow<LoggedUserStore.State>
 
-    fun onClickAddNewTaskForMe()
+    fun onClickAddNewTask()
 
     fun onClickDeleteTask(externalTask: ExternalTask)
 
     fun onClickAddNewTaskForMeToFirebase(task: Task)
+
+    fun onClickAddNewTaskForOtherUserToFirebase(externalTask: ExternalTask)
 
     fun onClickEditUsersList()
 

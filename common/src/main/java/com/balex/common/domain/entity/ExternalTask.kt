@@ -4,6 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ExternalTask(
-    val task: Task,
-    val taskOwner: String
+    val task: Task = Task(),
+    val taskOwner: String = ""
 )

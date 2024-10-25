@@ -136,6 +136,7 @@ fun LoggedUserScreen(component: LoggedUserComponent, state: LoggedUserStore.Stat
 fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
     val selectedColor = androidx.compose.material.MaterialTheme.colors.secondary
     val unSelectedColor = androidx.compose.material.MaterialTheme.colors.onSecondary
+    val notAvailableColor = Color.DarkGray
     val context = LocalLocalizedContext.current
     Scaffold(
         bottomBar = {
@@ -205,19 +206,28 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                 )
                 BottomNavigationItem(
                     selected = state.activeBottomItem == PagesNames.AdminPanel,
+                    enabled = state.user.hasAdminRights,
                     onClick = { component.onNavigateToBottomItem(PagesNames.AdminPanel) },
                     icon = {
+                        var itemColor = if (state.activeBottomItem == PagesNames.AdminPanel) selectedColor else unSelectedColor
+                        if (!state.user.hasAdminRights) {
+                            itemColor = notAvailableColor
+                        }
                         Icon(
                             Icons.Default.Settings,
                             contentDescription = "Admin panel",
-                            tint = if (state.activeBottomItem == PagesNames.AdminPanel) selectedColor else unSelectedColor
+                            tint = itemColor
                         )
                     },
                     label = {
+                        var itemColor = if (state.activeBottomItem == PagesNames.AdminPanel) selectedColor else unSelectedColor
+                        if (!state.user.hasAdminRights) {
+                            itemColor = notAvailableColor
+                        }
                         Text(
                             context.getString(R.string.bottom_text_admin),
                             maxLines = 1,
-                            color = if (state.activeBottomItem == PagesNames.AdminPanel) selectedColor else unSelectedColor
+                            color = itemColor
                         )
                     },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,

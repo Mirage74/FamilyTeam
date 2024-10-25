@@ -18,6 +18,7 @@ import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
@@ -33,6 +34,7 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
+
 
 
 class RegLogRepositoryImpl @Inject constructor(
@@ -71,8 +73,6 @@ class RegLogRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
     override fun observeUser(): StateFlow<User> = flow {
-        //Storage.clearPreferences(context)
-
         val userFakeEmailFromStorage = Storage.getUser(context)
         val phoneLanguageFromStorage = Storage.getLanguage(context)
 
@@ -99,18 +99,36 @@ class RegLogRepositoryImpl @Inject constructor(
                 phoneLang
             )
         }
-
         emit(user)
+        addUserListenerInFirebase()
         isCurrentUserNeedRefreshFlow.collect {
             emit(user)
         }
-
     }
         .stateIn(
             scope = coroutineScope,
             started = SharingStarted.Lazily,
             initialValue = user
         )
+
+    private suspend fun addUserListenerInFirebase() {
+        val userCollection = usersCollection.document(user.adminEmailOrPhone)
+            .collection(user.nickName.lowercase())
+            .document(user.nickName.lowercase())
+
+        userCollection.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                return@addSnapshotListener
+            }
+            snapshot?.let {
+                user = it.toObject(User::class.java) ?: user
+                coroutineScope.launch {
+                    isCurrentUserNeedRefreshFlow.emit(Unit)
+                }
+            }
+        }
+    }
+
 
     override fun observeIsWrongPassword(): StateFlow<User> = flow {
         emit(isWrongPassword)
@@ -1041,3 +1059,6 @@ class RegLogRepositoryImpl @Inject constructor(
         }
     }
 }
+
+
+

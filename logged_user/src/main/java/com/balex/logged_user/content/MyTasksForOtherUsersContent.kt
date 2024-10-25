@@ -1,13 +1,20 @@
 package com.balex.logged_user.content
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.balex.common.LocalLocalizedContext
+import com.balex.common.extensions.allMyTasks
 import com.balex.logged_user.LoggedUserComponent
 import com.balex.logged_user.LoggedUserStore
 import com.balex.logged_user.R
@@ -18,14 +25,38 @@ fun MyTasksForOtherUsersContent(
     state: LoggedUserStore.State,
     paddingValues: PaddingValues
 ) {
+
     val context = LocalLocalizedContext.current
-    LazyColumn(
-        modifier = Modifier.padding(paddingValues),
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp),
+        verticalArrangement = Arrangement.SpaceEvenly
     ) {
-        items(state.myTasksForOtherUsersList.externalTasks) { myTask ->
-            val description = myTask.task.description
-            val taskOwner = myTask.taskOwner
-            Text(text = context.getString(R.string.text_my_tasks_for_other, description, taskOwner))
+
+        if (!state.isAddNewTaskClicked) {
+            GreetingRow(state)
+            Button(
+                onClick = { component.onClickAddNewTask() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp)
+                    .padding(horizontal = 64.dp)
+                    .weight(1f)
+            ) {
+                Text(
+                    text = context.getString(R.string.add_button_text),
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            val tasks = state.user.listToDo.thingsToDoForOtherUsers.externalTasks
+            ShowTasksList(tasks, state, component,  modifier = Modifier
+                .weight(4f)
+                .padding(paddingValues))
+        } else {
+            InputNewTaskForm(component, state, false, context)
         }
     }
 }
+

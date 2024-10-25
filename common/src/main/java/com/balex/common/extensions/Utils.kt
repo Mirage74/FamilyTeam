@@ -108,6 +108,20 @@ fun PrivateTasks.toExternalTasks(taskOwner: String): ExternalTasks {
     return ExternalTasks(externalTasks = this.privateTasks.map { it.toExternalTask(taskOwner) })
 }
 
+fun Task.numberOfReminders(): Int {
+    var numberOfReminders = 0
+    if (this.alarmTime1 != Task.NO_ALARM) {
+        numberOfReminders++
+    }
+    if (this.alarmTime2 != Task.NO_ALARM) {
+        numberOfReminders++
+    }
+    if (this.alarmTime3 != Task.NO_ALARM) {
+        numberOfReminders++
+    }
+    return numberOfReminders
+}
+
 fun ToDoList.allMyTasks(myNickName: String): ExternalTasks {
     return ExternalTasks(
         externalTasks = this.thingsToDoShared.externalTasks.toMutableList().apply {addAll(this@allMyTasks.thingsToDoPrivate.toExternalTasks(

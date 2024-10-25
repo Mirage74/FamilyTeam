@@ -22,6 +22,7 @@
     <string name="select_date_and_time_for_alarm1">Reminder 1:</string>
     <string name="select_date_and_time_for_alarm2">Reminder 2:</string>
     <string name="select_date_and_time_for_alarm3">Reminder 3:</string>
+    <string name="no_available_tasks">No available tasks</string>
     <string name="wrong_input_data_for_one_task">
         Wrong input data. Must be:\n1) Task later, then %d min\n
         2)Reminder greater than %d minutes from task time\n3)Greater than %d min between reminders

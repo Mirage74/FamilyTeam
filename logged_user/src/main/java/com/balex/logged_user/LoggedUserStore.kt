@@ -17,16 +17,13 @@ import com.balex.common.domain.usecases.regLog.ObserveLanguageUseCase
 import com.balex.common.domain.usecases.regLog.ObserveUserUseCase
 import com.balex.common.domain.usecases.regLog.SaveLanguageUseCase
 import com.balex.common.domain.usecases.regLog.StorageSavePreferencesUseCase
-import com.balex.common.domain.usecases.user.ObserveExternalTasksUseCase
-import com.balex.common.domain.usecases.user.ObserveListToShopUseCase
-import com.balex.common.domain.usecases.user.ObserveMyTasksForOtherUsersUseCase
-import com.balex.common.domain.usecases.user.ObservePrivateTasksUseCase
 import com.balex.common.domain.usecases.user.ObserveUsersListUseCase
 import com.balex.common.domain.usecases.user.RemoveUserUseCase
 import com.balex.common.R
 import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.Task
 import com.balex.common.domain.usecases.admin.CreateNewUserUseCase
+import com.balex.common.domain.usecases.user.AddExternalTaskToFirebaseUseCase
 import com.balex.common.domain.usecases.user.AddPrivateTaskToFirebaseUseCase
 import com.balex.common.domain.usecases.user.DeleteTaskFromFirebaseUseCase
 import com.balex.logged_user.LoggedUserStore.Intent
@@ -42,9 +39,11 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 
     sealed interface Intent {
 
-        data object ClickedAddMyTask : Intent
+        data object ClickedAddNewTask : Intent
 
-        data class ClickedAddTaskToFirebase(val task: Task) : Intent
+        data class ClickedAddPrivateTaskToFirebase(val task: Task) : Intent
+
+        data class ClickedAddExternalTaskToFirebase(val externalTask: ExternalTask) : Intent
 
         data class ClickedDeleteTask(val externalTask: ExternalTask) : Intent
 
@@ -79,7 +78,7 @@ interface LoggedUserStore : Store<Intent, State, Label> {
     data class State(
         val user: User,
         val usersNicknamesList: List<String>,
-        val isAddTodoItemClicked: Boolean,
+        val isAddNewTaskClicked: Boolean,
         val isAddTaskToFirebaseClicked: Boolean,
         val isWrongTaskData: Boolean,
         val isCreateNewUserClicked: Boolean,
@@ -122,11 +121,8 @@ class LoggedUserStoreFactory @Inject constructor(
     private val removeUserUseCase: RemoveUserUseCase,
     private val deleteTaskFromFirebaseUseCase: DeleteTaskFromFirebaseUseCase,
     private val observeUsersListUseCase: ObserveUsersListUseCase,
-    private val observeExternalTasksUseCase: ObserveExternalTasksUseCase,
-    private val observePrivateTasksUseCase: ObservePrivateTasksUseCase,
-    private val observeListToShopUseCase: ObserveListToShopUseCase,
-    private val observeMyTasksForOtherUsersUseCase: ObserveMyTasksForOtherUsersUseCase,
     private val addPrivateTaskToFirebaseUseCase: AddPrivateTaskToFirebaseUseCase,
+    private val addExternalTaskToFirebaseUseCase: AddExternalTaskToFirebaseUseCase,
     private val storeFactory: StoreFactory,
     context: Context
 ) {
@@ -139,7 +135,7 @@ class LoggedUserStoreFactory @Inject constructor(
             initialState = State(
                 getUserUseCase(),
                 listOf(),
-                isAddTodoItemClicked = false,
+                isAddNewTaskClicked = false,
                 isAddTaskToFirebaseClicked = false,
                 isWrongTaskData = false,
                 isCreateNewUserClicked = false,
@@ -191,7 +187,7 @@ class LoggedUserStoreFactory @Inject constructor(
 
     private sealed interface Msg {
 
-        data object ButtonAddMyTaskClicked : Msg
+        data object ButtonAddNewTaskClicked : Msg
 
         data object ButtonAddTaskToFirebaseClickedAndTaskDataIsCorrect : Msg
 
@@ -305,8 +301,8 @@ class LoggedUserStoreFactory @Inject constructor(
         override fun executeIntent(intent: Intent, getState: () -> State) {
             when (intent) {
 
-                Intent.ClickedAddMyTask -> {
-                    dispatch(Msg.ButtonAddMyTaskClicked)
+                Intent.ClickedAddNewTask -> {
+                    dispatch(Msg.ButtonAddNewTaskClicked)
                 }
 
                 is Intent.ClickedDeleteTask -> {
@@ -315,7 +311,7 @@ class LoggedUserStoreFactory @Inject constructor(
                     }
                 }
 
-                is Intent.ClickedAddTaskToFirebase -> {
+                is Intent.ClickedAddPrivateTaskToFirebase -> {
                     if (intent.task.checkData()) {
                         scope.launch {
                             addPrivateTaskToFirebaseUseCase(intent.task)
@@ -324,7 +320,19 @@ class LoggedUserStoreFactory @Inject constructor(
                     } else {
                         dispatch(Msg.ButtonAddTaskToFirebaseClickedButTaskDataIsIncorrect)
                     }
+                }
 
+                is Intent.ClickedAddExternalTaskToFirebase -> {
+                    scope.launch {
+                        if (intent.externalTask.task.checkData()) {
+                            scope.launch {
+                                addExternalTaskToFirebaseUseCase(intent.externalTask)
+                            }
+                            dispatch(Msg.ButtonAddTaskToFirebaseClickedAndTaskDataIsCorrect)
+                        } else {
+                            dispatch(Msg.ButtonAddTaskToFirebaseClickedButTaskDataIsIncorrect)
+                        }
+                    }
                 }
 
                 Intent.ClickedCreateNewUser -> {
@@ -473,13 +481,13 @@ class LoggedUserStoreFactory @Inject constructor(
         override fun State.reduce(msg: Msg): State =
             when (msg) {
 
-                Msg.ButtonAddMyTaskClicked -> {
-                    copy(isAddTodoItemClicked = true)
+                Msg.ButtonAddNewTaskClicked -> {
+                    copy(isAddNewTaskClicked = true)
                 }
 
                 Msg.ButtonAddTaskToFirebaseClickedAndTaskDataIsCorrect -> {
                     copy(
-                        isAddTodoItemClicked = false,
+                        isAddNewTaskClicked = false,
                         isAddTaskToFirebaseClicked = false,
                         isWrongTaskData = false
                     )

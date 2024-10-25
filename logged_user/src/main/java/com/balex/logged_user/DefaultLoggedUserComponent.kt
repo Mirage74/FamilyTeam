@@ -82,8 +82,8 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     override val model: StateFlow<LoggedUserStore.State> = store.stateFlow
 
 
-    override fun onClickAddNewTaskForMe() {
-        store.accept(LoggedUserStore.Intent.ClickedAddMyTask)
+    override fun onClickAddNewTask() {
+        store.accept(LoggedUserStore.Intent.ClickedAddNewTask)
     }
 
     override fun onClickDeleteTask(externalTask: ExternalTask) {
@@ -91,7 +91,11 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     }
 
     override fun onClickAddNewTaskForMeToFirebase(task: Task) {
-        store.accept(LoggedUserStore.Intent.ClickedAddTaskToFirebase(task))
+        store.accept(LoggedUserStore.Intent.ClickedAddPrivateTaskToFirebase(task))
+    }
+
+    override fun onClickAddNewTaskForOtherUserToFirebase(externalTask: ExternalTask) {
+        store.accept(LoggedUserStore.Intent.ClickedAddExternalTaskToFirebase(externalTask))
     }
 
     override fun onClickEditUsersList() {
