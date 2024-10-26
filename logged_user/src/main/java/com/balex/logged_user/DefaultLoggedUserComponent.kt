@@ -34,6 +34,7 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     private val refreshFCMLastTimeUpdatedUseCase: RefreshFCMLastTimeUpdatedUseCase,
     private val emitUsersNicknamesListNeedRefreshUseCase: EmitUsersNicknamesListNeedRefreshUseCase,
     @Assisted("onAbout") private val onAbout: () -> Unit,
+    @Assisted("onBackClicked") private val onBackClicked: () -> Unit,
     @Assisted("onLogout") private val onLogout: () -> Unit,
     @Assisted("componentContext") componentContext: ComponentContext
 ) : LoggedUserComponent, ComponentContext by componentContext {
@@ -82,6 +83,13 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     override val model: StateFlow<LoggedUserStore.State> = store.stateFlow
 
+    override fun onBackFromNewTaskFormClicked() {
+        store.accept(LoggedUserStore.Intent.BackFromNewTaskFormClicked)
+    }
+
+    override fun onBackClickedHandle() {
+        onBackClicked()
+    }
 
     override fun onClickAddNewTask() {
         store.accept(LoggedUserStore.Intent.ClickedAddNewTask)
@@ -171,6 +179,7 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     interface Factory {
 
         fun create(
+            @Assisted("onBackClicked") onBackClicked :() -> Unit,
             @Assisted("onAbout") onAbout: () -> Unit,
             @Assisted("onLogout") onLogout: () -> Unit,
             @Assisted("componentContext") componentContext: ComponentContext

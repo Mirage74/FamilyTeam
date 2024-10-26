@@ -104,6 +104,10 @@ fun Task.toExternalTask(taskOwner: String): ExternalTask {
     return ExternalTask(this, taskOwner)
 }
 
+fun Task.isExpired(): Boolean {
+    return this.cutoffTime < System.currentTimeMillis()
+}
+
 fun PrivateTasks.toExternalTasks(taskOwner: String): ExternalTasks {
     return ExternalTasks(externalTasks = this.privateTasks.map { it.toExternalTask(taskOwner) })
 }

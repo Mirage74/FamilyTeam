@@ -40,6 +40,8 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 
     sealed interface Intent {
 
+        data object BackFromNewTaskFormClicked : Intent
+
         data object ClickedAddNewTask : Intent
 
         data class ClickedAddPrivateTaskToFirebase(val task: Task) : Intent
@@ -188,6 +190,8 @@ class LoggedUserStoreFactory @Inject constructor(
 
     private sealed interface Msg {
 
+        data object BackFromNewTaskFormClicked : Msg
+
         data object ButtonAddNewTaskClicked : Msg
 
         data object ButtonAddTaskToFirebaseClickedAndTaskDataIsCorrect : Msg
@@ -301,6 +305,10 @@ class LoggedUserStoreFactory @Inject constructor(
     private inner class ExecutorImpl : CoroutineExecutor<Intent, Action, State, Msg, Label>() {
         override fun executeIntent(intent: Intent, getState: () -> State) {
             when (intent) {
+
+                Intent.BackFromNewTaskFormClicked -> {
+                    dispatch(Msg.BackFromNewTaskFormClicked)
+                }
 
                 Intent.ClickedAddNewTask -> {
                     dispatch(Msg.ButtonAddNewTaskClicked)
@@ -481,6 +489,10 @@ class LoggedUserStoreFactory @Inject constructor(
     private object ReducerImpl : Reducer<State, Msg> {
         override fun State.reduce(msg: Msg): State =
             when (msg) {
+
+                Msg.BackFromNewTaskFormClicked -> {
+                    copy(isAddNewTaskClicked = false)
+                }
 
                 Msg.ButtonAddNewTaskClicked -> {
                     copy(isAddNewTaskClicked = true)

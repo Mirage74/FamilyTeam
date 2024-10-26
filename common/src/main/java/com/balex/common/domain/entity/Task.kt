@@ -1,13 +1,21 @@
 package com.balex.common.domain.entity
 
+import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class Task(
+    @SerializedName("id")
+    val id: Long = System.currentTimeMillis(),
+    @SerializedName("description")
     val description: String = "",
+    @SerializedName("cutoffTime")
     val cutoffTime: Long = 0,
+    @SerializedName("alarmTime1")
     val alarmTime1: Long = NO_ALARM,
+    @SerializedName("alarmTime2")
     val alarmTime2: Long = NO_ALARM,
+    @SerializedName("alarmTime3")
     val alarmTime3: Long = NO_ALARM
 ) {
     companion object {

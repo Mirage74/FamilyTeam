@@ -85,7 +85,8 @@ class DefaultRootComponent @AssistedInject constructor(
                     },
                     onBackClicked = {
                         navigation.pop()
-                    }, componentContext = childComponentContext
+                    },
+                    componentContext = childComponentContext
                 )
                 Child.RegAdmin(component)
             }
@@ -113,6 +114,9 @@ class DefaultRootComponent @AssistedInject constructor(
 
             is Config.LoggedUser -> {
                 val component = loggedUserComponentFactory.create(
+                    onBackClicked = {
+                        navigation.pop()
+                    },
                     onAbout = {
                         navigation.push(Config.About)
                     },

@@ -24,12 +24,13 @@ import androidx.compose.ui.unit.sp
 import com.balex.common.data.repository.UserRepositoryImpl
 import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.ExternalTasks
+import com.balex.common.extensions.isExpired
 import com.balex.logged_user.LoggedUserComponent
 import com.balex.logged_user.LoggedUserStore
 
 @Composable
 fun ShowTasksList(
-    tasks:  List<ExternalTask>,
+    tasks: List<ExternalTask>,
     state: LoggedUserStore.State,
     component: LoggedUserComponent,
     isMyTask: Boolean,
@@ -78,7 +79,8 @@ fun ShowTasksList(
                     text = taskOwner,
                     modifier = Modifier
                         .weight(2f),
-                    color = if (taskOwner != state.user.nickName) Color.Green else Color.Gray,
+                    color = if (externalTask.task.isExpired()) Color.Red else {
+                        if (taskOwner != state.user.nickName) Color.Green else Color.Gray},
                     fontSize = 16.sp,
                     textAlign = TextAlign.End
                 )
@@ -95,7 +97,12 @@ fun ShowTasksList(
                 }
 
                 IconButton(
-                    onClick = { component.onClickDeleteTask(externalTask, getTaskType(externalTask, isMyTask, state.user.nickName)) },
+                    onClick = {
+                        component.onClickDeleteTask(
+                            externalTask,
+                            getTaskType(externalTask, isMyTask, state.user.nickName)
+                        )
+                    },
                     modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
@@ -110,7 +117,11 @@ fun ShowTasksList(
     }
 }
 
-fun getTaskType(externalTask: ExternalTask, isMyTask: Boolean, currentUserNickname: String): UserRepositoryImpl.Companion.TaskType {
+fun getTaskType(
+    externalTask: ExternalTask,
+    isMyTask: Boolean,
+    currentUserNickname: String
+): UserRepositoryImpl.Companion.TaskType {
     return when (isMyTask) {
         true -> {
             if (externalTask.taskOwner.trim() == currentUserNickname.trim()) {
@@ -119,6 +130,7 @@ fun getTaskType(externalTask: ExternalTask, isMyTask: Boolean, currentUserNickna
                 UserRepositoryImpl.Companion.TaskType.FROM_OTHER_USER_FOR_ME
             }
         }
+
         false -> {
             UserRepositoryImpl.Companion.TaskType.MY_TO_OTHER_USER
         }

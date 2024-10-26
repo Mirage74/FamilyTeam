@@ -10,4 +10,5 @@
     <integer name="max_available_FCM_per_day_default">5</integer>
     <integer name="max_available_FCM_per_day_premium">100</integer>
     <integer name="min_time_task_from_current_in_min">30</integer>
+    <integer name="max_expired_task_save_in_days">1</integer>
 </resources>

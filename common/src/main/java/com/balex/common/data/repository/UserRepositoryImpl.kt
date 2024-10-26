@@ -1,8 +1,11 @@
 package com.balex.common.data.repository
 
+import android.content.Context
 import android.util.Log
+import com.balex.common.R
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_ADMINS_COLLECTION
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_USERS_COLLECTION
+import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.MILLIS_IN_DAY
 import com.balex.common.domain.entity.Admin
 import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.ExternalTasks
@@ -30,9 +33,16 @@ import javax.inject.Inject
 class UserRepositoryImpl @Inject constructor(
     private val getUserUseCase: GetUserUseCase,
     private val getRepoAdminUseCase: GetRepoAdminUseCase,
+    private val context: Context
 ) : UserRepository {
 
     private var usersNicknamesList: MutableList<String> = mutableListOf()
+        set(value) {
+            field = value
+            coroutineScope.launch {
+                isCurrentUsersListNeedRefreshFlow.emit(Unit)
+            }
+        }
     private val isCurrentUsersListNeedRefreshFlow = MutableSharedFlow<Unit>(replay = 1)
 
     private val db = Firebase.firestore
@@ -48,6 +58,7 @@ class UserRepositoryImpl @Inject constructor(
                 if (usersNicknamesList.isNotEmpty()) {
                     emit(usersNicknamesList)
                     job.complete()
+                    addUsersListListenerInFirebase()
                     isCurrentUsersListNeedRefreshFlow.collect {
                         emit(usersNicknamesList)
                     }
@@ -61,11 +72,28 @@ class UserRepositoryImpl @Inject constructor(
             )
     }
 
+    private fun addUsersListListenerInFirebase() {
+        val currentUser = getUserUseCase()
+        val adminCollection = adminsCollection.document(currentUser.adminEmailOrPhone)
+
+        adminCollection.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                return@addSnapshotListener
+            }
+            snapshot?.let {
+                val admin = it.toObject(Admin::class.java) ?: Admin()
+                if (admin.nickName != Admin.DEFAULT_NICK_NAME) {
+                    usersNicknamesList = admin.usersNickNamesList.toMutableList()
+                }
+            }
+        }
+
+    }
+
 
     override suspend fun emitUsersNicknamesListNeedRefresh() {
         coroutineScope.launch {
             usersNicknamesList = getUsersListFromFirebase()
-            isCurrentUsersListNeedRefreshFlow.emit(Unit)
         }
     }
 
@@ -190,7 +218,7 @@ class UserRepositoryImpl @Inject constructor(
             if (taskType == TaskType.PRIVATE) {
                 val privateTasksToUpdate =
                     currentUserData.listToDo.thingsToDoPrivate.privateTasks.filterNot { task ->
-                        task.cutoffTime == externalTask.task.cutoffTime
+                        task.id == externalTask.task.id
                     }
                 val listToDoForUpdate = currentUserData.listToDo.copy(
                     thingsToDoPrivate = PrivateTasks(privateTasks = privateTasksToUpdate)
@@ -203,7 +231,7 @@ class UserRepositoryImpl @Inject constructor(
             } else if (taskType == TaskType.MY_TO_OTHER_USER) {
                 val externalTasksToUpdate =
                     currentUserData.listToDo.thingsToDoForOtherUsers.externalTasks.filterNot { externalTasksItem ->
-                        externalTasksItem.task.cutoffTime == externalTask.task.cutoffTime
+                        externalTasksItem.task.id == externalTask.task.id
                     }
                 val listToDoForUpdate = currentUserData.listToDo.copy(
                     thingsToDoForOtherUsers = ExternalTasks(externalTasks = externalTasksToUpdate)
@@ -211,27 +239,34 @@ class UserRepositoryImpl @Inject constructor(
                 try {
                     userCollectionCurrentUser.update("listToDo", listToDoForUpdate).await()
                 } catch (e: Exception) {
-                    Log.d("deleteTaskFromFirebase, TaskType.MY_TO_OTHER_USER, my list error", e.toString())
+                    Log.d(
+                        "deleteTaskFromFirebase, TaskType.MY_TO_OTHER_USER, my list error",
+                        e.toString()
+                    )
                 }
 
                 if (externalUserData != null) {
                     val otherUserSharedTasks =
                         externalUserData.listToDo.thingsToDoShared.externalTasks.filterNot { externalTasksItem ->
-                            externalTasksItem.task.cutoffTime == externalTask.task.cutoffTime
+                            externalTasksItem.task.id == externalTask.task.id
                         }
                     val listToDoOtherUserForUpdate = externalUserData.listToDo.copy(
                         thingsToDoShared = ExternalTasks(externalTasks = otherUserSharedTasks)
                     )
                     try {
-                        externalUserCollection.update("listToDo", listToDoOtherUserForUpdate).await()
+                        externalUserCollection.update("listToDo", listToDoOtherUserForUpdate)
+                            .await()
                     } catch (e: Exception) {
-                        Log.d("deleteTaskFromFirebase, TaskType.MY_TO_OTHER_USER, other user list error", e.toString())
+                        Log.d(
+                            "deleteTaskFromFirebase, TaskType.MY_TO_OTHER_USER, other user list error",
+                            e.toString()
+                        )
                     }
                 }
             } else if (taskType == TaskType.FROM_OTHER_USER_FOR_ME) {
                 val externalTasksToUpdate =
                     currentUserData.listToDo.thingsToDoShared.externalTasks.filterNot { externalTasksItem ->
-                        externalTasksItem.task.cutoffTime == externalTask.task.cutoffTime
+                        externalTasksItem.task.id == externalTask.task.id
                     }
                 val listToDoForUpdate = currentUserData.listToDo.copy(
                     thingsToDoShared = ExternalTasks(externalTasks = externalTasksToUpdate)
@@ -239,27 +274,35 @@ class UserRepositoryImpl @Inject constructor(
                 try {
                     userCollectionCurrentUser.update("listToDo", listToDoForUpdate).await()
                 } catch (e: Exception) {
-                    Log.d("deleteTaskFromFirebase, TaskType.FROM_OTHER_USER_FOR_ME, my list error", e.toString())
+                    Log.d(
+                        "deleteTaskFromFirebase, TaskType.FROM_OTHER_USER_FOR_ME, my list error",
+                        e.toString()
+                    )
                 }
 
                 if (externalUserData != null) {
                     val otherUserSharedTasks =
                         externalUserData.listToDo.thingsToDoForOtherUsers.externalTasks.filterNot { externalTasksItem ->
-                            externalTasksItem.task.cutoffTime == externalTask.task.cutoffTime
+                            externalTasksItem.task.id == externalTask.task.id
                         }
                     val listToDoOtherUserForUpdate = externalUserData.listToDo.copy(
                         thingsToDoForOtherUsers = ExternalTasks(externalTasks = otherUserSharedTasks)
                     )
                     try {
-                        externalUserCollection.update("listToDo", listToDoOtherUserForUpdate).await()
+                        externalUserCollection.update("listToDo", listToDoOtherUserForUpdate)
+                            .await()
                     } catch (e: Exception) {
-                        Log.d("deleteTaskFromFirebase, TaskType.FROM_OTHER_USER_FOR_ME, other user list error", e.toString())
+                        Log.d(
+                            "deleteTaskFromFirebase, TaskType.FROM_OTHER_USER_FOR_ME, other user list error",
+                            e.toString()
+                        )
                     }
                 }
             }
 
         }
     }
+
 
     private suspend fun getUsersListFromFirebase(): MutableList<String> {
         val admin = getRepoAdminUseCase()

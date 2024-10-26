@@ -1,5 +1,6 @@
 package com.balex.logged_user
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,6 +57,15 @@ import com.balex.common.R as commonR
 @Composable
 fun LoggedUserContent(component: LoggedUserComponent) {
     val state by component.model.collectAsState(context = CoroutineScope(Dispatchers.Main.immediate).coroutineContext)
+
+    BackHandler {
+        if (state.isAddNewTaskClicked) {
+            component.onBackFromNewTaskFormClicked()
+        } else {
+            component.onBackClickedHandle()
+        }
+
+    }
 
     com.balex.common.LocalizedContextProvider(languageCode = state.language.lowercase()) {
 

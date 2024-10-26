@@ -75,5 +75,4 @@ interface RegLogRepository {
 
     suspend fun signToFirebaseWithFakeEmail(userToSignIn: User): StatusFakeEmailSignIn
 
-
 }

@@ -9,6 +9,10 @@ interface LoggedUserComponent {
 
     val model: StateFlow<LoggedUserStore.State>
 
+    fun onBackFromNewTaskFormClicked()
+
+    fun onBackClickedHandle()
+
     fun onClickAddNewTask()
 
     fun onClickDeleteTask(externalTask: ExternalTask, taskType: UserRepositoryImpl.Companion.TaskType)

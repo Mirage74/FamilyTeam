@@ -84,9 +84,9 @@ class DefaultRegAdminComponent @AssistedInject constructor(
     override val model: StateFlow<RegAdminStore.State> = store.stateFlow
 
 
-//    override fun onClickBack() {
-//        store.accept(RegAdminStore.Intent.ClickedBack)
-//    }
+    override fun onClickBack() {
+        store.accept(RegAdminStore.Intent.ClickedBack)
+    }
 
 
     override fun onClickRegister() {

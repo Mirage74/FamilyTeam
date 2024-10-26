@@ -1,6 +1,7 @@
 package com.balex.familyteam.presentation.regadmin.content
 
 import android.content.Context
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
@@ -26,6 +27,7 @@ fun RegisterOrTryAgainButton(
     context: Context,
     activity: MainActivity
 ) {
+
     val coroutineScope = CoroutineScope(Dispatchers.Default)
     if (!state.isRegisterButtonWasPressed) {
         Button(
