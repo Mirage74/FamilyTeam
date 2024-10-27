@@ -28,6 +28,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -46,7 +47,7 @@ class RegLogRepositoryImpl @Inject constructor(
 
     private var admin = Admin()
 
-    private var user = User()
+    private var globalRepoUser = User()
         set(value) {
             field = value
             coroutineScope.launch {
@@ -72,7 +73,7 @@ class RegLogRepositoryImpl @Inject constructor(
 
     private var isUserMailOrPhoneVerified = false
     private var isUserListenerRegistered = false
-    private var isAdminUsersNickNamesListListenerRegistered = false
+
 
     private val isCurrentUserNeedRefreshFlow = MutableSharedFlow<Unit>(replay = 1)
     private val isWrongPasswordNeedRefreshFlow = MutableSharedFlow<Unit>(replay = 1)
@@ -110,7 +111,7 @@ class RegLogRepositoryImpl @Inject constructor(
         if (userFakeEmailFromStorage == Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
             val emptyUserNotSaved =
                 User(nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES, language = phoneLang)
-            user = emptyUserNotSaved
+            globalRepoUser = emptyUserNotSaved
             //isCurrentUserNeedRefreshFlow.emit(Unit)
 
         } else {
@@ -120,30 +121,30 @@ class RegLogRepositoryImpl @Inject constructor(
                 phoneLang
             )
         }
-        emit(user)
+        emit(globalRepoUser)
         addUserListenerInFirebase()
-        isCurrentUserNeedRefreshFlow.collect {
-            emit(user)
+        isCurrentUserNeedRefreshFlow.distinctUntilChanged().collect {
+            emit(globalRepoUser)
         }
     }
         .stateIn(
             scope = coroutineScope,
             started = SharingStarted.Lazily,
-            initialValue = user
+            initialValue = globalRepoUser
         )
 
     private fun addUserListenerInFirebase() {
-        if (user.adminEmailOrPhone != User.DEFAULT_FAKE_EMAIL && user.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
-            val userCollection = usersCollection.document(user.adminEmailOrPhone)
-                .collection(user.nickName.lowercase())
-                .document(user.nickName.lowercase())
+        if (globalRepoUser.adminEmailOrPhone != User.DEFAULT_FAKE_EMAIL && globalRepoUser.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
+            val userCollection = usersCollection.document(globalRepoUser.adminEmailOrPhone)
+                .collection(globalRepoUser.nickName.lowercase())
+                .document(globalRepoUser.nickName.lowercase())
 
             userCollection.addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     return@addSnapshotListener
                 }
                 snapshot?.let {
-                    user = it.toObject(User::class.java) ?: user
+                    globalRepoUser = it.toObject(User::class.java) ?: globalRepoUser
                 }
             }
         }
@@ -199,7 +200,7 @@ class RegLogRepositoryImpl @Inject constructor(
         )
 
     override suspend fun logoutUser() {
-        user = User()
+        globalRepoUser = User()
         admin = Admin()
         isWrongPassword = User()
         isUserMailOrPhoneVerified = false
@@ -214,7 +215,7 @@ class RegLogRepositoryImpl @Inject constructor(
     }
 
     override fun getRepoUser(): User {
-        return user
+        return globalRepoUser
     }
 
     override fun getRepoAdmin(): Admin {
@@ -230,7 +231,7 @@ class RegLogRepositoryImpl @Inject constructor(
     }
 
     override suspend fun setUserWithError(message: String) {
-        user = User(existErrorInData = true, errorMessage = message)
+        globalRepoUser = User(existErrorInData = true, errorMessage = message)
         //isCurrentUserNeedRefreshFlow.emit(Unit)
     }
 
@@ -327,7 +328,7 @@ class RegLogRepositoryImpl @Inject constructor(
             )
             Storage.saveUsersPassword(context, newUser.password)
             Storage.saveLanguage(context, language)
-            user = newUser
+            globalRepoUser = newUser
             //isCurrentUserNeedRefreshFlow.emit(Unit)
             Result.success(Unit)
         } catch (e: Exception) {
@@ -372,36 +373,36 @@ class RegLogRepositoryImpl @Inject constructor(
 
     override suspend fun refreshFCMLastTimeUpdated() {
         deleteOldTasks()
-        var isPremiumAccount = user.hasPremiumAccount
+        var isPremiumAccount = globalRepoUser.hasPremiumAccount
         if (isPremiumAccount) {
-            if (user.premiumAccountExpirationDate < System.currentTimeMillis()) {
+            if (globalRepoUser.premiumAccountExpirationDate < System.currentTimeMillis()) {
                 isPremiumAccount = false
             }
         }
-        if (System.currentTimeMillis() - user.lastTimeAvailableFCMWasUpdated > MILLIS_IN_DAY) {
+        if (System.currentTimeMillis() - globalRepoUser.lastTimeAvailableFCMWasUpdated > MILLIS_IN_DAY) {
 
-            var maxTaskPerDay = if (user.hasPremiumAccount) {
+            var maxTaskPerDay = if (globalRepoUser.hasPremiumAccount) {
                 context.resources.getInteger(R.integer.max_available_tasks_per_day_premium)
             } else {
                 context.resources.getInteger(R.integer.max_available_tasks_per_day_default)
             }
 
-            var maxFCMPerDay = if (user.hasPremiumAccount) {
+            var maxFCMPerDay = if (globalRepoUser.hasPremiumAccount) {
                 context.resources.getInteger(R.integer.max_available_FCM_per_day_premium)
             } else {
                 context.resources.getInteger(R.integer.max_available_FCM_per_day_default)
             }
 
-            if (maxTaskPerDay < user.availableTasksToAdd) {
-                maxTaskPerDay = user.availableTasksToAdd
+            if (maxTaskPerDay < globalRepoUser.availableTasksToAdd) {
+                maxTaskPerDay = globalRepoUser.availableTasksToAdd
             }
 
-            if (maxFCMPerDay < user.availableFCM) {
-                maxFCMPerDay = user.availableFCM
+            if (maxFCMPerDay < globalRepoUser.availableFCM) {
+                maxFCMPerDay = globalRepoUser.availableFCM
             }
 
 
-            val userForUpdate = user.copy(
+            val userForUpdate = globalRepoUser.copy(
                 hasPremiumAccount = isPremiumAccount,
                 availableTasksToAdd = maxTaskPerDay,
                 availableFCM = maxFCMPerDay,
@@ -409,9 +410,9 @@ class RegLogRepositoryImpl @Inject constructor(
             )
 
             val userCollection =
-                usersCollection.document(user.adminEmailOrPhone)
-                    .collection(user.nickName.lowercase())
-                    .document(user.nickName.lowercase())
+                usersCollection.document(globalRepoUser.adminEmailOrPhone)
+                    .collection(globalRepoUser.nickName.lowercase())
+                    .document(globalRepoUser.nickName.lowercase())
 
             try {
                 userCollection.set(userForUpdate).await()
@@ -455,13 +456,13 @@ class RegLogRepositoryImpl @Inject constructor(
                             auth.signInWithEmailAndPassword(fakeEmail, password).await()
                         val firebaseAuthUser = authRes.user
                         if (firebaseAuthUser != null) {
-                            user = userFromCollection
+                            globalRepoUser = userFromCollection
                             //isCurrentUserNeedRefreshFlow.emit(Unit)
                         } else {
                             setUserWithError("signToFirebaseWithEmailAndPasswordFromPreferences: ERROR AUTH USER: $fakeEmail")
                         }
                     } else {
-                        user = userFromCollection.copy(password = User.WRONG_PASSWORD)
+                        globalRepoUser = userFromCollection.copy(password = User.WRONG_PASSWORD)
                         isWrongPassword =
                             userFromCollection.copy(password = User.WRONG_PASSWORD)
 
@@ -475,7 +476,7 @@ class RegLogRepositoryImpl @Inject constructor(
                             nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES,
                             language = phoneLang
                         )
-                    user = emptyUserNotSaved
+                    globalRepoUser = emptyUserNotSaved
                 }
 
             } else {
@@ -486,13 +487,13 @@ class RegLogRepositoryImpl @Inject constructor(
                         nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES,
                         language = phoneLang
                     )
-                user = emptyUserNotSaved
+                globalRepoUser = emptyUserNotSaved
             }
 
         } catch (e: FirebaseAuthException) {
             val errCode = e.errorCode.trim()
             if (errCode == "ERROR_INVALID_CREDENTIAL" || errCode == "ERROR_USER_NOT_FOUND") {
-                isWrongPassword = user
+                isWrongPassword = globalRepoUser
                 //isWrongPasswordNeedRefreshFlow.emit(Unit)
             } else {
                 Storage.clearPreferences(context)
@@ -637,13 +638,13 @@ class RegLogRepositoryImpl @Inject constructor(
                     val userFromCollection = findUserInCollection(userToSignIn)
 
                     if (userFromCollection != null && userFromCollection.nickName != User.DEFAULT_NICK_NAME) {
-                        user = userFromCollection
+                        globalRepoUser = userFromCollection
                         //isCurrentUserNeedRefreshFlow.emit(Unit)
 
                     } else {
                         val result = addUserToCollection(newUser)
                         if (result.isSuccess) {
-                            user = newUser
+                            globalRepoUser = newUser
                             //isCurrentUserNeedRefreshFlow.emit(Unit)
                         } else {
                             setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
@@ -1017,10 +1018,10 @@ class RegLogRepositoryImpl @Inject constructor(
                         )
                     )
                     if (trySignIn == StatusFakeEmailSignIn.USER_SIGNED_IN) {
-                        user = userFromCollection
+                        globalRepoUser = userFromCollection
                         //isCurrentUserNeedRefreshFlow.emit(Unit)
                     }
-                    return user
+                    return globalRepoUser
                 }
 
             } else {
@@ -1034,7 +1035,7 @@ class RegLogRepositoryImpl @Inject constructor(
     }
 
     suspend fun deleteOldTasks() {
-        val userForModify = user
+        val userForModify = globalRepoUser
         val taskMaxExpireTimeInMillis =
             context.resources.getInteger(R.integer.max_expired_task_save_in_days) * MILLIS_IN_DAY
         val privateTasks = userForModify.listToDo.thingsToDoPrivate.privateTasks.filter { task ->

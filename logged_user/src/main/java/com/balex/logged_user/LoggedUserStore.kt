@@ -96,6 +96,7 @@ interface LoggedUserStore : Store<Intent, State, Label> {
         val usersNicknamesList: List<String>,
         val isAddTaskClicked: Boolean,
         val isEditTaskClicked: Boolean,
+        val isAddShopListClicked: Boolean,
         val taskForEdit: ExternalTask,
         val taskType: UserRepositoryImpl.Companion.TaskType,
         //val isAddOrEditTaskToFirebaseClicked: Boolean,
@@ -162,6 +163,7 @@ class LoggedUserStoreFactory @Inject constructor(
                 isWrongTaskData = false,
                 isCreateNewUserClicked = false,
                 isEditUsersListClicked = false,
+                isAddShopListClicked = false,
                 passwordVisible = false,
                 nickName = "",
                 displayName = "",
@@ -192,15 +194,6 @@ class LoggedUserStoreFactory @Inject constructor(
 
         data class UsersListIsChanged(val usersList: List<String>) : Action
 
-        data class ExternalTasksListIsChanged(val externalTasksList: ExternalTasks) : Action
-
-        data class PrivateTasksListIsChanged(val privateTasksList: PrivateTasks) : Action
-
-        data class ShopListIsChanged(val shopList: List<String>) : Action
-
-        data class MyTasksForOtherUsersListIsChanged(val myTasksForOtherUsersList: ExternalTasks) :
-            Action
-
         data class PageIsChanged(val page: PagesNames) : Action
 
         data class LanguageIsChanged(val language: String) : Action
@@ -225,15 +218,6 @@ class LoggedUserStoreFactory @Inject constructor(
         data class UserIsChanged(val user: User) : Msg
 
         data class UsersListIsChanged(val usersList: List<String>) : Msg
-
-        data class ExternalTasksListIsChanged(val externalTasksList: ExternalTasks) : Msg
-
-        data class PrivateTasksListIsChanged(val privateTasksList: PrivateTasks) : Msg
-
-        data class ShopListIsChanged(val shopList: List<String>) : Msg
-
-        data class MyTasksForOtherUsersListIsChanged(val myTasksForOtherUsersList: ExternalTasks) :
-            Msg
 
         data class PageIsChanged(val page: PagesNames) : Msg
 
@@ -471,24 +455,6 @@ class LoggedUserStoreFactory @Inject constructor(
                     dispatch(Msg.UsersListIsChanged(action.usersList))
                 }
 
-                is Action.ExternalTasksListIsChanged -> {
-                    dispatch(Msg.ExternalTasksListIsChanged(action.externalTasksList))
-                }
-
-                is Action.PrivateTasksListIsChanged -> {
-                    dispatch(Msg.PrivateTasksListIsChanged(action.privateTasksList))
-                }
-
-                is Action.ShopListIsChanged -> {
-                    dispatch(Msg.ShopListIsChanged(action.shopList))
-                }
-
-                is Action.MyTasksForOtherUsersListIsChanged -> {
-                    dispatch(Msg.MyTasksForOtherUsersListIsChanged(action.myTasksForOtherUsersList))
-
-                }
-
-
             }
         }
     }
@@ -498,7 +464,10 @@ class LoggedUserStoreFactory @Inject constructor(
             when (msg) {
 
                 Msg.BackFromNewTaskFormClicked -> {
-                    copy(isAddTaskClicked = false)
+                    copy(
+                        isAddTaskClicked = false,
+                        isEditTaskClicked = false
+                    )
                 }
 
                 Msg.ButtonAddTaskClicked -> {
@@ -550,44 +519,16 @@ class LoggedUserStoreFactory @Inject constructor(
                     )
                 }
 
-                is Msg.ExternalTasksListIsChanged -> {
-                    val list = ToDoList(
-                        thingsToDoShared = msg.externalTasksList,
-                        thingsToDoPrivate = todoList.thingsToDoPrivate,
-                        listToShop = todoList.listToShop
-                    )
-                    copy(todoList = list)
-                }
-
-                is Msg.PrivateTasksListIsChanged -> {
-                    val list = ToDoList(
-                        thingsToDoShared = todoList.thingsToDoShared,
-                        thingsToDoPrivate = msg.privateTasksList,
-                        listToShop = todoList.listToShop
-                    )
-                    copy(todoList = list)
-                }
-
-                is Msg.ShopListIsChanged -> {
-                    val list = ToDoList(
-                        thingsToDoShared = todoList.thingsToDoShared,
-                        thingsToDoPrivate = todoList.thingsToDoPrivate,
-                        listToShop = msg.shopList
-                    )
-                    copy(todoList = list)
-                }
-
-                is Msg.MyTasksForOtherUsersListIsChanged -> {
-                    copy(myTasksForOtherUsersList = msg.myTasksForOtherUsersList)
-                }
-
-
                 is Msg.LanguageIsChanged -> {
                     copy(language = msg.language)
                 }
 
                 is Msg.PageIsChanged -> {
-                    copy(activeBottomItem = msg.page)
+                    copy(
+                        activeBottomItem = msg.page,
+                        isAddTaskClicked = false,
+                        isEditTaskClicked = false
+                    )
                 }
 
                 Msg.ButtonCreateNewUserClicked -> {

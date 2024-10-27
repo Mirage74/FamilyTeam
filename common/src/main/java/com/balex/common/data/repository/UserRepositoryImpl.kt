@@ -32,8 +32,7 @@ import javax.inject.Inject
 
 class UserRepositoryImpl @Inject constructor(
     private val getUserUseCase: GetUserUseCase,
-    private val getRepoAdminUseCase: GetRepoAdminUseCase,
-    private val context: Context
+    private val getRepoAdminUseCase: GetRepoAdminUseCase
 ) : UserRepository {
 
     private var usersNicknamesList: MutableList<String> = mutableListOf()
@@ -44,6 +43,8 @@ class UserRepositoryImpl @Inject constructor(
             }
         }
     private val isCurrentUsersListNeedRefreshFlow = MutableSharedFlow<Unit>(replay = 1)
+
+    private var isAdminUsersNickNamesListListenerRegistered = false
 
     private val db = Firebase.firestore
     private val adminsCollection = db.collection(FIREBASE_ADMINS_COLLECTION)
@@ -58,7 +59,11 @@ class UserRepositoryImpl @Inject constructor(
                 if (usersNicknamesList.isNotEmpty()) {
                     emit(usersNicknamesList)
                     job.complete()
-                    addUsersListListenerInFirebase()
+                    if (!isAdminUsersNickNamesListListenerRegistered) {
+                        addUsersListListenerInFirebase()
+                        isAdminUsersNickNamesListListenerRegistered = true
+                    }
+
                     isCurrentUsersListNeedRefreshFlow.collect {
                         emit(usersNicknamesList)
                     }
@@ -106,7 +111,7 @@ class UserRepositoryImpl @Inject constructor(
 
         val userForModify = getUserUseCase()
 
-        if (userForModify.availableTasksToAdd > 0) {
+        if (userForModify.availableTasksToAdd > 0 || taskMode == TaskMode.EDIT) {
             val toDoOld = userForModify.listToDo
             val updatedTodoList =
                 if (taskMode == TaskMode.ADD) {
@@ -152,7 +157,7 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun addOrModifyExternalTaskToFirebase(externalTask: ExternalTask, taskMode: TaskMode) {
         val currentUser = getUserUseCase()
 
-        if (currentUser.availableTasksToAdd > 0) {
+        if (currentUser.availableTasksToAdd > 0  || taskMode == TaskMode.EDIT) {
             val toDoOld = currentUser.listToDo
             val updatedTodoList =
                 if (taskMode == TaskMode.ADD) {
@@ -215,7 +220,11 @@ class UserRepositoryImpl @Inject constructor(
                             toDoOldExternal.copy(
                                 thingsToDoShared = toDoOldExternal.thingsToDoShared.copy(
                                     externalTasks = toDoOldExternal.thingsToDoShared.externalTasks.map { taskItem ->
-                                        if (taskItem.task.id == externalTask.task.id) externalTask else taskItem
+                                        if (taskItem.task.id == externalTask.task.id) {
+                                            externalTask.copy(taskOwner = taskItem.taskOwner)
+                                        } else {
+                                            taskItem
+                                        }
                                     }
                                 )
                             )
@@ -371,7 +380,7 @@ class UserRepositoryImpl @Inject constructor(
         } catch (exception: Exception) {
             //exception.printStackTrace()
             //throw RuntimeException("getUsersListFromFirebase: $ERROR_GET_USERS_LIST_FROM_FIREBASE")
-            Log.d(ERROR_GET_USERS_LIST_FROM_FIREBASE, exception.toString())
+            //Log.d(ERROR_GET_USERS_LIST_FROM_FIREBASE, exception.toString())
             usersList
         }
 

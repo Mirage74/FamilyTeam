@@ -1,4 +1,4 @@
-package com.balex.logged_user.content
+package com.balex.logged_user.content.subcontent
 
 import android.content.Context
 import androidx.compose.foundation.layout.fillMaxWidth

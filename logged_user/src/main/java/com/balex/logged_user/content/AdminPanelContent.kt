@@ -25,6 +25,10 @@ import com.balex.common.LocalLocalizedContext
 import com.balex.logged_user.LoggedUserComponent
 import com.balex.logged_user.LoggedUserStore
 import com.balex.logged_user.R
+import com.balex.logged_user.content.subcontent.DisplayNameTextField
+import com.balex.logged_user.content.subcontent.NickNameTextField
+import com.balex.logged_user.content.subcontent.PasswordTextField
+import com.balex.logged_user.content.subcontent.RegisterNewUserButton
 
 @Composable
 fun AdminPanelContent(

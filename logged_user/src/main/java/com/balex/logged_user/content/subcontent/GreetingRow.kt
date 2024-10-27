@@ -1,4 +1,4 @@
-package com.balex.logged_user.content
+package com.balex.logged_user.content.subcontent
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row

@@ -17,8 +17,10 @@
 
     <string name="hello_text">Hello, %s!</string>
     <string name="add_button_text">Add new task</string>
+    <string name="add_item_button_text">Add new item</string>
     <string name="save_edited_task_button_text">Save task</string>
     <string name="task_description">Task description:</string>
+    <string name="shop_item_description">Shop item description:</string>
     <string name="select_date_and_time_for_task">Task date and time:</string>
     <string name="select_date_and_time_for_alarm1">Reminder 1:</string>
     <string name="select_date_and_time_for_alarm2">Reminder 2:</string>

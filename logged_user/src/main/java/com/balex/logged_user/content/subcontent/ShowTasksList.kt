@@ -1,4 +1,4 @@
-package com.balex.logged_user.content
+package com.balex.logged_user.content.subcontent
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -18,7 +18,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -33,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.balex.common.data.repository.UserRepositoryImpl
 import com.balex.common.domain.entity.ExternalTask
-import com.balex.common.domain.entity.ExternalTasks
 import com.balex.common.extensions.isExpired
 import com.balex.logged_user.LoggedUserComponent
 import com.balex.logged_user.LoggedUserStore
@@ -117,21 +115,22 @@ fun ShowTasksList(
                     textAlign = TextAlign.End
                 )
 
-                if (!(isMyTask && externalTask.taskOwner != state.user.nickName))
-                IconButton(
-                    onClick = {
-                        component.onClickEditTask(
-                            externalTask,
-                            getTaskType(externalTask, isMyTask, state.user.nickName)
+                if (!(isMyTask && externalTask.taskOwner != state.user.nickName)) {
+                    IconButton(
+                        onClick = {
+                            component.onClickEditTask(
+                                externalTask,
+                                getTaskType(externalTask, isMyTask, state.user.nickName)
+                            )
+                        },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit task",
+                            tint = Color.Blue,
                         )
-                    },
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit task",
-                        tint = Color.Blue,
-                    )
+                    }
                 }
 
                 IconButton(

@@ -59,7 +59,7 @@ fun LoggedUserContent(component: LoggedUserComponent) {
     val state by component.model.collectAsState(context = CoroutineScope(Dispatchers.Main.immediate).coroutineContext)
 
     BackHandler {
-        if (state.isAddTaskClicked) {
+        if (state.isAddTaskClicked || state.isEditTaskClicked) {
             component.onBackFromNewTaskFormClicked()
         } else {
             component.onBackClickedHandle()
@@ -284,8 +284,7 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
 
                 PagesNames.ShopList -> ShopListContent(
                     component = component,
-                    state = state,
-                    paddingValues = paddingValues
+                    state = state
                 )
 
                 PagesNames.MyTasksForOtherUsers -> MyTasksForOtherUsersContent(
