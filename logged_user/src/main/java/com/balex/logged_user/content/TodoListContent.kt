@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.balex.common.LocalLocalizedContext
+import com.balex.common.data.repository.TaskMode
 import com.balex.common.extensions.allMyTasks
 import com.balex.logged_user.LoggedUserComponent
 import com.balex.logged_user.LoggedUserStore
@@ -35,7 +36,7 @@ fun TodoListContent(
         verticalArrangement = Arrangement.SpaceEvenly
     ) {
 
-        if (!state.isAddNewTaskClicked) {
+        if (!state.isAddTaskClicked && !state.isEditTaskClicked) {
             GreetingRow(state)
             Button(
                 onClick = { component.onClickAddNewTask() },
@@ -53,10 +54,17 @@ fun TodoListContent(
             val tasks = state.user.listToDo.allMyTasks(state.user.nickName).externalTasks
             ShowTasksList(tasks, state, component, true,  modifier = Modifier.weight(4f).padding(paddingValues))
         } else {
-            InputNewTaskForm(component, state, true, context)
+            if (state.isAddTaskClicked) {
+                InputOrEditTaskForm(component, state, true, TaskMode.ADD, context)
+            } else {
+                InputOrEditTaskForm(component, state, true, TaskMode.EDIT, context)
+            }
         }
     }
 }
+
+
+
 
 
 

@@ -14,7 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.balex.common.LocalLocalizedContext
-import com.balex.common.extensions.allMyTasks
+import com.balex.common.data.repository.TaskMode
 import com.balex.logged_user.LoggedUserComponent
 import com.balex.logged_user.LoggedUserStore
 import com.balex.logged_user.R
@@ -35,7 +35,7 @@ fun MyTasksForOtherUsersContent(
         verticalArrangement = Arrangement.SpaceEvenly
     ) {
 
-        if (!state.isAddNewTaskClicked) {
+        if (!state.isAddTaskClicked && !state.isEditTaskClicked) {
             GreetingRow(state)
             Button(
                 onClick = { component.onClickAddNewTask() },
@@ -55,7 +55,12 @@ fun MyTasksForOtherUsersContent(
                 .weight(4f)
                 .padding(paddingValues))
         } else {
-            InputNewTaskForm(component, state, false, context)
+            if (state.isAddTaskClicked) {
+                InputOrEditTaskForm(component, state, false, TaskMode.ADD, context)
+            } else {
+                InputOrEditTaskForm(component, state, false, TaskMode.EDIT, context)
+            }
+
         }
     }
 }

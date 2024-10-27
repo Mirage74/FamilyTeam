@@ -20,6 +20,7 @@ import com.balex.common.domain.usecases.regLog.StorageSavePreferencesUseCase
 import com.balex.common.domain.usecases.user.ObserveUsersListUseCase
 import com.balex.common.domain.usecases.user.RemoveUserUseCase
 import com.balex.common.R
+import com.balex.common.data.repository.TaskMode
 import com.balex.common.data.repository.UserRepositoryImpl
 import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.Task
@@ -44,11 +45,23 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 
         data object ClickedAddNewTask : Intent
 
-        data class ClickedAddPrivateTaskToFirebase(val task: Task) : Intent
+        data class ClickedEditTask(
+            val externalTask: ExternalTask,
+            val taskType: UserRepositoryImpl.Companion.TaskType
+        ) : Intent
 
-        data class ClickedAddExternalTaskToFirebase(val externalTask: ExternalTask) : Intent
+        data class ClickedAddPrivateTaskOrEditToFirebase(val task: Task, val taskMode: TaskMode) :
+            Intent
 
-        data class ClickedDeleteTask(val externalTask: ExternalTask, val taskType: UserRepositoryImpl.Companion.TaskType) : Intent
+        data class ClickedAddExternalTaskOrEditToFirebase(
+            val externalTask: ExternalTask,
+            val taskMode: TaskMode
+        ) : Intent
+
+        data class ClickedDeleteTask(
+            val externalTask: ExternalTask,
+            val taskType: UserRepositoryImpl.Companion.TaskType
+        ) : Intent
 
         data object ClickedCreateNewUser : Intent
 
@@ -81,8 +94,11 @@ interface LoggedUserStore : Store<Intent, State, Label> {
     data class State(
         val user: User,
         val usersNicknamesList: List<String>,
-        val isAddNewTaskClicked: Boolean,
-        val isAddTaskToFirebaseClicked: Boolean,
+        val isAddTaskClicked: Boolean,
+        val isEditTaskClicked: Boolean,
+        val taskForEdit: ExternalTask,
+        val taskType: UserRepositoryImpl.Companion.TaskType,
+        //val isAddOrEditTaskToFirebaseClicked: Boolean,
         val isWrongTaskData: Boolean,
         val isCreateNewUserClicked: Boolean,
         val isEditUsersListClicked: Boolean,
@@ -138,8 +154,11 @@ class LoggedUserStoreFactory @Inject constructor(
             initialState = State(
                 getUserUseCase(),
                 listOf(),
-                isAddNewTaskClicked = false,
-                isAddTaskToFirebaseClicked = false,
+                isAddTaskClicked = false,
+                isEditTaskClicked = false,
+                taskForEdit = ExternalTask(),
+                taskType = UserRepositoryImpl.Companion.TaskType.PRIVATE,
+                //isAddOrEditTaskToFirebaseClicked = false,
                 isWrongTaskData = false,
                 isCreateNewUserClicked = false,
                 isEditUsersListClicked = false,
@@ -192,11 +211,16 @@ class LoggedUserStoreFactory @Inject constructor(
 
         data object BackFromNewTaskFormClicked : Msg
 
-        data object ButtonAddNewTaskClicked : Msg
+        data object ButtonAddTaskClicked : Msg
 
-        data object ButtonAddTaskToFirebaseClickedAndTaskDataIsCorrect : Msg
+        data class ClickedEditTask(
+            val externalTask: ExternalTask,
+            val taskType: UserRepositoryImpl.Companion.TaskType
+        ) : Msg
 
-        data object ButtonAddTaskToFirebaseClickedButTaskDataIsIncorrect : Msg
+        data object ButtonAddTaskToFirebaseOrEditClickedAndTaskDataIsCorrect : Msg
+
+        data object ButtonAddTaskToFirebaseOrEditClickedButTaskDataIsIncorrect : Msg
 
         data class UserIsChanged(val user: User) : Msg
 
@@ -275,30 +299,6 @@ class LoggedUserStoreFactory @Inject constructor(
                     dispatch(Action.UsersListIsChanged(it))
                 }
             }
-
-//            scope.launch {
-//                observeExternalTasksUseCase().collect {
-//                    dispatch(Action.ExternalTasksListIsChanged(it))
-//                }
-//            }
-//
-//            scope.launch {
-//                observePrivateTasksUseCase().collect {
-//                    dispatch(Action.PrivateTasksListIsChanged(it))
-//                }
-//            }
-//
-//            scope.launch {
-//                observeListToShopUseCase().collect {
-//                    dispatch(Action.ShopListIsChanged(it))
-//                }
-//            }
-//
-//            scope.launch {
-//                observeMyTasksForOtherUsersUseCase().collect {
-//                    dispatch(Action.MyTasksForOtherUsersListIsChanged(it))
-//                }
-//            }
         }
     }
 
@@ -311,7 +311,11 @@ class LoggedUserStoreFactory @Inject constructor(
                 }
 
                 Intent.ClickedAddNewTask -> {
-                    dispatch(Msg.ButtonAddNewTaskClicked)
+                    dispatch(Msg.ButtonAddTaskClicked)
+                }
+
+                is Intent.ClickedEditTask -> {
+                    dispatch(Msg.ClickedEditTask(intent.externalTask, intent.taskType))
                 }
 
                 is Intent.ClickedDeleteTask -> {
@@ -320,26 +324,29 @@ class LoggedUserStoreFactory @Inject constructor(
                     }
                 }
 
-                is Intent.ClickedAddPrivateTaskToFirebase -> {
+                is Intent.ClickedAddPrivateTaskOrEditToFirebase -> {
                     if (intent.task.checkData()) {
                         scope.launch {
-                            addPrivateTaskToFirebaseUseCase(intent.task)
+                            addPrivateTaskToFirebaseUseCase(intent.task, intent.taskMode)
                         }
-                        dispatch(Msg.ButtonAddTaskToFirebaseClickedAndTaskDataIsCorrect)
+                        dispatch(Msg.ButtonAddTaskToFirebaseOrEditClickedAndTaskDataIsCorrect)
                     } else {
-                        dispatch(Msg.ButtonAddTaskToFirebaseClickedButTaskDataIsIncorrect)
+                        dispatch(Msg.ButtonAddTaskToFirebaseOrEditClickedButTaskDataIsIncorrect)
                     }
                 }
 
-                is Intent.ClickedAddExternalTaskToFirebase -> {
+                is Intent.ClickedAddExternalTaskOrEditToFirebase -> {
                     scope.launch {
                         if (intent.externalTask.task.checkData()) {
                             scope.launch {
-                                addExternalTaskToFirebaseUseCase(intent.externalTask)
+                                addExternalTaskToFirebaseUseCase(
+                                    intent.externalTask,
+                                    intent.taskMode
+                                )
                             }
-                            dispatch(Msg.ButtonAddTaskToFirebaseClickedAndTaskDataIsCorrect)
+                            dispatch(Msg.ButtonAddTaskToFirebaseOrEditClickedAndTaskDataIsCorrect)
                         } else {
-                            dispatch(Msg.ButtonAddTaskToFirebaseClickedButTaskDataIsIncorrect)
+                            dispatch(Msg.ButtonAddTaskToFirebaseOrEditClickedButTaskDataIsIncorrect)
                         }
                     }
                 }
@@ -491,24 +498,35 @@ class LoggedUserStoreFactory @Inject constructor(
             when (msg) {
 
                 Msg.BackFromNewTaskFormClicked -> {
-                    copy(isAddNewTaskClicked = false)
+                    copy(isAddTaskClicked = false)
                 }
 
-                Msg.ButtonAddNewTaskClicked -> {
-                    copy(isAddNewTaskClicked = true)
-                }
-
-                Msg.ButtonAddTaskToFirebaseClickedAndTaskDataIsCorrect -> {
+                Msg.ButtonAddTaskClicked -> {
                     copy(
-                        isAddNewTaskClicked = false,
-                        isAddTaskToFirebaseClicked = false,
-                        isWrongTaskData = false
+                        isAddTaskClicked = true
                     )
                 }
 
-                Msg.ButtonAddTaskToFirebaseClickedButTaskDataIsIncorrect -> {
+                is Msg.ClickedEditTask -> {
                     copy(
-                        isAddTaskToFirebaseClicked = false,
+                        isEditTaskClicked = true,
+                        taskForEdit = msg.externalTask,
+                        taskType = msg.taskType
+                    )
+                }
+
+                Msg.ButtonAddTaskToFirebaseOrEditClickedAndTaskDataIsCorrect -> {
+                    copy(
+                        isAddTaskClicked = false,
+                        isEditTaskClicked = false,
+                        isWrongTaskData = false,
+                        taskForEdit = ExternalTask()
+                    )
+                }
+
+                Msg.ButtonAddTaskToFirebaseOrEditClickedButTaskDataIsIncorrect -> {
+                    copy(
+                        //isAddOrEditTaskToFirebaseClicked = false,
                         isWrongTaskData = true
                     )
                 }

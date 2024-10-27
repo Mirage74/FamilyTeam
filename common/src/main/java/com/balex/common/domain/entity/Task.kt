@@ -8,7 +8,7 @@ data class Task(
     @SerializedName("id")
     val id: Long = System.currentTimeMillis(),
     @SerializedName("description")
-    val description: String = "",
+    val description: String = DEFAULT_DESCRIPTION,
     @SerializedName("cutoffTime")
     val cutoffTime: Long = 0,
     @SerializedName("alarmTime1")
@@ -19,6 +19,7 @@ data class Task(
     val alarmTime3: Long = NO_ALARM
 ) {
     companion object {
+        const val DEFAULT_DESCRIPTION = "DEFAULT_DESCRIPTION"
         const val NO_ALARM = -1L
         const val MIN_CUTOFF_TIME_FROM_NOW_IN_MINUTES = 30
         const val MIN_DIFFERENCE_BETWEEN_CUTOFF_TIME_AND_ALARMS_IN_MINUTES = 5

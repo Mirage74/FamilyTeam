@@ -1,5 +1,6 @@
 package com.balex.logged_user
 
+import com.balex.common.data.repository.TaskMode
 import com.balex.common.data.repository.UserRepositoryImpl
 import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.Task
@@ -15,11 +16,13 @@ interface LoggedUserComponent {
 
     fun onClickAddNewTask()
 
+    fun onClickEditTask(externalTask: ExternalTask, taskType: UserRepositoryImpl.Companion.TaskType)
+
     fun onClickDeleteTask(externalTask: ExternalTask, taskType: UserRepositoryImpl.Companion.TaskType)
 
-    fun onClickAddNewTaskForMeToFirebase(task: Task)
+    fun onClickAddNewTaskOrEditForMeToFirebase(task: Task, taskMode: TaskMode)
 
-    fun onClickAddNewTaskForOtherUserToFirebase(externalTask: ExternalTask)
+    fun onClickAddNewTaskOrEditForOtherUserToFirebase(externalTask: ExternalTask, taskMode: TaskMode)
 
     fun onClickEditUsersList()
 

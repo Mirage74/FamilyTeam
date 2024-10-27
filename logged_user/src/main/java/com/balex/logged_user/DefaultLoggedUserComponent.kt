@@ -7,6 +7,7 @@ import com.arkivanov.essenty.lifecycle.doOnResume
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
+import com.balex.common.data.repository.TaskMode
 import com.balex.common.data.repository.UserRepositoryImpl
 import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.Task
@@ -95,16 +96,20 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         store.accept(LoggedUserStore.Intent.ClickedAddNewTask)
     }
 
+    override fun onClickEditTask(externalTask: ExternalTask, taskType: UserRepositoryImpl.Companion.TaskType) {
+        store.accept(LoggedUserStore.Intent.ClickedEditTask(externalTask, taskType))
+    }
+
     override fun onClickDeleteTask(externalTask: ExternalTask, taskType: UserRepositoryImpl.Companion.TaskType) {
         store.accept(LoggedUserStore.Intent.ClickedDeleteTask(externalTask, taskType))
     }
 
-    override fun onClickAddNewTaskForMeToFirebase(task: Task) {
-        store.accept(LoggedUserStore.Intent.ClickedAddPrivateTaskToFirebase(task))
+    override fun onClickAddNewTaskOrEditForMeToFirebase(task: Task, taskMode: TaskMode) {
+        store.accept(LoggedUserStore.Intent.ClickedAddPrivateTaskOrEditToFirebase(task, taskMode))
     }
 
-    override fun onClickAddNewTaskForOtherUserToFirebase(externalTask: ExternalTask) {
-        store.accept(LoggedUserStore.Intent.ClickedAddExternalTaskToFirebase(externalTask))
+    override fun onClickAddNewTaskOrEditForOtherUserToFirebase(externalTask: ExternalTask, taskMode: TaskMode) {
+        store.accept(LoggedUserStore.Intent.ClickedAddExternalTaskOrEditToFirebase(externalTask, taskMode))
     }
 
     override fun onClickEditUsersList() {

@@ -47,8 +47,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.balex.common.data.repository.TaskMode
 import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.Task
+import com.balex.common.extensions.dayInMillis
+import com.balex.common.extensions.timeOfDayInMillis
 import com.balex.logged_user.LoggedUserComponent
 import com.balex.logged_user.LoggedUserStore
 import com.balex.common.R as commonR
@@ -62,10 +65,11 @@ import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InputNewTaskForm(
+fun InputOrEditTaskForm(
     component: LoggedUserComponent,
     state: LoggedUserStore.State,
     isMyTask: Boolean,
+    taskMode: TaskMode,
     context: Context,
 ) {
 
@@ -111,6 +115,27 @@ fun InputNewTaskForm(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
 
+            if (taskMode == TaskMode.EDIT) {
+                description = description.copy(text = state.taskForEdit.task.description)
+                selectedDateInMillis = state.taskForEdit.task.cutoffTime.dayInMillis
+                selectedTimeInMillis = state.taskForEdit.task.cutoffTime.timeOfDayInMillis
+                if (state.taskForEdit.task.alarmTime1 != Task.NO_ALARM) {
+                    selectedAlarmInMillisDate1 = state.taskForEdit.task.alarmTime1.dayInMillis
+                    selectedAlarmInMillisTime1 = state.taskForEdit.task.alarmTime1.timeOfDayInMillis
+                    isCheckBoxSelected1 = true
+                }
+                if (state.taskForEdit.task.alarmTime2 != Task.NO_ALARM) {
+                    selectedAlarmInMillisDate2 = state.taskForEdit.task.alarmTime2.dayInMillis
+                    selectedAlarmInMillisTime2 = state.taskForEdit.task.alarmTime2.timeOfDayInMillis
+                    isCheckBoxSelected2 = true
+                }
+                if (state.taskForEdit.task.alarmTime3 != Task.NO_ALARM) {
+                    selectedAlarmInMillisDate3 = state.taskForEdit.task.alarmTime3.dayInMillis
+                    selectedAlarmInMillisTime3 = state.taskForEdit.task.alarmTime3.timeOfDayInMillis
+                    isCheckBoxSelected3 = true
+                }
+            }
+
             GreetingRow(state)
 
             val usersListWithoutMe = state.usersNicknamesList.filter { it != state.user.nickName }
@@ -137,6 +162,7 @@ fun InputNewTaskForm(
 
 
             DateAndTimePickers(
+                shiftTimeInMillis = reminderInMillis3 + MILLIS_IN_DAY,
                 onDateSelected = { selectedDateInMillis = it },
                 onTimeSelected = { selectedTimeInMillis = it },
                 textTitle = context.getString(R.string.select_date_and_time_for_task),
@@ -234,7 +260,7 @@ fun InputNewTaskForm(
                             task.copy(alarmTime3 = selectedAlarmInMillisDate3 + selectedAlarmInMillisTime3)
                     }
                     if (isMyTask) {
-                        component.onClickAddNewTaskForMeToFirebase(task.copy())
+                        component.onClickAddNewTaskOrEditForMeToFirebase(task.copy(), taskMode)
                     } else {
                         val otherUser = selectedUser
                         if (otherUser != null) {
@@ -242,14 +268,19 @@ fun InputNewTaskForm(
                                 task = task,
                                 taskOwner = otherUser
                             )
-                            component.onClickAddNewTaskForOtherUserToFirebase(externalTask.copy())
+                            component.onClickAddNewTaskOrEditForOtherUserToFirebase(externalTask.copy(), taskMode)
                         }
                     }
 
                 },
                 modifier = Modifier.align(Alignment.End)
             ) {
-                Text(context.getString(R.string.add_button_text))
+                val textButton = if (taskMode == TaskMode.ADD) {
+                    context.getString(R.string.add_button_text)
+                } else {
+                    context.getString(R.string.save_edited_task_button_text)
+                }
+                Text(textButton)
             }
         }
     } else {

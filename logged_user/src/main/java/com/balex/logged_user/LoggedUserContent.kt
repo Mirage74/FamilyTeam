@@ -59,7 +59,7 @@ fun LoggedUserContent(component: LoggedUserComponent) {
     val state by component.model.collectAsState(context = CoroutineScope(Dispatchers.Main.immediate).coroutineContext)
 
     BackHandler {
-        if (state.isAddNewTaskClicked) {
+        if (state.isAddTaskClicked) {
             component.onBackFromNewTaskFormClicked()
         } else {
             component.onBackClickedHandle()

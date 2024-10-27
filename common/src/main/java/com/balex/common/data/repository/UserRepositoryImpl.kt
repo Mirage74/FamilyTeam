@@ -102,21 +102,37 @@ class UserRepositoryImpl @Inject constructor(
     }
 
 
-    override suspend fun addPrivateTaskToFirebase(task: Task) {
+    override suspend fun addOrModifyPrivateTaskToFirebase(task: Task, taskMode: TaskMode) {
 
         val userForModify = getUserUseCase()
 
         if (userForModify.availableTasksToAdd > 0) {
             val toDoOld = userForModify.listToDo
-            val updatedTodoList = toDoOld.copy(
-                thingsToDoPrivate = toDoOld.thingsToDoPrivate.copy(
-                    privateTasks = toDoOld.thingsToDoPrivate.privateTasks + task
-                )
-            )
+            val updatedTodoList =
+                if (taskMode == TaskMode.ADD) {
+                    toDoOld.copy(
+                        thingsToDoPrivate = toDoOld.thingsToDoPrivate.copy(
+                            privateTasks = toDoOld.thingsToDoPrivate.privateTasks + task
+                        )
+                    )
+                } else {
+                    toDoOld.copy(
+                        thingsToDoPrivate = toDoOld.thingsToDoPrivate.copy(
+                            privateTasks = toDoOld.thingsToDoPrivate.privateTasks.map { taskItem ->
+                                if (taskItem.id == task.id) task else taskItem
+                            }
+                        )
+                    )
+                }
+
+            val newAvailableFCM = if (taskMode == TaskMode.ADD) {
+                userForModify.availableFCM - task.numberOfReminders()
+            } else userForModify.availableFCM
+
             val userForUpdate = userForModify.copy(
                 listToDo = updatedTodoList,
                 availableTasksToAdd = userForModify.availableTasksToAdd - 1,
-                availableFCM = userForModify.availableFCM - task.numberOfReminders()
+                availableFCM = newAvailableFCM
             )
             val userCollection =
                 usersCollection.document(userForModify.adminEmailOrPhone)
@@ -133,20 +149,36 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun addExternalTaskToFirebase(externalTask: ExternalTask) {
+    override suspend fun addOrModifyExternalTaskToFirebase(externalTask: ExternalTask, taskMode: TaskMode) {
         val currentUser = getUserUseCase()
 
         if (currentUser.availableTasksToAdd > 0) {
             val toDoOld = currentUser.listToDo
-            val updatedTodoList = toDoOld.copy(
-                thingsToDoForOtherUsers = toDoOld.thingsToDoForOtherUsers.copy(
-                    externalTasks = toDoOld.thingsToDoForOtherUsers.externalTasks + externalTask
-                )
-            )
+            val updatedTodoList =
+                if (taskMode == TaskMode.ADD) {
+                    toDoOld.copy(
+                        thingsToDoForOtherUsers = toDoOld.thingsToDoForOtherUsers.copy(
+                            externalTasks = toDoOld.thingsToDoForOtherUsers.externalTasks + externalTask
+                        )
+                    )
+                } else {
+                    toDoOld.copy(
+                        thingsToDoForOtherUsers = toDoOld.thingsToDoForOtherUsers.copy(
+                            externalTasks = toDoOld.thingsToDoForOtherUsers.externalTasks.map { taskItem ->
+                                if (taskItem.task.id == externalTask.task.id) externalTask else taskItem
+                            }
+                        )
+                    )
+                }
+
+            val newAvailableFCM = if (taskMode == TaskMode.ADD) {
+                currentUser.availableFCM - externalTask.task.numberOfReminders()
+            } else currentUser.availableFCM
+
             val userForUpdate = currentUser.copy(
                 listToDo = updatedTodoList,
                 availableTasksToAdd = currentUser.availableTasksToAdd - 1,
-                availableFCM = currentUser.availableFCM - externalTask.task.numberOfReminders()
+                availableFCM = newAvailableFCM
             )
             val userCollection =
                 usersCollection.document(currentUser.adminEmailOrPhone)
@@ -169,13 +201,25 @@ class UserRepositoryImpl @Inject constructor(
                 val externalUser = externalUserSnapshot?.toObject(User::class.java)
                 if (externalUser != null) {
                     val toDoOldExternal = externalUser.listToDo
-                    val updatedTodoListExternal = toDoOldExternal.copy(
-                        thingsToDoShared = toDoOldExternal.thingsToDoShared.copy(
-                            externalTasks = toDoOldExternal.thingsToDoShared.externalTasks + externalTask.copy(
-                                taskOwner = currentUser.nickName
+
+                    val updatedTodoListExternal =
+                        if (taskMode == TaskMode.ADD) {
+                            toDoOldExternal.copy(
+                                thingsToDoShared = toDoOldExternal.thingsToDoShared.copy(
+                                    externalTasks = toDoOldExternal.thingsToDoShared.externalTasks + externalTask.copy(
+                                        taskOwner = currentUser.nickName
+                                    )
+                                )
                             )
-                        )
-                    )
+                        } else {
+                            toDoOldExternal.copy(
+                                thingsToDoShared = toDoOldExternal.thingsToDoShared.copy(
+                                    externalTasks = toDoOldExternal.thingsToDoShared.externalTasks.map { taskItem ->
+                                        if (taskItem.task.id == externalTask.task.id) externalTask else taskItem
+                                    }
+                                )
+                            )
+                        }
                     val userForUpdateExternal = externalUser.copy(
                         listToDo = updatedTodoListExternal
                     )
@@ -343,4 +387,8 @@ class UserRepositoryImpl @Inject constructor(
             MY_TO_OTHER_USER
         }
     }
+}
+
+enum class TaskMode {
+    ADD, EDIT
 }

@@ -55,7 +55,20 @@ fun User.calendarLastTimeAvailableFCMWasUpdated(): Calendar {
     }
 }
 
+val Long.dayInMillis: Long
+    get() {
+        val calendar = Calendar.getInstance().apply {
+            timeInMillis = this@dayInMillis
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        return calendar.timeInMillis
+    }
 
+val Long.timeOfDayInMillis: Long
+    get() = this % (24 * 60 * 60 * 1000)
 
 fun Task.checkData(): Boolean {
     var isCompareAlarm1AndAlarm2Correct = true
