@@ -11,6 +11,4 @@ data class ToDoList (
     val thingsToDoPrivate: PrivateTasks = PrivateTasks(listOf()),
     @SerializedName("thingsToDoForOtherUsers")
     val thingsToDoForOtherUsers: ExternalTasks = ExternalTasks(listOf()),
-    @SerializedName("listToShop")
-    val listToShop: ShopItems = ShopItems(listOf())
 )

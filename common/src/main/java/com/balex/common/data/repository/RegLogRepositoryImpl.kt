@@ -89,7 +89,7 @@ class RegLogRepositoryImpl @Inject constructor(
     private val adminsCollection = db.collection(FIREBASE_ADMINS_COLLECTION)
     private val usersCollection = db.collection(FIREBASE_USERS_COLLECTION)
 
-    private val coroutineScope = CoroutineScope(Dispatchers.Default)
+    private val coroutineScope = CoroutineScope(Dispatchers.Main.immediate)
 
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -123,7 +123,7 @@ class RegLogRepositoryImpl @Inject constructor(
         }
         emit(globalRepoUser)
         addUserListenerInFirebase()
-        isCurrentUserNeedRefreshFlow.distinctUntilChanged().collect {
+        isCurrentUserNeedRefreshFlow.collect {
             emit(globalRepoUser)
         }
     }

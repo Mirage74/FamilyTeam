@@ -64,6 +64,9 @@ dependencies {
     implementation(libs.dagger.core)
     ksp(libs.dagger.compiler)
 
+    implementation(libs.room.core)
+    ksp(libs.room.compiler)
+
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.messaging.ktx)

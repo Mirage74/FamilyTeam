@@ -8,7 +8,6 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.balex.common.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
 import com.balex.common.domain.entity.ExternalTasks
-import com.balex.common.domain.entity.PrivateTasks
 import com.balex.common.domain.entity.ToDoList
 import com.balex.common.domain.entity.User
 import com.balex.common.extensions.*
@@ -20,11 +19,18 @@ import com.balex.common.domain.usecases.regLog.StorageSavePreferencesUseCase
 import com.balex.common.domain.usecases.user.ObserveUsersListUseCase
 import com.balex.common.domain.usecases.user.RemoveUserUseCase
 import com.balex.common.R
+import com.balex.common.data.local.model.ShopItemDBModel
 import com.balex.common.data.repository.TaskMode
 import com.balex.common.data.repository.UserRepositoryImpl
 import com.balex.common.domain.entity.ExternalTask
+import com.balex.common.domain.entity.ShopItems
 import com.balex.common.domain.entity.Task
 import com.balex.common.domain.usecases.admin.CreateNewUserUseCase
+import com.balex.common.domain.usecases.shopList.AddToShopListUseCase
+import com.balex.common.domain.usecases.shopList.GetShopListUseCase
+import com.balex.common.domain.usecases.shopList.ObserveShopListUseCase
+import com.balex.common.domain.usecases.shopList.RefreshShopListUseCase
+import com.balex.common.domain.usecases.shopList.RemoveFromShopListUseCase
 import com.balex.common.domain.usecases.user.AddExternalTaskToFirebaseUseCase
 import com.balex.common.domain.usecases.user.AddPrivateTaskToFirebaseUseCase
 import com.balex.common.domain.usecases.user.DeleteTaskFromFirebaseUseCase
@@ -45,6 +51,8 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 
         data object ClickedAddNewTask : Intent
 
+        data object ClickedAddShopItem : Intent
+
         data class ClickedEditTask(
             val externalTask: ExternalTask,
             val taskType: UserRepositoryImpl.Companion.TaskType
@@ -52,6 +60,8 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 
         data class ClickedAddPrivateTaskOrEditToFirebase(val task: Task, val taskMode: TaskMode) :
             Intent
+
+        data class ClickedAddShopItemToDatabase(val shopItem: ShopItemDBModel) : Intent
 
         data class ClickedAddExternalTaskOrEditToFirebase(
             val externalTask: ExternalTask,
@@ -62,6 +72,8 @@ interface LoggedUserStore : Store<Intent, State, Label> {
             val externalTask: ExternalTask,
             val taskType: UserRepositoryImpl.Companion.TaskType
         ) : Intent
+
+        data class ClickedDeleteShopItem(val itemId: Long) : Intent
 
         data object ClickedCreateNewUser : Intent
 
@@ -94,9 +106,10 @@ interface LoggedUserStore : Store<Intent, State, Label> {
     data class State(
         val user: User,
         val usersNicknamesList: List<String>,
+        val shopItemsList: ShopItems,
         val isAddTaskClicked: Boolean,
         val isEditTaskClicked: Boolean,
-        val isAddShopListClicked: Boolean,
+        val isAddShopItemClicked: Boolean,
         val taskForEdit: ExternalTask,
         val taskType: UserRepositoryImpl.Companion.TaskType,
         //val isAddOrEditTaskToFirebaseClicked: Boolean,
@@ -133,13 +146,18 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 
 class LoggedUserStoreFactory @Inject constructor(
     private val getUserUseCase: GetUserUseCase,
+    private val observeShopListUseCase: ObserveShopListUseCase,
+    private val refreshShopListUseCase: RefreshShopListUseCase,
+    private val getShopListUseCase: GetShopListUseCase,
     private val saveLanguageUseCase: SaveLanguageUseCase,
     private val observeUserUseCase: ObserveUserUseCase,
     private val observeLanguageUseCase: ObserveLanguageUseCase,
     private val createNewUserUseCase: CreateNewUserUseCase,
+    private val addToShopListUseCase: AddToShopListUseCase,
     private val storageSavePreferencesUseCase: StorageSavePreferencesUseCase,
     private val removeUserUseCase: RemoveUserUseCase,
     private val deleteTaskFromFirebaseUseCase: DeleteTaskFromFirebaseUseCase,
+    private val removeFromShopListUseCase: RemoveFromShopListUseCase,
     private val observeUsersListUseCase: ObserveUsersListUseCase,
     private val addPrivateTaskToFirebaseUseCase: AddPrivateTaskToFirebaseUseCase,
     private val addExternalTaskToFirebaseUseCase: AddExternalTaskToFirebaseUseCase,
@@ -155,6 +173,8 @@ class LoggedUserStoreFactory @Inject constructor(
             initialState = State(
                 getUserUseCase(),
                 listOf(),
+                ShopItems(),
+                isAddShopItemClicked = false,
                 isAddTaskClicked = false,
                 isEditTaskClicked = false,
                 taskForEdit = ExternalTask(),
@@ -163,7 +183,6 @@ class LoggedUserStoreFactory @Inject constructor(
                 isWrongTaskData = false,
                 isCreateNewUserClicked = false,
                 isEditUsersListClicked = false,
-                isAddShopListClicked = false,
                 passwordVisible = false,
                 nickName = "",
                 displayName = "",
@@ -192,6 +211,8 @@ class LoggedUserStoreFactory @Inject constructor(
 
         data class UserIsChanged(val user: User) : Action
 
+        data class ShopListIsChanged(val shopList: List<ShopItemDBModel>) : Action
+
         data class UsersListIsChanged(val usersList: List<String>) : Action
 
         data class PageIsChanged(val page: PagesNames) : Action
@@ -206,6 +227,10 @@ class LoggedUserStoreFactory @Inject constructor(
 
         data object ButtonAddTaskClicked : Msg
 
+        data object ButtonAddShopItemClicked : Msg
+
+        data object ButtonAddShopItemToDatabaseClicked : Msg
+
         data class ClickedEditTask(
             val externalTask: ExternalTask,
             val taskType: UserRepositoryImpl.Companion.TaskType
@@ -216,6 +241,8 @@ class LoggedUserStoreFactory @Inject constructor(
         data object ButtonAddTaskToFirebaseOrEditClickedButTaskDataIsIncorrect : Msg
 
         data class UserIsChanged(val user: User) : Msg
+
+        data class ShopListIsChanged(val shopList: List<ShopItemDBModel>) : Msg
 
         data class UsersListIsChanged(val usersList: List<String>) : Msg
 
@@ -254,6 +281,7 @@ class LoggedUserStoreFactory @Inject constructor(
         private var userJob: Job? = null
         private var languageJob: Job? = null
         private var usersListJob: Job? = null
+        private var shopListJob: Job? = null
 
         override fun invoke() {
             start()
@@ -263,12 +291,20 @@ class LoggedUserStoreFactory @Inject constructor(
             userJob?.cancel()
             languageJob?.cancel()
             usersListJob?.cancel()
+            shopListJob?.cancel()
         }
 
         fun start() {
+            refreshShopListUseCase()
             userJob = scope.launch {
                 observeUserUseCase().collect {
                     dispatch(Action.UserIsChanged(it))
+                }
+            }
+
+            shopListJob = scope.launch {
+                observeShopListUseCase().collect {
+                    dispatch(Action.ShopListIsChanged(it))
                 }
             }
 
@@ -298,6 +334,10 @@ class LoggedUserStoreFactory @Inject constructor(
                     dispatch(Msg.ButtonAddTaskClicked)
                 }
 
+                Intent.ClickedAddShopItem -> {
+                    dispatch(Msg.ButtonAddShopItemClicked)
+                }
+
                 is Intent.ClickedEditTask -> {
                     dispatch(Msg.ClickedEditTask(intent.externalTask, intent.taskType))
                 }
@@ -305,6 +345,15 @@ class LoggedUserStoreFactory @Inject constructor(
                 is Intent.ClickedDeleteTask -> {
                     scope.launch {
                         deleteTaskFromFirebaseUseCase(intent.externalTask, intent.taskType)
+                    }
+                }
+
+                is Intent.ClickedDeleteShopItem -> {
+                    scope.launch {
+                        removeFromShopListUseCase(intent.itemId)
+                        refreshShopListUseCase()
+                        dispatch(Msg.ShopListIsChanged(getShopListUseCase()))
+
                     }
                 }
 
@@ -316,6 +365,14 @@ class LoggedUserStoreFactory @Inject constructor(
                         dispatch(Msg.ButtonAddTaskToFirebaseOrEditClickedAndTaskDataIsCorrect)
                     } else {
                         dispatch(Msg.ButtonAddTaskToFirebaseOrEditClickedButTaskDataIsIncorrect)
+                    }
+                }
+
+                is Intent.ClickedAddShopItemToDatabase -> {
+                    scope.launch {
+                        addToShopListUseCase(intent.shopItem)
+                        dispatch(Msg.ShopListIsChanged(getShopListUseCase()))
+                        dispatch(Msg.ButtonAddShopItemToDatabaseClicked)
                     }
                 }
 
@@ -443,6 +500,10 @@ class LoggedUserStoreFactory @Inject constructor(
                     }
                 }
 
+                is Action.ShopListIsChanged -> {
+                    dispatch(Msg.ShopListIsChanged(action.shopList))
+                }
+
                 is Action.LanguageIsChanged -> {
                     dispatch(Msg.LanguageIsChanged(action.language))
                 }
@@ -463,16 +524,27 @@ class LoggedUserStoreFactory @Inject constructor(
         override fun State.reduce(msg: Msg): State =
             when (msg) {
 
+                is Msg.ShopListIsChanged -> {
+                    copy(shopItemsList = ShopItems(msg.shopList))
+                }
+
                 Msg.BackFromNewTaskFormClicked -> {
                     copy(
                         isAddTaskClicked = false,
-                        isEditTaskClicked = false
+                        isEditTaskClicked = false,
+                        isAddShopItemClicked = false
                     )
                 }
 
                 Msg.ButtonAddTaskClicked -> {
                     copy(
                         isAddTaskClicked = true
+                    )
+                }
+
+                Msg.ButtonAddShopItemClicked -> {
+                    copy(
+                        isAddShopItemClicked = true
                     )
                 }
 
@@ -491,6 +563,10 @@ class LoggedUserStoreFactory @Inject constructor(
                         isWrongTaskData = false,
                         taskForEdit = ExternalTask()
                     )
+                }
+
+                Msg.ButtonAddShopItemToDatabaseClicked -> {
+                    copy(isAddShopItemClicked = false)
                 }
 
                 Msg.ButtonAddTaskToFirebaseOrEditClickedButTaskDataIsIncorrect -> {

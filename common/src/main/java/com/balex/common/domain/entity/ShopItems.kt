@@ -1,10 +1,7 @@
 package com.balex.common.domain.entity
 
-import com.google.gson.annotations.SerializedName
-import kotlinx.serialization.Serializable
+import com.balex.common.data.local.model.ShopItemDBModel
 
-@Serializable
 data class ShopItems(
-    @SerializedName("shopItems")
-    val shopItems: List<ShopItem> = listOf()
+    val shopItems: List<ShopItemDBModel> = listOf()
 )

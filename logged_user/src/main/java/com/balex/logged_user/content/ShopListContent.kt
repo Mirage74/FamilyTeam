@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.balex.common.LocalLocalizedContext
+import com.balex.common.data.local.model.ShopItemDBModel
 import com.balex.logged_user.LoggedUserComponent
 import com.balex.logged_user.LoggedUserStore
 import com.balex.logged_user.R
@@ -33,16 +34,22 @@ fun ShopListContent(
 ) {
     val context = LocalLocalizedContext.current
 
+    val arrangement = if (!state.isAddShopItemClicked) {
+        Arrangement.SpaceEvenly
+    } else {
+        Arrangement.Top
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(8.dp),
-        verticalArrangement = Arrangement.SpaceEvenly
+        verticalArrangement = arrangement
     ) {
-        if (!state.isAddShopListClicked) {
+        if (!state.isAddShopItemClicked) {
             GreetingRow(state)
             Button(
-                onClick = { component.onClickAddNewTask() },
+                onClick = { component.onClickAddShopItem() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(150.dp)
@@ -54,12 +61,15 @@ fun ShopListContent(
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
-            val tasks = state.user.listToDo.thingsToDoForOtherUsers.externalTasks
+
             ShowShopList(state, component, modifier = Modifier.weight(4f))
         } else {
             var description by remember { mutableStateOf(TextFieldValue("")) }
+            Spacer(modifier = Modifier.height(16.dp))
             GreetingRow(state)
+            Spacer(modifier = Modifier.height(16.dp))
             Text(context.getString(R.string.shop_item_description))
+            Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
                 value = description,
                 onValueChange = {
@@ -71,11 +81,14 @@ fun ShopListContent(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
+            Spacer(modifier = Modifier.height(32.dp))
             Button(
                 onClick = {
-                        //component.onClickAddShopItemToFirebase(ShopItem(description = description.text))
+                    component.onClickedAddShopItemToDatabase(ShopItemDBModel(description = description.text))
                 },
-                modifier = Modifier.align(Alignment.End)
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .padding(bottom = 16.dp)
             ) {
                 Text(context.getString(R.string.add_item_button_text))
             }

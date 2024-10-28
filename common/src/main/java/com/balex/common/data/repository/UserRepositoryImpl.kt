@@ -49,7 +49,7 @@ class UserRepositoryImpl @Inject constructor(
     private val db = Firebase.firestore
     private val adminsCollection = db.collection(FIREBASE_ADMINS_COLLECTION)
     private val usersCollection = db.collection(FIREBASE_USERS_COLLECTION)
-    private val coroutineScope = CoroutineScope(Dispatchers.Default)
+    private val coroutineScope = CoroutineScope(Dispatchers.Main.immediate)
 
     override fun observeUsersList(): StateFlow<List<String>> {
         val job = Job()

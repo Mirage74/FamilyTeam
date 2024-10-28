@@ -7,6 +7,7 @@ import com.arkivanov.essenty.lifecycle.doOnResume
 import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
+import com.balex.common.data.local.model.ShopItemDBModel
 import com.balex.common.data.repository.TaskMode
 import com.balex.common.data.repository.UserRepositoryImpl
 import com.balex.common.domain.entity.ExternalTask
@@ -96,6 +97,10 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         store.accept(LoggedUserStore.Intent.ClickedAddNewTask)
     }
 
+    override fun onClickAddShopItem() {
+        store.accept(LoggedUserStore.Intent.ClickedAddShopItem)
+    }
+
     override fun onClickEditTask(externalTask: ExternalTask, taskType: UserRepositoryImpl.Companion.TaskType) {
         store.accept(LoggedUserStore.Intent.ClickedEditTask(externalTask, taskType))
     }
@@ -104,8 +109,16 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         store.accept(LoggedUserStore.Intent.ClickedDeleteTask(externalTask, taskType))
     }
 
+    override fun onClickDeleteShopItem(itemId: Long) {
+        store.accept(LoggedUserStore.Intent.ClickedDeleteShopItem(itemId))
+    }
+
     override fun onClickAddNewTaskOrEditForMeToFirebase(task: Task, taskMode: TaskMode) {
         store.accept(LoggedUserStore.Intent.ClickedAddPrivateTaskOrEditToFirebase(task, taskMode))
+    }
+
+    override fun onClickedAddShopItemToDatabase(shopItem: ShopItemDBModel) {
+        store.accept(LoggedUserStore.Intent.ClickedAddShopItemToDatabase(shopItem))
     }
 
     override fun onClickAddNewTaskOrEditForOtherUserToFirebase(externalTask: ExternalTask, taskMode: TaskMode) {

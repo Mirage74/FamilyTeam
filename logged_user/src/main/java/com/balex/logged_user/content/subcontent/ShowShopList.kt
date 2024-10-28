@@ -45,8 +45,9 @@ fun ShowShopList(
 ) {
     LazyColumn(
         modifier = modifier
+            .padding(bottom = 64.dp)
     ) {
-        items(state.todoList.listToShop.shopItems) { shopItem ->
+        items(state.shopItemsList.shopItems, key = { it.id }) { shopItem ->
             var offsetX by remember { mutableFloatStateOf(0f) }
             val animatedOffsetX by animateFloatAsState(targetValue = offsetX, label = "")
 
@@ -54,11 +55,13 @@ fun ShowShopList(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(4.dp)
+                    .padding(bottom = 16.dp)
                     .pointerInput(Unit) {
                         detectHorizontalDragGestures(
                             onDragEnd = {
                                 if (offsetX > 100f) {
-//                                    component.onClickDeleteShopItem()
+                                    component.onClickDeleteShopItem(shopItem.id)
+                                    offsetX = 0f
                                 } else {
                                     offsetX = 0f
                                 }
@@ -83,31 +86,19 @@ fun ShowShopList(
                 Text(
                     text = shopItem.description,
                     modifier = Modifier
-                        .padding(start = 4.dp),
+                        .padding(start = 4.dp)
+                        .weight(9f),
                     fontSize = 20.sp
                 )
 
 
-
-                    IconButton(
-                        onClick = {
-                            //component.onClickEditShopItem(shopItem)
-                        },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit task",
-                            tint = Color.Blue,
-                        )
-                    }
-
-
                 IconButton(
                     onClick = {
-                        //component.onClickDeleteShopItem(shopItem.id)
+                        component.onClickDeleteShopItem(shopItem.id)
                     },
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier
+                        .size(32.dp)
+                        .weight(1f),
                 ) {
                     Icon(
                         imageVector = Icons.Default.Delete,

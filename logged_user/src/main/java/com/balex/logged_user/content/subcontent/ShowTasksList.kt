@@ -46,9 +46,10 @@ fun ShowTasksList(
 ) {
     LazyColumn(
         modifier = modifier
+            .padding(bottom = 32.dp)
     ) {
 
-        items(tasks) { externalTask ->
+        items(tasks, key = { it.task.id }) { externalTask ->
             val description = externalTask.task.description
             val taskOwner = externalTask.taskOwner
             val taskDate = convertMillisToDate(externalTask.task.cutoffTime)
@@ -59,6 +60,7 @@ fun ShowTasksList(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(4.dp)
+                    .padding(bottom = 16.dp)
                     .pointerInput(Unit) {
                         detectHorizontalDragGestures(
                             onDragEnd = {
