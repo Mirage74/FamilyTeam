@@ -11,7 +11,7 @@ import com.balex.familyteam.presentation.regadmin.RegAdminContent
 import com.balex.common.theme.FamilyTeamTheme
 
 @Composable
-fun RootContent(component: RootComponent, activity: MainActivity) {
+fun RootContent(component: RootComponent, activity: MainActivity, deviceToken: String) {
     FamilyTeamTheme {
         Children(
             stack = component.stack
@@ -30,7 +30,7 @@ fun RootContent(component: RootComponent, activity: MainActivity) {
                 }
 
                 is RootComponent.Child.LoggedUser -> {
-                    LoggedUserContent(component = instance.component)
+                    LoggedUserContent(component = instance.component, deviceToken = deviceToken)
                 }
 
                 is RootComponent.Child.About -> {

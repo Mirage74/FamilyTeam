@@ -1,5 +1,6 @@
 package com.balex.familyteam
 
+import android.content.Context
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import android.util.Log
@@ -9,8 +10,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         // Обработка сообщений FCM
         remoteMessage.notification?.let {
-            Log.d(TAG, "Message Notification Body: ${it.body}")
-            sendNotification(it.body)
+            showNotification(it.title, it.body)
         }
     }
 
@@ -26,6 +26,38 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     private fun sendRegistrationToServer(token: String?) {
         // Реализуйте этот метод для отправки токена на ваш сервер
     }
+
+    private fun showNotification(title: String?, message: String?) {
+//        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+//        val channelId = "default_channel_id"
+//
+//        // Создаем NotificationChannel для API 26+
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            val channel = NotificationChannel(
+//                channelId,
+//                "Default Channel",
+//                NotificationManager.IMPORTANCE_DEFAULT
+//            )
+//            notificationManager.createNotificationChannel(channel)
+//        }
+//
+//        // Создаем намерение для открытия приложения при нажатии на уведомление
+//        val intent = Intent(this, MainActivity::class.java)
+//        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+//        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+//
+//        // Создаем и показываем уведомление
+//        val notification = NotificationCompat.Builder(this, channelId)
+//            .setContentTitle(title)
+//            .setContentText(message)
+//            .setSmallIcon(R.drawable.ic_notification) // Убедитесь, что у вас есть иконка уведомления
+//            .setContentIntent(pendingIntent)
+//            .setAutoCancel(true)
+//            .build()
+//
+//        notificationManager.notify(0, notification)
+//    }
+}
 
     companion object {
         private const val TAG = "MyFirebaseMsgService"

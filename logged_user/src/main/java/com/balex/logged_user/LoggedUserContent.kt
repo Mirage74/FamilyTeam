@@ -55,7 +55,10 @@ import kotlinx.coroutines.launch
 import com.balex.common.R as commonR
 
 @Composable
-fun LoggedUserContent(component: LoggedUserComponent) {
+fun LoggedUserContent(
+    component: LoggedUserComponent,
+    deviceToken: String
+) {
     val state by component.model.collectAsState(context = CoroutineScope(Dispatchers.Main.immediate).coroutineContext)
 
     BackHandler {
@@ -219,7 +222,8 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                     enabled = state.user.hasAdminRights,
                     onClick = { component.onNavigateToBottomItem(PagesNames.AdminPanel) },
                     icon = {
-                        var itemColor = if (state.activeBottomItem == PagesNames.AdminPanel) selectedColor else unSelectedColor
+                        var itemColor =
+                            if (state.activeBottomItem == PagesNames.AdminPanel) selectedColor else unSelectedColor
                         if (!state.user.hasAdminRights) {
                             itemColor = notAvailableColor
                         }
@@ -230,7 +234,8 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                         )
                     },
                     label = {
-                        var itemColor = if (state.activeBottomItem == PagesNames.AdminPanel) selectedColor else unSelectedColor
+                        var itemColor =
+                            if (state.activeBottomItem == PagesNames.AdminPanel) selectedColor else unSelectedColor
                         if (!state.user.hasAdminRights) {
                             itemColor = notAvailableColor
                         }

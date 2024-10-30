@@ -1,12 +1,21 @@
 package com.balex.familyteam.presentation
 
+import android.Manifest
+import android.app.AlertDialog
+import android.content.DialogInterface
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import com.arkivanov.decompose.defaultComponentContext
 import com.balex.familyteam.appComponent
 import com.balex.familyteam.presentation.root.DefaultRootComponent
 import com.balex.familyteam.presentation.root.RootContent
+import com.google.firebase.messaging.FirebaseMessaging
 import javax.inject.Inject
 
 
@@ -15,108 +24,74 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var rootComponentFactory: DefaultRootComponent.Factory
 
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
-        //(applicationContext as FamilyApp).applicationComponent.inject(this)
         appComponent.inject(this)
-
-
-
-
         super.onCreate(savedInstanceState)
 
-
-        setContent {
-            RootContent(component = rootComponentFactory.create(defaultComponentContext()), this)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                permissionsIsGranted()
+            } else if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+                showPermissionRationaleDialog()
+            } else {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
         }
+
+    }
+
+    private fun permissionsIsGranted() {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                return@addOnCompleteListener
+            }
+            val token = task.result
+            setContent {
+                RootContent(
+                    component = rootComponentFactory.create(defaultComponentContext()),
+                    this,
+                    token
+                )
+            }
+        }
+    }
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            permissionsIsGranted()
+        } else {
+            setContent {
+                RootContent(
+                    component = rootComponentFactory.create(defaultComponentContext()),
+                    this,
+                    NO_NOTIFICATION_PERMISSION_GRANTED
+                )
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private fun showPermissionRationaleDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Permission for notifications")
+            .setMessage("This application requires permission to send notifications to remind you of your scheduled tasks at the time you specify. Please grant this permission.")
+            .setPositiveButton("OK") { dialog: DialogInterface, _: Int ->
+                dialog.dismiss()
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+            .setNegativeButton("No thanks") { dialog: DialogInterface, _: Int ->
+                dialog.dismiss()
+            }
+            .create()
+            .show()
+    }
+
+    companion object {
+        const val NO_NOTIFICATION_PERMISSION_GRANTED = "NO_NOTIFICATION_PERMISSION_GRANTED"
     }
 }
 
-//        private val requestPermissionLauncher =
-//        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-//            if (isGranted) {
-//                val t = 6
-//            } else {
-//                val t = 6
-//            }
-//        }
-
-
-//        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-//            if (!task.isSuccessful) {
-//                Log.w("MainActivity", "Fetching FCM registration token failed", task.exception)
-//                return@addOnCompleteListener
-//            }
-//
-//            // Get new FCM registration token
-//            val token = task.result
-//
-//            // Log and toast
-//            Log.d("MainActivity", "FCM Registration token: $token")
-//        }
-//
-//        requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-
-
-
-//@Composable
-//fun MyApp() {
-//    Scaffold(
-//        modifier = Modifier
-//            .fillMaxSize()
-//    ) { padding ->
-//        Column(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(padding),
-//            verticalArrangement = Arrangement.spacedBy(8.dp),
-//            horizontalAlignment = Alignment.CenterHorizontally
-//        ) {
-//            var currentLanguage by remember { mutableStateOf("ru") }
-//           Row (
-//               modifier = Modifier
-//                   .fillMaxWidth()
-//           ) {
-//
-//
-//               LocalizedContextProvider(languageCode = currentLanguage) {
-//                   MyScreen(onLanguageChange = { newLanguage ->
-//                       currentLanguage = newLanguage
-//                   })
-//               }
-//           }
-//           Row (
-//               modifier = Modifier
-//                   .fillMaxWidth()
-//           ){
-//               NotificationHandler()
-//           }
-//
-//       }
-//
-//    }
-//}
-//
-//
-
-
-//@Composable
-//fun NotificationHandler() {
-//    var notification by remember { mutableStateOf("No notifications") }
-//
-//    LaunchedEffect(Unit) {
-//        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-//            if (!task.isSuccessful) {
-//                notification = "Fetching FCM registration token failed"
-//                return@addOnCompleteListener
-//            }
-//
-//            val token = task.result
-//            notification = "FCM Registration Token: $token"
-//        }
-//    }
-//
-//    Text(text = notification)
-//}
-//
