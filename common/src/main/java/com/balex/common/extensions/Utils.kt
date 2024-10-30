@@ -5,6 +5,7 @@ import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.ExternalTasks
 import com.balex.common.domain.entity.PrivateTasks
+import com.balex.common.domain.entity.Reminder
 import com.balex.common.domain.entity.Task
 import com.balex.common.domain.entity.ToDoList
 import com.balex.common.domain.entity.User
@@ -119,6 +120,31 @@ fun Task.toExternalTask(taskOwner: String): ExternalTask {
 
 fun Task.isExpired(): Boolean {
     return this.cutoffTime < System.currentTimeMillis()
+}
+
+fun Task.toReminder(alarmNumber: Int): Reminder {
+    val alarmTime: Long
+    val readableAlarmTime: String
+    val pattern = "dd MMMM yyyy HH:mm"
+    when (alarmNumber) {
+        1 -> {
+            alarmTime = this.alarmTime1
+            readableAlarmTime = SimpleDateFormat(pattern, Locale.getDefault()).format(Date(alarmTime1))
+        }
+        2 -> {
+            alarmTime = this.alarmTime2
+            readableAlarmTime = SimpleDateFormat(pattern, Locale.getDefault()).format(Date(alarmTime2))
+        }
+        else -> {
+            alarmTime = this.alarmTime3
+            readableAlarmTime = SimpleDateFormat(pattern, Locale.getDefault()).format(Date(alarmTime3))
+        }
+    }
+        return Reminder(
+            id = this.id + alarmNumber,
+            description = this.description + " " + readableAlarmTime,
+            alarmTime = alarmTime,
+        )
 }
 
 fun PrivateTasks.toExternalTasks(taskOwner: String): ExternalTasks {

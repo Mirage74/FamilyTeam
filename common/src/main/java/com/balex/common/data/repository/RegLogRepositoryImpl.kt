@@ -431,7 +431,6 @@ class RegLogRepositoryImpl @Inject constructor(
     ) {
         val extractedUser = extractUserInfoFromFakeEmail(fakeEmail)
 
-
         try {
 
             val adminFromCollection =
@@ -637,14 +636,14 @@ class RegLogRepositoryImpl @Inject constructor(
                 if (firebaseUser != null) {
                     val userFromCollection = findUserInCollection(userToSignIn)
 
-                    if (userFromCollection != null && userFromCollection.nickName != User.DEFAULT_NICK_NAME) {
-                        globalRepoUser = userFromCollection
+                    globalRepoUser = if (userFromCollection != null && userFromCollection.nickName != User.DEFAULT_NICK_NAME) {
+                        userFromCollection
                         //isCurrentUserNeedRefreshFlow.emit(Unit)
 
                     } else {
                         val result = addUserToCollection(newUser)
                         if (result.isSuccess) {
-                            globalRepoUser = newUser
+                            newUser
                             //isCurrentUserNeedRefreshFlow.emit(Unit)
                         } else {
                             setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
@@ -1034,7 +1033,7 @@ class RegLogRepositoryImpl @Inject constructor(
         }
     }
 
-    suspend fun deleteOldTasks() {
+    private suspend fun deleteOldTasks() {
         val userForModify = globalRepoUser
         val taskMaxExpireTimeInMillis =
             context.resources.getInteger(R.integer.max_expired_task_save_in_days) * MILLIS_IN_DAY

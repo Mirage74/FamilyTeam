@@ -16,6 +16,7 @@ import com.balex.common.domain.repository.UserRepository
 import com.balex.common.domain.usecases.regLog.GetRepoAdminUseCase
 import com.balex.common.domain.usecases.regLog.GetUserUseCase
 import com.balex.common.extensions.numberOfReminders
+import com.balex.common.extensions.toReminder
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
@@ -49,6 +50,7 @@ class UserRepositoryImpl @Inject constructor(
     private val db = Firebase.firestore
     private val adminsCollection = db.collection(FIREBASE_ADMINS_COLLECTION)
     private val usersCollection = db.collection(FIREBASE_USERS_COLLECTION)
+    private val scheduleCollection = db.collection(FIREBASE_SCHEDULERS_COLLECTION)
     private val coroutineScope = CoroutineScope(Dispatchers.Main.immediate)
 
     override fun observeUsersList(): StateFlow<List<String>> {
@@ -107,6 +109,22 @@ class UserRepositoryImpl @Inject constructor(
     }
 
 
+    private suspend fun addRemindersToSchedule(task: Task) {
+        try {
+            if (task.alarmTime1 != Task.NO_ALARM) {
+                scheduleCollection.add(task.toReminder(1)).await()
+            }
+            if (task.alarmTime2 != Task.NO_ALARM) {
+                scheduleCollection.add(task.toReminder(2)).await()
+            }
+            if (task.alarmTime3 != Task.NO_ALARM) {
+                scheduleCollection.add(task.toReminder(3)).await()
+            }
+        } catch (e: Exception) {
+            Log.d("addRemindersToSchedule error", e.toString())
+        }
+    }
+
     override suspend fun addOrModifyPrivateTaskToFirebase(task: Task, taskMode: TaskMode) {
 
         val userForModify = getUserUseCase()
@@ -144,6 +162,11 @@ class UserRepositoryImpl @Inject constructor(
                     .collection(userForModify.nickName.lowercase())
                     .document(userForModify.nickName.lowercase())
 
+            if (taskMode == TaskMode.ADD) {
+                addRemindersToSchedule(task)
+            }
+
+
             try {
                 userCollection.set(userForUpdate).await()
             } catch (e: Exception) {
@@ -154,10 +177,13 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun addOrModifyExternalTaskToFirebase(externalTask: ExternalTask, taskMode: TaskMode) {
+    override suspend fun addOrModifyExternalTaskToFirebase(
+        externalTask: ExternalTask,
+        taskMode: TaskMode
+    ) {
         val currentUser = getUserUseCase()
 
-        if (currentUser.availableTasksToAdd > 0  || taskMode == TaskMode.EDIT) {
+        if (currentUser.availableTasksToAdd > 0 || taskMode == TaskMode.EDIT) {
             val toDoOld = currentUser.listToDo
             val updatedTodoList =
                 if (taskMode == TaskMode.ADD) {
@@ -388,7 +414,9 @@ class UserRepositoryImpl @Inject constructor(
 
 
     companion object {
-        const val ERROR_GET_USERS_LIST_FROM_FIREBASE = "ERROR_GET_USERS_LIST_FROM_FIREBASE"
+        //       const val ERROR_GET_USERS_LIST_FROM_FIREBASE = "ERROR_GET_USERS_LIST_FROM_FIREBASE"
+
+        const val FIREBASE_SCHEDULERS_COLLECTION = "schedule"
 
         enum class TaskType {
             PRIVATE,
