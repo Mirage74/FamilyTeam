@@ -10,5 +10,7 @@ data class Reminder(
     @SerializedName("description")
     val description: String = "",
     @SerializedName("alarmTime")
-    val alarmTime: Long = 0
+    val alarmTime: Long = 0,
+    @SerializedName("deviceToken")
+    val deviceToken: String = ""
 )

@@ -26,6 +26,7 @@ import com.balex.logged_user.content.subcontent.ShowTasksList
 fun MyTasksForOtherUsersContent(
     component: LoggedUserComponent,
     state: LoggedUserStore.State,
+    deviceToken: String,
     paddingValues: PaddingValues
 ) {
 
@@ -59,9 +60,9 @@ fun MyTasksForOtherUsersContent(
                 .padding(paddingValues))
         } else {
             if (state.isAddTaskClicked) {
-                InputOrEditTaskForm(component, state, false, TaskMode.ADD, context)
+                InputOrEditTaskForm(component, state, false, TaskMode.ADD, deviceToken,  context)
             } else {
-                InputOrEditTaskForm(component, state, false, TaskMode.EDIT, context)
+                InputOrEditTaskForm(component, state, false, TaskMode.EDIT, deviceToken, context)
             }
 
         }

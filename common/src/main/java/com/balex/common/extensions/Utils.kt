@@ -122,7 +122,7 @@ fun Task.isExpired(): Boolean {
     return this.cutoffTime < System.currentTimeMillis()
 }
 
-fun Task.toReminder(alarmNumber: Int): Reminder {
+fun Task.toReminder(alarmNumber: Int, token: String): Reminder {
     val alarmTime: Long
     val readableAlarmTime: String
     val pattern = "dd MMMM yyyy HH:mm"
@@ -144,6 +144,7 @@ fun Task.toReminder(alarmNumber: Int): Reminder {
             id = this.id + alarmNumber,
             description = this.description + " " + readableAlarmTime,
             alarmTime = alarmTime,
+            deviceToken = token
         )
 }
 

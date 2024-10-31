@@ -21,15 +21,15 @@ interface LoggedUserComponent {
 
     fun onClickEditTask(externalTask: ExternalTask, taskType: UserRepositoryImpl.Companion.TaskType)
 
-    fun onClickDeleteTask(externalTask: ExternalTask, taskType: UserRepositoryImpl.Companion.TaskType)
+    fun onClickDeleteTask(externalTask: ExternalTask, taskType: UserRepositoryImpl.Companion.TaskType, token: String)
 
     fun onClickDeleteShopItem(itemId: Long)
 
-    fun onClickAddNewTaskOrEditForMeToFirebase(task: Task, taskMode: TaskMode)
+    fun onClickAddNewTaskOrEditForMeToFirebase(task: Task, taskMode: TaskMode, token: String)
 
     fun onClickedAddShopItemToDatabase(shopItem: ShopItemDBModel)
 
-    fun onClickAddNewTaskOrEditForOtherUserToFirebase(externalTask: ExternalTask, taskMode: TaskMode)
+    fun onClickAddNewTaskOrEditForOtherUserToFirebase(externalTask: ExternalTask, taskMode: TaskMode, token: String)
 
     fun onClickEditUsersList()
 

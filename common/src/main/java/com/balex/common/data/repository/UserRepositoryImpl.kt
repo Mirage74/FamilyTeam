@@ -10,6 +10,7 @@ import com.balex.common.domain.entity.Admin
 import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.ExternalTasks
 import com.balex.common.domain.entity.PrivateTasks
+import com.balex.common.domain.entity.Reminder
 import com.balex.common.domain.entity.Task
 import com.balex.common.domain.entity.User
 import com.balex.common.domain.repository.UserRepository
@@ -51,6 +52,7 @@ class UserRepositoryImpl @Inject constructor(
     private val adminsCollection = db.collection(FIREBASE_ADMINS_COLLECTION)
     private val usersCollection = db.collection(FIREBASE_USERS_COLLECTION)
     private val scheduleCollection = db.collection(FIREBASE_SCHEDULERS_COLLECTION)
+    private val scheduleDeleteCollection = db.collection(FIREBASE_SCHEDULERS_DELETE_COLLECTION)
     private val coroutineScope = CoroutineScope(Dispatchers.Main.immediate)
 
     override fun observeUsersList(): StateFlow<List<String>> {
@@ -109,23 +111,46 @@ class UserRepositoryImpl @Inject constructor(
     }
 
 
-    private suspend fun addRemindersToSchedule(task: Task) {
+    private suspend fun addRemindersToSchedule(task: Task, token: String) {
         try {
             if (task.alarmTime1 != Task.NO_ALARM) {
-                scheduleCollection.add(task.toReminder(1)).await()
+                scheduleCollection.add(task.toReminder(1, token)).await()
             }
             if (task.alarmTime2 != Task.NO_ALARM) {
-                scheduleCollection.add(task.toReminder(2)).await()
+                scheduleCollection.add(task.toReminder(2, token)).await()
             }
             if (task.alarmTime3 != Task.NO_ALARM) {
-                scheduleCollection.add(task.toReminder(3)).await()
+                scheduleCollection.add(task.toReminder(3, token)).await()
             }
         } catch (e: Exception) {
             Log.d("addRemindersToSchedule error", e.toString())
         }
     }
 
-    override suspend fun addOrModifyPrivateTaskToFirebase(task: Task, taskMode: TaskMode) {
+    private suspend fun addRemindersToDeleteSchedule(task: Task, token: String) {
+        try {
+
+            if (task.alarmTime1 != Task.NO_ALARM) {
+                scheduleDeleteCollection.add(
+                    Reminder(id = task.id + 1, deviceToken = token)
+                ).await()
+            }
+            if (task.alarmTime2 != Task.NO_ALARM) {
+                scheduleDeleteCollection.add(
+                    Reminder(id = task.id + 2, deviceToken = token)
+                ).await()
+            }
+            if (task.alarmTime3 != Task.NO_ALARM) {
+                scheduleDeleteCollection.add(
+                    Reminder(id = task.id + 3, deviceToken = token)
+                ).await()
+            }
+        } catch (e: Exception) {
+            Log.d("addRemindersToDeleteSchedule error", e.toString())
+        }
+    }
+
+    override suspend fun addOrModifyPrivateTaskToFirebase(task: Task, taskMode: TaskMode, token: String) {
 
         val userForModify = getUserUseCase()
 
@@ -163,7 +188,7 @@ class UserRepositoryImpl @Inject constructor(
                     .document(userForModify.nickName.lowercase())
 
             if (taskMode == TaskMode.ADD) {
-                addRemindersToSchedule(task)
+                addRemindersToSchedule(task, token)
             }
 
 
@@ -179,7 +204,8 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun addOrModifyExternalTaskToFirebase(
         externalTask: ExternalTask,
-        taskMode: TaskMode
+        taskMode: TaskMode,
+        token: String
     ) {
         val currentUser = getUserUseCase()
 
@@ -227,6 +253,11 @@ class UserRepositoryImpl @Inject constructor(
                 usersCollection.document(currentUser.adminEmailOrPhone)
                     .collection(externalTask.taskOwner.lowercase())
                     .document(externalTask.taskOwner.lowercase())
+
+            if (taskMode == TaskMode.ADD) {
+                addRemindersToSchedule(externalTask.task, token)
+            }
+
             try {
                 val externalUserSnapshot = externalUserCollection.get().await()
                 val externalUser = externalUserSnapshot?.toObject(User::class.java)
@@ -260,6 +291,7 @@ class UserRepositoryImpl @Inject constructor(
                     )
 
                     externalUserCollection.set(userForUpdateExternal).await()
+
                 }
 
             } catch (e: Exception) {
@@ -273,8 +305,11 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun deleteTaskFromFirebase(
         externalTask: ExternalTask,
-        taskType: TaskType
+        taskType: TaskType,
+        token: String
     ) {
+
+        addRemindersToDeleteSchedule(externalTask.task, token)
 
         val currentUser = getUserUseCase()
 
@@ -414,9 +449,9 @@ class UserRepositoryImpl @Inject constructor(
 
 
     companion object {
-        //       const val ERROR_GET_USERS_LIST_FROM_FIREBASE = "ERROR_GET_USERS_LIST_FROM_FIREBASE"
 
         const val FIREBASE_SCHEDULERS_COLLECTION = "schedule"
+        const val FIREBASE_SCHEDULERS_DELETE_COLLECTION = "schedule-delete"
 
         enum class TaskType {
             PRIVATE,

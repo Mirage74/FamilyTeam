@@ -10,6 +10,7 @@ class DeleteTaskFromFirebaseUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(
         externalTask: ExternalTask,
-        taskType: UserRepositoryImpl.Companion.TaskType
-    ) = repository.deleteTaskFromFirebase(externalTask, taskType)
+        taskType: UserRepositoryImpl.Companion.TaskType,
+        token: String
+    ) = repository.deleteTaskFromFirebase(externalTask, taskType, token)
 }

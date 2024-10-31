@@ -105,24 +105,24 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         store.accept(LoggedUserStore.Intent.ClickedEditTask(externalTask, taskType))
     }
 
-    override fun onClickDeleteTask(externalTask: ExternalTask, taskType: UserRepositoryImpl.Companion.TaskType) {
-        store.accept(LoggedUserStore.Intent.ClickedDeleteTask(externalTask, taskType))
+    override fun onClickDeleteTask(externalTask: ExternalTask, taskType: UserRepositoryImpl.Companion.TaskType, token: String) {
+        store.accept(LoggedUserStore.Intent.ClickedDeleteTask(externalTask, taskType, token))
     }
 
     override fun onClickDeleteShopItem(itemId: Long) {
         store.accept(LoggedUserStore.Intent.ClickedDeleteShopItem(itemId))
     }
 
-    override fun onClickAddNewTaskOrEditForMeToFirebase(task: Task, taskMode: TaskMode) {
-        store.accept(LoggedUserStore.Intent.ClickedAddPrivateTaskOrEditToFirebase(task, taskMode))
+    override fun onClickAddNewTaskOrEditForMeToFirebase(task: Task, taskMode: TaskMode, token: String) {
+        store.accept(LoggedUserStore.Intent.ClickedAddPrivateTaskOrEditToFirebase(task, taskMode, token))
     }
 
     override fun onClickedAddShopItemToDatabase(shopItem: ShopItemDBModel) {
         store.accept(LoggedUserStore.Intent.ClickedAddShopItemToDatabase(shopItem))
     }
 
-    override fun onClickAddNewTaskOrEditForOtherUserToFirebase(externalTask: ExternalTask, taskMode: TaskMode) {
-        store.accept(LoggedUserStore.Intent.ClickedAddExternalTaskOrEditToFirebase(externalTask, taskMode))
+    override fun onClickAddNewTaskOrEditForOtherUserToFirebase(externalTask: ExternalTask, taskMode: TaskMode, token: String) {
+        store.accept(LoggedUserStore.Intent.ClickedAddExternalTaskOrEditToFirebase(externalTask, taskMode, token))
     }
 
     override fun onClickEditUsersList() {

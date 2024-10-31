@@ -70,6 +70,7 @@ fun InputOrEditTaskForm(
     state: LoggedUserStore.State,
     isMyTask: Boolean,
     taskMode: TaskMode,
+    deviceToken: String,
     context: Context,
 ) {
 
@@ -282,7 +283,7 @@ fun InputOrEditTaskForm(
                             task.copy(alarmTime3 = selectedAlarmInMillisDate3 + selectedAlarmInMillisTime3)
                     }
                     if (isMyTask) {
-                        component.onClickAddNewTaskOrEditForMeToFirebase(task.copy(), taskMode)
+                        component.onClickAddNewTaskOrEditForMeToFirebase(task.copy(), taskMode, deviceToken)
                     } else {
                         val otherUser = selectedUser
                         if (otherUser != null) {
@@ -292,7 +293,8 @@ fun InputOrEditTaskForm(
                             )
                             component.onClickAddNewTaskOrEditForOtherUserToFirebase(
                                 externalTask.copy(),
-                                taskMode
+                                taskMode,
+                                deviceToken
                             )
                         }
                     }

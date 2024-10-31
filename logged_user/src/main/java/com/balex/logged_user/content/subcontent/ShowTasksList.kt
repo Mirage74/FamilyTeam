@@ -42,6 +42,7 @@ fun ShowTasksList(
     state: LoggedUserStore.State,
     component: LoggedUserComponent,
     isMyTask: Boolean,
+    deviceToken: String,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -67,7 +68,8 @@ fun ShowTasksList(
                                 if (offsetX > 100f) {
                                     component.onClickDeleteTask(
                                         externalTask,
-                                        getTaskType(externalTask, isMyTask, state.user.nickName)
+                                        getTaskType(externalTask, isMyTask, state.user.nickName),
+                                        deviceToken
                                     )
                                 } else {
                                     offsetX = 0f
@@ -139,7 +141,8 @@ fun ShowTasksList(
                     onClick = {
                         component.onClickDeleteTask(
                             externalTask,
-                            getTaskType(externalTask, isMyTask, state.user.nickName)
+                            getTaskType(externalTask, isMyTask, state.user.nickName),
+                            deviceToken
                         )
                     },
                     modifier = Modifier.size(32.dp)

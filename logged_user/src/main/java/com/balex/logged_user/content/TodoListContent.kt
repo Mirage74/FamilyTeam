@@ -27,6 +27,7 @@ import com.balex.logged_user.content.subcontent.ShowTasksList
 fun TodoListContent(
     component: LoggedUserComponent,
     state: LoggedUserStore.State,
+    deviceToken: String,
     paddingValues: PaddingValues
 ) {
 
@@ -55,12 +56,12 @@ fun TodoListContent(
             }
             Spacer(modifier = Modifier.height(16.dp))
             val tasks = state.user.listToDo.allMyTasks(state.user.nickName).externalTasks
-            ShowTasksList(tasks, state, component, true,  modifier = Modifier.weight(4f).padding(paddingValues))
+            ShowTasksList(tasks, state, component, true, deviceToken, modifier = Modifier.weight(4f).padding(paddingValues))
         } else {
             if (state.isAddTaskClicked) {
-                InputOrEditTaskForm(component, state, true, TaskMode.ADD, context)
+                InputOrEditTaskForm(component, state, true, TaskMode.ADD, deviceToken, context)
             } else {
-                InputOrEditTaskForm(component, state, true, TaskMode.EDIT, context)
+                InputOrEditTaskForm(component, state, true, TaskMode.EDIT, deviceToken, context)
             }
         }
     }

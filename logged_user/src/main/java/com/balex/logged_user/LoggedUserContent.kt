@@ -74,7 +74,7 @@ fun LoggedUserContent(
 
         when (state.loggedUserState) {
             LoggedUserStore.State.LoggedUserState.Content -> {
-                LoggedUserScreen(component, state)
+                LoggedUserScreen(component, state, deviceToken)
             }
 
             LoggedUserStore.State.LoggedUserState.Loading -> {
@@ -90,7 +90,11 @@ fun LoggedUserContent(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoggedUserScreen(component: LoggedUserComponent, state: LoggedUserStore.State) {
+fun LoggedUserScreen(
+    component: LoggedUserComponent,
+    state: LoggedUserStore.State,
+    deviceToken: String
+) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -139,14 +143,18 @@ fun LoggedUserScreen(component: LoggedUserComponent, state: LoggedUserStore.Stat
                     }
                 }
             )
-            MainContent(component, state)
+            MainContent(component, state, deviceToken)
         }
     }
 }
 
 
 @Composable
-fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
+fun MainContent(
+    component: LoggedUserComponent,
+    state: LoggedUserStore.State,
+    deviceToken: String
+) {
     val selectedColor = androidx.compose.material.MaterialTheme.colors.secondary
     val unSelectedColor = androidx.compose.material.MaterialTheme.colors.onSecondary
     val notAvailableColor = Color.DarkGray
@@ -284,6 +292,7 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                 PagesNames.TodoList -> TodoListContent(
                     component = component,
                     state = state,
+                    deviceToken = deviceToken,
                     paddingValues = paddingValues
                 )
 
@@ -295,6 +304,7 @@ fun MainContent(component: LoggedUserComponent, state: LoggedUserStore.State) {
                 PagesNames.MyTasksForOtherUsers -> MyTasksForOtherUsersContent(
                     component = component,
                     state = state,
+                    deviceToken = deviceToken,
                     paddingValues = paddingValues
                 )
 

@@ -58,19 +58,21 @@ interface LoggedUserStore : Store<Intent, State, Label> {
             val taskType: UserRepositoryImpl.Companion.TaskType
         ) : Intent
 
-        data class ClickedAddPrivateTaskOrEditToFirebase(val task: Task, val taskMode: TaskMode) :
+        data class ClickedAddPrivateTaskOrEditToFirebase(val task: Task, val taskMode: TaskMode, val token: String) :
             Intent
 
         data class ClickedAddShopItemToDatabase(val shopItem: ShopItemDBModel) : Intent
 
         data class ClickedAddExternalTaskOrEditToFirebase(
             val externalTask: ExternalTask,
-            val taskMode: TaskMode
+            val taskMode: TaskMode,
+            val token: String
         ) : Intent
 
         data class ClickedDeleteTask(
             val externalTask: ExternalTask,
-            val taskType: UserRepositoryImpl.Companion.TaskType
+            val taskType: UserRepositoryImpl.Companion.TaskType,
+            val token: String
         ) : Intent
 
         data class ClickedDeleteShopItem(val itemId: Long) : Intent
@@ -344,7 +346,7 @@ class LoggedUserStoreFactory @Inject constructor(
 
                 is Intent.ClickedDeleteTask -> {
                     scope.launch {
-                        deleteTaskFromFirebaseUseCase(intent.externalTask, intent.taskType)
+                        deleteTaskFromFirebaseUseCase(intent.externalTask, intent.taskType, intent.token)
                     }
                 }
 
@@ -360,7 +362,7 @@ class LoggedUserStoreFactory @Inject constructor(
                 is Intent.ClickedAddPrivateTaskOrEditToFirebase -> {
                     if (intent.task.checkData()) {
                         scope.launch {
-                            addPrivateTaskToFirebaseUseCase(intent.task, intent.taskMode)
+                            addPrivateTaskToFirebaseUseCase(intent.task, intent.taskMode, intent.token)
                         }
                         dispatch(Msg.ButtonAddTaskToFirebaseOrEditClickedAndTaskDataIsCorrect)
                     } else {
@@ -382,7 +384,8 @@ class LoggedUserStoreFactory @Inject constructor(
                             scope.launch {
                                 addExternalTaskToFirebaseUseCase(
                                     intent.externalTask,
-                                    intent.taskMode
+                                    intent.taskMode,
+                                    intent.token
                                 )
                             }
                             dispatch(Msg.ButtonAddTaskToFirebaseOrEditClickedAndTaskDataIsCorrect)
