@@ -93,12 +93,13 @@ fun InputOrEditTaskForm(
         var expanded by remember { mutableStateOf(false) }
         var selectedUser by remember { mutableStateOf<String?>(null) }
 
+
         var reminderInMillis1 =
-            context.resources.getInteger(R.integer.alarm_default_in_min_1) * MILLIS_IN_MINUTE
+            context.resources.getInteger(R.integer.alarm_default_in_days_3) * MILLIS_IN_DAY
         var reminderInMillis2 =
             context.resources.getInteger(R.integer.alarm_default_in_hour_2) * MILLIS_IN_HOUR
         var reminderInMillis3 =
-            context.resources.getInteger(R.integer.alarm_default_in_days_3) * MILLIS_IN_DAY
+            context.resources.getInteger(R.integer.alarm_default_in_min_1) * MILLIS_IN_MINUTE
 
         val errorInputText = context.getString(
             R.string.wrong_input_data_for_one_task,
@@ -116,7 +117,7 @@ fun InputOrEditTaskForm(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            var currentCutoff = reminderInMillis3 + MILLIS_IN_DAY
+            var currentCutoff = reminderInMillis1 + MILLIS_IN_DAY
             if (taskMode == TaskMode.EDIT) {
                 description = description.copy(text = state.taskForEdit.task.description)
                 currentCutoff = state.taskForEdit.task.cutoffTime
@@ -206,8 +207,12 @@ fun InputOrEditTaskForm(
                 DateAndTimePickers(
                     isEditMode = taskMode == TaskMode.EDIT,
                     shiftTimeInMillis = reminderInMillis3,
-                    onDateSelected = { selectedAlarmInMillisDate3 = it },
-                    onTimeSelected = { selectedAlarmInMillisTime3 = it },
+                    onDateSelected = {
+                        selectedAlarmInMillisDate3 = it
+                    },
+                    onTimeSelected = {
+                        selectedAlarmInMillisTime3 = it
+                    },
                     onCheck = { isCheckBoxSelected3 = it },
                     textTitle = context.getString(R.string.select_date_and_time_for_alarm3),
                     showCheckBox = YES_CHECK_BOX,
@@ -248,7 +253,7 @@ fun InputOrEditTaskForm(
                         }
                     }
                 } else {
-                    Text(text = state.taskForEdit.taskOwner )
+                    Text(text = state.taskForEdit.taskOwner)
                 }
             }
 
@@ -257,9 +262,12 @@ fun InputOrEditTaskForm(
                 onClick = {
 
                     var task = if (taskMode == TaskMode.ADD) {
+                        val dt = selectedDateInMillis
+                        val tm = selectedTimeInMillis
                         Task(
                             description = description.text,
-                            cutoffTime = selectedDateInMillis + selectedTimeInMillis
+                            //cutoffTime = selectedDateInMillis + selectedTimeInMillis
+                            cutoffTime = dt + tm
                         )
                     } else {
                         Task(
@@ -283,7 +291,11 @@ fun InputOrEditTaskForm(
                             task.copy(alarmTime3 = selectedAlarmInMillisDate3 + selectedAlarmInMillisTime3)
                     }
                     if (isMyTask) {
-                        component.onClickAddNewTaskOrEditForMeToFirebase(task.copy(), taskMode, deviceToken)
+                        component.onClickAddNewTaskOrEditForMeToFirebase(
+                            task.copy(),
+                            taskMode,
+                            deviceToken
+                        )
                     } else {
                         val otherUser = selectedUser
                         if (otherUser != null) {
@@ -425,6 +437,7 @@ fun DatePickerFieldToModal(
             onDateSelected = {
                 focusManager.clearFocus()
                 if (it != null) {
+//                    selectedDate = (it / MILLIS_IN_DAY) * MILLIS_IN_DAY
                     selectedDate = it
                 }
 
@@ -475,7 +488,8 @@ fun convertMillisToDate(millis: Long): String {
 }
 
 private fun convertMillisToTime(millis: Long): String {
-    val formatter = SimpleDateFormat("hh:mm a", Locale.getDefault())
+    val formatter = SimpleDateFormat("HH:mm", Locale.getDefault())
+    formatter.timeZone = TimeZone.getTimeZone("UTC")
     return formatter.format(Date(millis))
 }
 
@@ -538,7 +552,6 @@ fun TimePickerForNewTask(
             context = context
         )
     }
-
 }
 
 private fun getCurrentHour(dateInMillis: Long): Int {

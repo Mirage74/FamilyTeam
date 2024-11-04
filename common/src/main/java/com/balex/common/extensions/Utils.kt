@@ -112,6 +112,7 @@ fun Task.checkData(): Boolean {
     return this.cutoffTime - System.currentTimeMillis() >= Task.MIN_CUTOFF_TIME_FROM_NOW_IN_MILLIS &&
             isCompareAlarmAndCutoffTimeCorrect1 && isCompareAlarmAndCutoffTimeCorrect2 && isCompareAlarmAndCutoffTimeCorrect3 &&
             isCompareAlarm1AndAlarm2Correct && isCompareAlarm1AndAlarm3Correct && isCompareAlarm2AndAlarm3Correct
+    //return true
 }
 
 fun Task.toExternalTask(taskOwner: String): ExternalTask {

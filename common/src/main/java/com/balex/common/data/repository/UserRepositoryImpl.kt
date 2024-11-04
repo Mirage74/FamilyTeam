@@ -1,11 +1,8 @@
 package com.balex.common.data.repository
 
-import android.content.Context
 import android.util.Log
-import com.balex.common.R
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_ADMINS_COLLECTION
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_USERS_COLLECTION
-import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.MILLIS_IN_DAY
 import com.balex.common.domain.entity.Admin
 import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.ExternalTasks
@@ -134,16 +131,43 @@ class UserRepositoryImpl @Inject constructor(
                 scheduleDeleteCollection.add(
                     Reminder(id = task.id + 1, deviceToken = token)
                 ).await()
+
+                val document = Firebase.firestore
+                    .collection(FIREBASE_SCHEDULERS_COLLECTION)
+                    .whereEqualTo("id", task.id + 1)
+                    .get()
+                    .await()
+                    .documents
+                    .firstOrNull()
+                document?.reference?.delete()?.await()
             }
             if (task.alarmTime2 != Task.NO_ALARM) {
                 scheduleDeleteCollection.add(
                     Reminder(id = task.id + 2, deviceToken = token)
                 ).await()
+
+                val document = Firebase.firestore
+                    .collection(FIREBASE_SCHEDULERS_COLLECTION)
+                    .whereEqualTo("id", task.id + 2)
+                    .get()
+                    .await()
+                    .documents
+                    .firstOrNull()
+                document?.reference?.delete()?.await()
             }
             if (task.alarmTime3 != Task.NO_ALARM) {
                 scheduleDeleteCollection.add(
                     Reminder(id = task.id + 3, deviceToken = token)
                 ).await()
+
+                val document = Firebase.firestore
+                    .collection(FIREBASE_SCHEDULERS_COLLECTION)
+                    .whereEqualTo("id", task.id + 3)
+                    .get()
+                    .await()
+                    .documents
+                    .firstOrNull()
+                document?.reference?.delete()?.await()
             }
         } catch (e: Exception) {
             Log.d("addRemindersToDeleteSchedule error", e.toString())

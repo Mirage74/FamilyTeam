@@ -55,7 +55,7 @@ fun MyTasksForOtherUsersContent(
             }
             Spacer(modifier = Modifier.height(16.dp))
             val tasks = state.user.listToDo.thingsToDoForOtherUsers.externalTasks
-            ShowTasksList(tasks, state, component, false, modifier = Modifier
+            ShowTasksList(tasks, state, component, false, deviceToken, modifier = Modifier
                 .weight(4f)
                 .padding(paddingValues))
         } else {
