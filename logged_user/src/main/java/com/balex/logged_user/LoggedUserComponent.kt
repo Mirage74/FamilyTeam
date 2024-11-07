@@ -25,11 +25,11 @@ interface LoggedUserComponent {
 
     fun onClickDeleteShopItem(itemId: Long)
 
-    fun onClickAddNewTaskOrEditForMeToFirebase(task: Task, taskMode: TaskMode, token: String)
+    fun onClickAddNewTaskOrEditForMeToFirebase(task: Task, taskMode: TaskMode, differenceReminders: Int, token: String)
 
     fun onClickedAddShopItemToDatabase(shopItem: ShopItemDBModel)
 
-    fun onClickAddNewTaskOrEditForOtherUserToFirebase(externalTask: ExternalTask, taskMode: TaskMode, token: String)
+    fun onClickAddNewTaskOrEditForOtherUserToFirebase(externalTask: ExternalTask, taskMode: TaskMode, differenceReminders: Int, token: String)
 
     fun onClickEditUsersList()
 

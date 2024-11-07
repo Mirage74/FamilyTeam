@@ -52,7 +52,7 @@ class RegLogRepositoryImpl @Inject constructor(
             field = value
             coroutineScope.launch {
                 isCurrentUserNeedRefreshFlow.emit(Unit)
-                if (!isUserListenerRegistered && value.adminEmailOrPhone != User.DEFAULT_FAKE_EMAIL && value.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES)  {
+                if (!isUserListenerRegistered && value.adminEmailOrPhone != User.DEFAULT_FAKE_EMAIL && value.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
                     addUserListenerInFirebase()
                     isUserListenerRegistered = true
                 }
@@ -68,7 +68,6 @@ class RegLogRepositoryImpl @Inject constructor(
         }
 
     private var language = Language.DEFAULT_LANGUAGE.symbol
-
 
 
     private var isUserMailOrPhoneVerified = false
@@ -636,20 +635,21 @@ class RegLogRepositoryImpl @Inject constructor(
                 if (firebaseUser != null) {
                     val userFromCollection = findUserInCollection(userToSignIn)
 
-                    globalRepoUser = if (userFromCollection != null && userFromCollection.nickName != User.DEFAULT_NICK_NAME) {
-                        userFromCollection
-                        //isCurrentUserNeedRefreshFlow.emit(Unit)
-
-                    } else {
-                        val result = addUserToCollection(newUser)
-                        if (result.isSuccess) {
-                            newUser
+                    globalRepoUser =
+                        if (userFromCollection != null && userFromCollection.nickName != User.DEFAULT_NICK_NAME) {
+                            userFromCollection
                             //isCurrentUserNeedRefreshFlow.emit(Unit)
+
                         } else {
-                            setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
-                            return StatusFakeEmailSignIn.OTHER_FAKE_EMAIL_SIGN_IN_ERROR
+                            val result = addUserToCollection(newUser)
+                            if (result.isSuccess) {
+                                newUser
+                                //isCurrentUserNeedRefreshFlow.emit(Unit)
+                            } else {
+                                setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
+                                return StatusFakeEmailSignIn.OTHER_FAKE_EMAIL_SIGN_IN_ERROR
+                            }
                         }
-                    }
                     return StatusFakeEmailSignIn.USER_SIGNED_IN
 
                 }
@@ -1038,15 +1038,15 @@ class RegLogRepositoryImpl @Inject constructor(
         val taskMaxExpireTimeInMillis =
             context.resources.getInteger(R.integer.max_expired_task_save_in_days) * MILLIS_IN_DAY
         val privateTasks = userForModify.listToDo.thingsToDoPrivate.privateTasks.filter { task ->
-            task.cutoffTime - System.currentTimeMillis() > taskMaxExpireTimeInMillis
+            System.currentTimeMillis() - taskMaxExpireTimeInMillis < task.cutoffTime
         }
         val sharedTasks =
             userForModify.listToDo.thingsToDoShared.externalTasks.filter { externalTask ->
-                externalTask.task.cutoffTime - System.currentTimeMillis() > taskMaxExpireTimeInMillis
+                System.currentTimeMillis() - taskMaxExpireTimeInMillis < externalTask.task.cutoffTime
             }
         val tasksForOtherUsers =
             userForModify.listToDo.thingsToDoForOtherUsers.externalTasks.filter { externalTask ->
-                externalTask.task.cutoffTime - System.currentTimeMillis() > taskMaxExpireTimeInMillis
+                System.currentTimeMillis() - taskMaxExpireTimeInMillis < externalTask.task.cutoffTime
             }
 
         val toDoOld = userForModify.listToDo

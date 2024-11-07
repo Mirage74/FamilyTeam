@@ -113,16 +113,16 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         store.accept(LoggedUserStore.Intent.ClickedDeleteShopItem(itemId))
     }
 
-    override fun onClickAddNewTaskOrEditForMeToFirebase(task: Task, taskMode: TaskMode, token: String) {
-        store.accept(LoggedUserStore.Intent.ClickedAddPrivateTaskOrEditToFirebase(task, taskMode, token))
+    override fun onClickAddNewTaskOrEditForMeToFirebase(task: Task, taskMode: TaskMode, diffReminders: Int, token: String) {
+        store.accept(LoggedUserStore.Intent.ClickedAddPrivateTaskOrEditToFirebase(task, taskMode, diffReminders, token))
     }
 
     override fun onClickedAddShopItemToDatabase(shopItem: ShopItemDBModel) {
         store.accept(LoggedUserStore.Intent.ClickedAddShopItemToDatabase(shopItem))
     }
 
-    override fun onClickAddNewTaskOrEditForOtherUserToFirebase(externalTask: ExternalTask, taskMode: TaskMode, token: String) {
-        store.accept(LoggedUserStore.Intent.ClickedAddExternalTaskOrEditToFirebase(externalTask, taskMode, token))
+    override fun onClickAddNewTaskOrEditForOtherUserToFirebase(externalTask: ExternalTask, taskMode: TaskMode, diffReminders: Int, token: String) {
+        store.accept(LoggedUserStore.Intent.ClickedAddExternalTaskOrEditToFirebase(externalTask, taskMode, diffReminders, token))
     }
 
     override fun onClickEditUsersList() {

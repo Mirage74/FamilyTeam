@@ -174,7 +174,12 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun addOrModifyPrivateTaskToFirebase(task: Task, taskMode: TaskMode, token: String) {
+    override suspend fun addOrModifyPrivateTaskToFirebase(
+        task: Task,
+        taskMode: TaskMode,
+        diffReminders: Int,
+        token: String
+    ) {
 
         val userForModify = getUserUseCase()
 
@@ -199,7 +204,9 @@ class UserRepositoryImpl @Inject constructor(
 
             val newAvailableFCM = if (taskMode == TaskMode.ADD) {
                 userForModify.availableFCM - task.numberOfReminders()
-            } else userForModify.availableFCM
+            } else {
+                userForModify.availableFCM + diffReminders
+            }
 
             val userForUpdate = userForModify.copy(
                 listToDo = updatedTodoList,
@@ -229,6 +236,7 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun addOrModifyExternalTaskToFirebase(
         externalTask: ExternalTask,
         taskMode: TaskMode,
+        diffReminders: Int,
         token: String
     ) {
         val currentUser = getUserUseCase()
@@ -254,7 +262,9 @@ class UserRepositoryImpl @Inject constructor(
 
             val newAvailableFCM = if (taskMode == TaskMode.ADD) {
                 currentUser.availableFCM - externalTask.task.numberOfReminders()
-            } else currentUser.availableFCM
+            } else {
+                currentUser.availableFCM + diffReminders
+            }
 
             val userForUpdate = currentUser.copy(
                 listToDo = updatedTodoList,

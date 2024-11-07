@@ -8,9 +8,9 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface UserRepository {
 
-    suspend fun addOrModifyPrivateTaskToFirebase(task: Task, taskMode: TaskMode, token: String)
+    suspend fun addOrModifyPrivateTaskToFirebase(task: Task, taskMode: TaskMode, diffReminders: Int, token: String)
 
-    suspend fun addOrModifyExternalTaskToFirebase(externalTask: ExternalTask, taskMode: TaskMode, token: String)
+    suspend fun addOrModifyExternalTaskToFirebase(externalTask: ExternalTask, taskMode: TaskMode, diffReminders: Int, token: String)
 
     suspend fun deleteTaskFromFirebase(externalTask: ExternalTask, taskType: UserRepositoryImpl.Companion.TaskType, token: String)
 
