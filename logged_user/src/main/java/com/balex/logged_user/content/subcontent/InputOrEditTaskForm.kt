@@ -1,6 +1,7 @@
 package com.balex.logged_user.content.subcontent
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -77,9 +78,6 @@ fun InputOrEditTaskForm(
     if (state.user.availableTasksToAdd > 0 || state.isEditTaskClicked) {
 
 
-        var description by remember { mutableStateOf(TextFieldValue("")) }
-        var selectedDateInMillis by remember { mutableLongStateOf(0L) }
-        var selectedTimeInMillis by remember { mutableLongStateOf(0L) }
         var selectedAlarmInMillisDate1 by remember { mutableLongStateOf(0L) }
         var selectedAlarmInMillisTime1 by remember { mutableLongStateOf(0L) }
         var selectedAlarmInMillisDate2 by remember { mutableLongStateOf(0L) }
@@ -108,6 +106,22 @@ fun InputOrEditTaskForm(
             Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIMES_IN_MINUTES
         )
 
+        val initialDate by remember {
+            mutableLongStateOf(Calendar.getInstance(TimeZone.getTimeZone("UTC")).timeInMillis)
+        }
+
+        var currentCutoff = context.resources.getInteger(R.integer.alarm_default_in_days_3) * MILLIS_IN_DAY + MILLIS_IN_DAY
+
+        var selectedDateInMillis by remember { mutableLongStateOf((initialDate + currentCutoff) / MILLIS_IN_DAY * MILLIS_IN_DAY) }
+        var selectedTimeInMillis by remember { mutableLongStateOf((initialDate + currentCutoff) % MILLIS_IN_DAY) }
+
+
+
+        if (taskMode == TaskMode.EDIT) {
+            currentCutoff = state.taskForEdit.task.cutoffTime
+            selectedUser = state.taskForEdit.taskOwner
+        }
+
         Column(
 
             modifier = Modifier
@@ -117,22 +131,24 @@ fun InputOrEditTaskForm(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            var currentCutoff = reminderInMillis1 + MILLIS_IN_DAY
+
+            var description by remember { mutableStateOf(TextFieldValue("")) }
+
+
             if (taskMode == TaskMode.EDIT) {
                 description = description.copy(text = state.taskForEdit.task.description)
-                currentCutoff = state.taskForEdit.task.cutoffTime
-                selectedUser = state.taskForEdit.taskOwner
+
 
                 if (state.taskForEdit.task.alarmTime1 != Task.NO_ALARM) {
                     reminderInMillis1 = state.taskForEdit.task.alarmTime1
                     isCheckBoxSelected1 = true
                 }
                 if (state.taskForEdit.task.alarmTime2 != Task.NO_ALARM) {
-                    reminderInMillis2 = state.taskForEdit.task.alarmTime1
+                    reminderInMillis2 = state.taskForEdit.task.alarmTime2
                     isCheckBoxSelected2 = true
                 }
                 if (state.taskForEdit.task.alarmTime3 != Task.NO_ALARM) {
-                    reminderInMillis3 = state.taskForEdit.task.alarmTime1
+                    reminderInMillis3 = state.taskForEdit.task.alarmTime3
                     isCheckBoxSelected3 = true
                 }
             }
@@ -163,10 +179,15 @@ fun InputOrEditTaskForm(
 
 
             DateAndTimePickers(
+                initialDate,
                 isEditMode = taskMode == TaskMode.EDIT,
                 shiftTimeInMillis = currentCutoff,
-                onDateSelected = { selectedDateInMillis = it },
-                onTimeSelected = { selectedTimeInMillis = it },
+                onDateSelected = { selectedDate ->
+                    selectedDateInMillis = selectedDate
+                },
+                onTimeSelected = { selectedTime ->
+                    selectedTimeInMillis = selectedTime
+                },
                 textTitle = context.getString(R.string.select_date_and_time_for_task),
                 showCheckBox = NO_CHECK_BOX,
                 isCheckBoxSelected = true,
@@ -176,6 +197,7 @@ fun InputOrEditTaskForm(
 
             if (state.user.availableFCM > 0) {
                 DateAndTimePickers(
+                    initialDate,
                     isEditMode = taskMode == TaskMode.EDIT,
                     shiftTimeInMillis = reminderInMillis1,
                     onDateSelected = { selectedAlarmInMillisDate1 = it },
@@ -190,6 +212,7 @@ fun InputOrEditTaskForm(
 
             if (state.user.availableFCM > 1) {
                 DateAndTimePickers(
+                    initialDate,
                     isEditMode = taskMode == TaskMode.EDIT,
                     shiftTimeInMillis = reminderInMillis2,
                     onDateSelected = { selectedAlarmInMillisDate2 = it },
@@ -205,6 +228,7 @@ fun InputOrEditTaskForm(
 
             if (state.user.availableFCM > 2) {
                 DateAndTimePickers(
+                    initialDate,
                     isEditMode = taskMode == TaskMode.EDIT,
                     shiftTimeInMillis = reminderInMillis3,
                     onDateSelected = {
@@ -259,6 +283,7 @@ fun InputOrEditTaskForm(
 
 
             Button(
+                enabled = description.text.isNotBlank(),
                 onClick = {
 
                     var task = if (taskMode == TaskMode.ADD) {
@@ -330,6 +355,7 @@ fun InputOrEditTaskForm(
 
 @Composable
 fun DateAndTimePickers(
+    taskDateInMillis: Long,
     isEditMode: Boolean = false,
     shiftTimeInMillis: Long,
     onDateSelected: (Long) -> Unit,
@@ -349,10 +375,12 @@ fun DateAndTimePickers(
         verticalAlignment = Alignment.CenterVertically
     )
     {
-        var initialDate = Calendar.getInstance(TimeZone.getDefault()).timeInMillis
-        initialDate += context.resources.getInteger(R.integer.task_default_in_min) * MILLIS_IN_MINUTE + shiftTimeInMillis
 
 
+        var initialDate =
+            taskDateInMillis + context.resources.getInteger(R.integer.task_default_in_min) * MILLIS_IN_MINUTE + shiftTimeInMillis
+
+        //Log.d("taskDateInMillis", taskDateInMillis.toString())
         if (isEditMode && isCheckBoxSelected) {
             initialDate = shiftTimeInMillis
         }

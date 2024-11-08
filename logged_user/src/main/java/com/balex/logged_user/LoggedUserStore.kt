@@ -535,7 +535,8 @@ class LoggedUserStoreFactory @Inject constructor(
                     copy(
                         isAddTaskClicked = false,
                         isEditTaskClicked = false,
-                        isAddShopItemClicked = false
+                        isAddShopItemClicked = false,
+                        isWrongTaskData = false
                     )
                 }
 
