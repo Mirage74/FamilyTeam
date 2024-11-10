@@ -128,21 +128,22 @@ fun Task.toReminder(alarmNumber: Int, token: String): Reminder {
     val alarmTime: Long
     val readableAlarmTime: String
     val pattern = "dd MMMM yyyy HH:mm"
-    val formatter = SimpleDateFormat(pattern, Locale.ENGLISH)
+    val formatter = SimpleDateFormat(pattern, Locale.getDefault())
+    //val formatter = SimpleDateFormat(pattern, Locale.ENGLISH)
     formatter.timeZone = TimeZone.getTimeZone("UTC")
     when (alarmNumber) {
         1 -> {
-            alarmTime = this.alarmTime1
+            alarmTime = this.alarmTime1 - TimeZone.getDefault().rawOffset
             readableAlarmTime = formatter.format(Date(alarmTime1))
         }
 
         2 -> {
-            alarmTime = this.alarmTime2
+            alarmTime = this.alarmTime2 - TimeZone.getDefault().rawOffset
             readableAlarmTime = formatter.format(Date(alarmTime2))
         }
 
         else -> {
-            alarmTime = this.alarmTime3
+            alarmTime = this.alarmTime3 - TimeZone.getDefault().rawOffset
             readableAlarmTime = formatter.format(Date(alarmTime3))
         }
     }
