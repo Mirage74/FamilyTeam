@@ -17,6 +17,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 import kotlin.math.abs
 
 fun ComponentContext.componentScope() = CoroutineScope(
@@ -84,12 +85,12 @@ fun Task.checkData(): Boolean {
             this.cutoffTime - this.alarmTime1 >= Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIME_AND_ALARMS_IN_MILLIS
     }
 
-    if (this.alarmTime1 != Task.NO_ALARM) {
+    if (this.alarmTime2 != Task.NO_ALARM) {
         isCompareAlarmAndCutoffTimeCorrect2 =
             this.cutoffTime - this.alarmTime2 >= Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIME_AND_ALARMS_IN_MILLIS
     }
 
-    if (this.alarmTime1 != Task.NO_ALARM) {
+    if (this.alarmTime3 != Task.NO_ALARM) {
         isCompareAlarmAndCutoffTimeCorrect3 =
             this.cutoffTime - this.alarmTime3 >= Task.MIN_DIFFERENCE_BETWEEN_CUTOFF_TIME_AND_ALARMS_IN_MILLIS
     }
@@ -127,26 +128,30 @@ fun Task.toReminder(alarmNumber: Int, token: String): Reminder {
     val alarmTime: Long
     val readableAlarmTime: String
     val pattern = "dd MMMM yyyy HH:mm"
+    val formatter = SimpleDateFormat(pattern, Locale.ENGLISH)
+    formatter.timeZone = TimeZone.getTimeZone("UTC")
     when (alarmNumber) {
         1 -> {
             alarmTime = this.alarmTime1
-            readableAlarmTime = SimpleDateFormat(pattern, Locale.getDefault()).format(Date(alarmTime1))
+            readableAlarmTime = formatter.format(Date(alarmTime1))
         }
+
         2 -> {
             alarmTime = this.alarmTime2
-            readableAlarmTime = SimpleDateFormat(pattern, Locale.getDefault()).format(Date(alarmTime2))
+            readableAlarmTime = formatter.format(Date(alarmTime2))
         }
+
         else -> {
             alarmTime = this.alarmTime3
-            readableAlarmTime = SimpleDateFormat(pattern, Locale.getDefault()).format(Date(alarmTime3))
+            readableAlarmTime = formatter.format(Date(alarmTime3))
         }
     }
-        return Reminder(
-            id = this.id + alarmNumber,
-            description = this.description + " " + readableAlarmTime,
-            alarmTime = alarmTime,
-            deviceToken = token
-        )
+    return Reminder(
+        id = this.id + alarmNumber,
+        description = this.description + " " + readableAlarmTime,
+        alarmTime = alarmTime,
+        deviceToken = token
+    )
 }
 
 fun PrivateTasks.toExternalTasks(taskOwner: String): ExternalTasks {
@@ -169,9 +174,13 @@ fun Task.numberOfReminders(): Int {
 
 fun ToDoList.allMyTasks(myNickName: String): ExternalTasks {
     return ExternalTasks(
-        externalTasks = this.thingsToDoShared.externalTasks.toMutableList().apply {addAll(this@allMyTasks.thingsToDoPrivate.toExternalTasks(
-            myNickName
-        ).externalTasks)}.sortedBy { it.task.cutoffTime })
+        externalTasks = this.thingsToDoShared.externalTasks.toMutableList().apply {
+            addAll(
+                this@allMyTasks.thingsToDoPrivate.toExternalTasks(
+                    myNickName
+                ).externalTasks
+            )
+        }.sortedBy { it.task.cutoffTime })
 
 //        externalTasks = this.thingsToDoShared.externalTasks.union(
 //            this.thingsToDoPrivate.toExternalTasks(

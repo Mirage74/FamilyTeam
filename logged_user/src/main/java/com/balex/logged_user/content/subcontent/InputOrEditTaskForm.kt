@@ -78,12 +78,7 @@ fun InputOrEditTaskForm(
     if (state.user.availableTasksToAdd > 0 || state.isEditTaskClicked) {
 
 
-        var selectedAlarmInMillisDate1 by remember { mutableLongStateOf(0L) }
-        var selectedAlarmInMillisTime1 by remember { mutableLongStateOf(0L) }
-        var selectedAlarmInMillisDate2 by remember { mutableLongStateOf(0L) }
-        var selectedAlarmInMillisTime2 by remember { mutableLongStateOf(0L) }
-        var selectedAlarmInMillisDate3 by remember { mutableLongStateOf(0L) }
-        var selectedAlarmInMillisTime3 by remember { mutableLongStateOf(0L) }
+
         var isCheckBoxSelected1 by remember { mutableStateOf(false) }
         var isCheckBoxSelected2 by remember { mutableStateOf(false) }
         var isCheckBoxSelected3 by remember { mutableStateOf(false) }
@@ -110,10 +105,17 @@ fun InputOrEditTaskForm(
             mutableLongStateOf(Calendar.getInstance(TimeZone.getTimeZone("UTC")).timeInMillis)
         }
 
-        var currentCutoff = context.resources.getInteger(R.integer.alarm_default_in_days_3) * MILLIS_IN_DAY + MILLIS_IN_DAY
+        var currentCutoff = context.resources.getInteger(R.integer.alarm_default_in_days_3) * MILLIS_IN_DAY + MILLIS_IN_DAY + context.resources.getInteger(R.integer.task_default_in_min) * MILLIS_IN_MINUTE
 
         var selectedDateInMillis by remember { mutableLongStateOf((initialDate + currentCutoff) / MILLIS_IN_DAY * MILLIS_IN_DAY) }
         var selectedTimeInMillis by remember { mutableLongStateOf((initialDate + currentCutoff) % MILLIS_IN_DAY) }
+
+        var selectedAlarmInMillisDate1 by remember { mutableLongStateOf((selectedDateInMillis + reminderInMillis1) / MILLIS_IN_DAY * MILLIS_IN_DAY) }
+        var selectedAlarmInMillisTime1 by remember { mutableLongStateOf((selectedDateInMillis + reminderInMillis1) % MILLIS_IN_DAY) }
+        var selectedAlarmInMillisDate2 by remember { mutableLongStateOf((selectedDateInMillis + reminderInMillis2) / MILLIS_IN_DAY * MILLIS_IN_DAY) }
+        var selectedAlarmInMillisTime2 by remember { mutableLongStateOf((selectedDateInMillis + reminderInMillis2) % MILLIS_IN_DAY) }
+        var selectedAlarmInMillisDate3 by remember { mutableLongStateOf((selectedDateInMillis + reminderInMillis3) / MILLIS_IN_DAY * MILLIS_IN_DAY) }
+        var selectedAlarmInMillisTime3 by remember { mutableLongStateOf((selectedDateInMillis + reminderInMillis3) % MILLIS_IN_DAY) }
 
 
 
@@ -287,12 +289,9 @@ fun InputOrEditTaskForm(
                 onClick = {
 
                     var task = if (taskMode == TaskMode.ADD) {
-                        val dt = selectedDateInMillis
-                        val tm = selectedTimeInMillis
                         Task(
                             description = description.text,
-                            //cutoffTime = selectedDateInMillis + selectedTimeInMillis
-                            cutoffTime = dt + tm
+                            cutoffTime = selectedDateInMillis + selectedTimeInMillis
                         )
                     } else {
                         Task(
@@ -377,10 +376,9 @@ fun DateAndTimePickers(
     {
 
 
-        var initialDate =
-            taskDateInMillis + context.resources.getInteger(R.integer.task_default_in_min) * MILLIS_IN_MINUTE + shiftTimeInMillis
+        //var initialDate = taskDateInMillis + context.resources.getInteger(R.integer.task_default_in_min) * MILLIS_IN_MINUTE + shiftTimeInMillis
+        var initialDate = taskDateInMillis + shiftTimeInMillis
 
-        //Log.d("taskDateInMillis", taskDateInMillis.toString())
         if (isEditMode && isCheckBoxSelected) {
             initialDate = shiftTimeInMillis
         }
@@ -399,7 +397,7 @@ fun DateAndTimePickers(
         }
 
         DatePickerFieldToModal(
-            defaultDateInMillis = initialDate,
+            defaultDateInMillis = initialDate / MILLIS_IN_DAY * MILLIS_IN_DAY,
             onDateSelected = onDateSelected,
             context = context,
             modifier = Modifier
@@ -534,7 +532,6 @@ fun TimePickerForNewTask(
     var showDialWithDialog by remember { mutableStateOf(false) }
 
 
-
     OutlinedTextField(
         value = selectedTime.let {
             onTimeSelected(it)
@@ -584,6 +581,7 @@ fun TimePickerForNewTask(
 
 private fun getCurrentHour(dateInMillis: Long): Int {
     val calendar = Calendar.getInstance().apply {
+        timeZone = TimeZone.getTimeZone("UTC")
         timeInMillis = dateInMillis
     }
     return calendar.get(Calendar.HOUR_OF_DAY)
@@ -591,6 +589,7 @@ private fun getCurrentHour(dateInMillis: Long): Int {
 
 private fun getCurrentMinute(dateInMillis: Long): Int {
     val calendar = Calendar.getInstance().apply {
+        timeZone = TimeZone.getTimeZone("UTC")
         timeInMillis = dateInMillis
     }
     return calendar.get(Calendar.MINUTE)
