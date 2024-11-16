@@ -85,6 +85,10 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     override val model: StateFlow<LoggedUserStore.State> = store.stateFlow
 
+    override fun sendIntent(intent: LoggedUserStore.Intent) {
+        store.accept(intent)
+    }
+
     override fun onBackFromNewTaskFormClicked() {
         store.accept(LoggedUserStore.Intent.BackFromNewTaskFormClicked)
     }

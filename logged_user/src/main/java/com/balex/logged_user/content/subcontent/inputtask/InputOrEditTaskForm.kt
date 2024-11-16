@@ -1,38 +1,21 @@
-package com.balex.logged_user.content.subcontent
+package com.balex.logged_user.content.subcontent.inputtask
 
 import android.content.Context
-import android.util.Log
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.TimePickerState
-import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -42,25 +25,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.balex.common.data.repository.TaskMode
 import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.Task
 import com.balex.logged_user.LoggedUserComponent
 import com.balex.logged_user.LoggedUserStore
-import com.balex.common.R as commonR
 import com.balex.logged_user.R
-import java.text.SimpleDateFormat
+import com.balex.logged_user.content.subcontent.GreetingRow
 import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 import java.util.TimeZone
 
 
@@ -78,10 +52,9 @@ fun InputOrEditTaskForm(
     if (state.user.availableTasksToAdd > 0 || state.isEditTaskClicked) {
 
 
-
-        var isCheckBoxSelected1 by remember { mutableStateOf(false) }
-        var isCheckBoxSelected2 by remember { mutableStateOf(false) }
-        var isCheckBoxSelected3 by remember { mutableStateOf(false) }
+        var isCheckBoxSelected1 by remember { mutableStateOf(state.taskForEdit.task.alarmTime1 != Task.NO_ALARM) }
+        var isCheckBoxSelected2 by remember { mutableStateOf(state.taskForEdit.task.alarmTime2 != Task.NO_ALARM) }
+        var isCheckBoxSelected3 by remember { mutableStateOf(state.taskForEdit.task.alarmTime3 != Task.NO_ALARM) }
 
         var expanded by remember { mutableStateOf(false) }
         var selectedUser by remember { mutableStateOf<String?>(null) }
@@ -105,7 +78,10 @@ fun InputOrEditTaskForm(
             mutableLongStateOf(Calendar.getInstance(TimeZone.getTimeZone("UTC")).timeInMillis)
         }
 
-        var currentCutoff = context.resources.getInteger(R.integer.alarm_default_in_days_3) * MILLIS_IN_DAY + MILLIS_IN_DAY + context.resources.getInteger(R.integer.task_default_in_min) * MILLIS_IN_MINUTE
+        var currentCutoff =
+            context.resources.getInteger(R.integer.alarm_default_in_days_3) * MILLIS_IN_DAY + MILLIS_IN_DAY + context.resources.getInteger(
+                R.integer.task_default_in_min
+            ) * MILLIS_IN_MINUTE
 
         var selectedDateInMillis by remember { mutableLongStateOf((initialDate + currentCutoff) / MILLIS_IN_DAY * MILLIS_IN_DAY) }
         var selectedTimeInMillis by remember { mutableLongStateOf((initialDate + currentCutoff) % MILLIS_IN_DAY) }
@@ -117,11 +93,31 @@ fun InputOrEditTaskForm(
         var selectedAlarmInMillisDate3 by remember { mutableLongStateOf((selectedDateInMillis + reminderInMillis3) / MILLIS_IN_DAY * MILLIS_IN_DAY) }
         var selectedAlarmInMillisTime3 by remember { mutableLongStateOf((selectedDateInMillis + reminderInMillis3) % MILLIS_IN_DAY) }
 
+        var description by remember {
+            mutableStateOf(
+                if (taskMode == TaskMode.EDIT) {
+                    TextFieldValue(state.taskForEdit.task.description)
+                } else {
+                    TextFieldValue("")
+                }
+            )
+        }
 
 
         if (taskMode == TaskMode.EDIT) {
+
             currentCutoff = state.taskForEdit.task.cutoffTime
             selectedUser = state.taskForEdit.taskOwner
+
+            if (state.taskForEdit.task.alarmTime1 != Task.NO_ALARM) {
+                reminderInMillis1 = state.taskForEdit.task.alarmTime1
+            }
+            if (state.taskForEdit.task.alarmTime2 != Task.NO_ALARM) {
+                reminderInMillis2 = state.taskForEdit.task.alarmTime2
+            }
+            if (state.taskForEdit.task.alarmTime3 != Task.NO_ALARM) {
+                reminderInMillis3 = state.taskForEdit.task.alarmTime3
+            }
         }
 
         Column(
@@ -134,26 +130,8 @@ fun InputOrEditTaskForm(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
 
-            var description by remember { mutableStateOf(TextFieldValue("")) }
 
 
-            if (taskMode == TaskMode.EDIT) {
-                description = description.copy(text = state.taskForEdit.task.description)
-
-
-                if (state.taskForEdit.task.alarmTime1 != Task.NO_ALARM) {
-                    reminderInMillis1 = state.taskForEdit.task.alarmTime1
-                    isCheckBoxSelected1 = true
-                }
-                if (state.taskForEdit.task.alarmTime2 != Task.NO_ALARM) {
-                    reminderInMillis2 = state.taskForEdit.task.alarmTime2
-                    isCheckBoxSelected2 = true
-                }
-                if (state.taskForEdit.task.alarmTime3 != Task.NO_ALARM) {
-                    reminderInMillis3 = state.taskForEdit.task.alarmTime3
-                    isCheckBoxSelected3 = true
-                }
-            }
 
             GreetingRow(state)
 
@@ -219,7 +197,9 @@ fun InputOrEditTaskForm(
                     shiftTimeInMillis = reminderInMillis2,
                     onDateSelected = { selectedAlarmInMillisDate2 = it },
                     onTimeSelected = { selectedAlarmInMillisTime2 = it },
-                    onCheck = { isCheckBoxSelected2 = it },
+                    onCheck = {
+                        isCheckBoxSelected2 = it
+                    },
                     textTitle = context.getString(R.string.select_date_and_time_for_alarm2),
                     showCheckBox = YES_CHECK_BOX,
                     isCheckBoxSelected = isCheckBoxSelected2,
@@ -349,308 +329,6 @@ fun InputOrEditTaskForm(
     } else {
         Text(context.getString(R.string.no_available_tasks))
     }
-}
-
-
-@Composable
-fun DateAndTimePickers(
-    taskDateInMillis: Long,
-    isEditMode: Boolean = false,
-    shiftTimeInMillis: Long,
-    onDateSelected: (Long) -> Unit,
-    onTimeSelected: (Long) -> Unit,
-    onCheck: ((Boolean) -> Unit)? = null,
-    textTitle: String,
-    showCheckBox: Boolean,
-    isCheckBoxSelected: Boolean = false,
-    context: Context
-) {
-    Text(textTitle)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth(),
-        //.padding(horizontal = dimensionResource(id = R.dimen.time_padding_size).value.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    )
-    {
-
-
-        //var initialDate = taskDateInMillis + context.resources.getInteger(R.integer.task_default_in_min) * MILLIS_IN_MINUTE + shiftTimeInMillis
-        var initialDate = taskDateInMillis + shiftTimeInMillis
-
-        if (isEditMode && isCheckBoxSelected) {
-            initialDate = shiftTimeInMillis
-        }
-
-
-        var isChecked by remember { mutableStateOf(isCheckBoxSelected) }
-        if (showCheckBox) {
-
-            Checkbox(
-                checked = isChecked,
-                onCheckedChange = {
-                    isChecked = it
-                    onCheck?.invoke(it)
-                }
-            )
-        }
-
-        DatePickerFieldToModal(
-            defaultDateInMillis = initialDate / MILLIS_IN_DAY * MILLIS_IN_DAY,
-            onDateSelected = onDateSelected,
-            context = context,
-            modifier = Modifier
-                .weight(4f)
-                .padding(end = dimensionResource(id = R.dimen.time_padding_size).value.dp)
-        )
-        TimePickerForNewTask(
-            defaultTimeInMillis = initialDate % MILLIS_IN_DAY,
-            onTimeSelected = onTimeSelected,
-            modifier = Modifier
-                .weight(3f),
-            context = context
-        )
-    }
-}
-
-@Composable
-fun DatePickerFieldToModal(
-    defaultDateInMillis: Long,
-    onDateSelected: (Long) -> Unit,
-    context: Context,
-    modifier: Modifier = Modifier
-) {
-    var selectedDate by remember { mutableLongStateOf(defaultDateInMillis) }
-    var showModal by remember { mutableStateOf(false) }
-
-    val focusManager = LocalFocusManager.current
-
-    OutlinedTextField(
-        value = selectedDate.let {
-            onDateSelected(it)
-            convertMillisToDate(it)
-        } ?: "",
-        maxLines = 1,
-        singleLine = true,
-        onValueChange = { },
-
-        textStyle = TextStyle(
-            fontSize = dimensionResource(id = R.dimen.alarm_date_and_time_text_size).value.sp
-        ),
-        trailingIcon = {
-            Icon(Icons.Default.DateRange, contentDescription = "Select date")
-        },
-        modifier = modifier
-            //.fillMaxWidth()
-            .pointerInput(selectedDate) {
-                awaitEachGesture {
-                    // Modifier.clickable doesn't work for text fields, so we use Modifier.pointerInput
-                    // in the Initial pass to observe events before the text field consumes them
-                    // in the Main pass.
-                    awaitFirstDown(pass = PointerEventPass.Initial)
-                    val upEvent = waitForUpOrCancellation(pass = PointerEventPass.Initial)
-                    if (upEvent != null) {
-                        showModal = true
-                    }
-                }
-            }
-    )
-
-    if (showModal) {
-        DatePickerModal(
-            defaultDateInMillis = selectedDate,
-            onDateSelected = {
-                focusManager.clearFocus()
-                if (it != null) {
-//                    selectedDate = (it / MILLIS_IN_DAY) * MILLIS_IN_DAY
-                    selectedDate = it
-                }
-
-            },
-            onDismiss = {
-                focusManager.clearFocus()
-                showModal = false
-            },
-            context = context
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DatePickerModal(
-    defaultDateInMillis: Long,
-    onDateSelected: (Long?) -> Unit,
-    onDismiss: () -> Unit,
-    context: Context
-) {
-    val datePickerState = rememberDatePickerState(defaultDateInMillis)
-
-    DatePickerDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = {
-                onDateSelected(datePickerState.selectedDateMillis)
-                onDismiss()
-            }) {
-                Text(context.getString(commonR.string.button_ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(context.getString(commonR.string.button_cancel))
-            }
-        }
-    ) {
-        DatePicker(state = datePickerState)
-    }
-}
-
-
-fun convertMillisToDate(millis: Long): String {
-    val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    return formatter.format(Date(millis))
-}
-
-private fun convertMillisToTime(millis: Long): String {
-    val formatter = SimpleDateFormat("HH:mm", Locale.getDefault())
-    formatter.timeZone = TimeZone.getTimeZone("UTC")
-    return formatter.format(Date(millis))
-}
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TimePickerForNewTask(
-    defaultTimeInMillis: Long,
-    onTimeSelected: (Long) -> Unit,
-    modifier: Modifier = Modifier,
-    context: Context
-) {
-    var selectedTime by remember { mutableLongStateOf(defaultTimeInMillis) }
-    var showDialWithDialog by remember { mutableStateOf(false) }
-
-
-    OutlinedTextField(
-        value = selectedTime.let {
-            onTimeSelected(it)
-            convertMillisToTime(it)
-        } ?: "",
-        maxLines = 1,
-        singleLine = true,
-        onValueChange = { },
-        textStyle = TextStyle(
-            fontSize = dimensionResource(id = R.dimen.alarm_date_and_time_text_size).value.sp
-        ),
-        trailingIcon = {
-            Icon(Icons.Default.DateRange, contentDescription = "Select time")
-        },
-        modifier = modifier
-            .fillMaxWidth()
-            .pointerInput(selectedTime) {
-                awaitEachGesture {
-                    // Modifier.clickable doesn't work for text fields, so we use Modifier.pointerInput
-                    // in the Initial pass to observe events before the text field consumes them
-                    // in the Main pass.
-                    awaitFirstDown(pass = PointerEventPass.Initial)
-                    val upEvent = waitForUpOrCancellation(pass = PointerEventPass.Initial)
-                    if (upEvent != null) {
-                        showDialWithDialog = true
-                    }
-                }
-            }
-    )
-
-    if (showDialWithDialog) {
-        DialWithDialog(
-            defaultTimeInMillis = selectedTime,
-            onDismiss = {
-                showDialWithDialog = false
-
-            },
-            onConfirm = { time ->
-                selectedTime = time.hour * MILLIS_IN_HOUR + time.minute * MILLIS_IN_MINUTE
-                showDialWithDialog = false
-
-            },
-            context = context
-        )
-    }
-}
-
-private fun getCurrentHour(dateInMillis: Long): Int {
-    val calendar = Calendar.getInstance().apply {
-        timeZone = TimeZone.getTimeZone("UTC")
-        timeInMillis = dateInMillis
-    }
-    return calendar.get(Calendar.HOUR_OF_DAY)
-}
-
-private fun getCurrentMinute(dateInMillis: Long): Int {
-    val calendar = Calendar.getInstance().apply {
-        timeZone = TimeZone.getTimeZone("UTC")
-        timeInMillis = dateInMillis
-    }
-    return calendar.get(Calendar.MINUTE)
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DialWithDialog(
-    defaultTimeInMillis: Long,
-    onConfirm: (TimePickerState) -> Unit,
-    onDismiss: () -> Unit,
-    context: Context
-) {
-    //val currentTime = Calendar.getInstance()
-    val focusManager = LocalFocusManager.current
-
-    val timePickerState = rememberTimePickerState(
-        initialHour = getCurrentHour(defaultTimeInMillis),
-        initialMinute = getCurrentMinute(defaultTimeInMillis),
-        is24Hour = true
-    )
-
-    TimePickerDialog(
-        onDismiss = {
-            onDismiss()
-            focusManager.clearFocus()
-        },
-        onConfirm = {
-            onConfirm(timePickerState)
-            focusManager.clearFocus()
-        },
-        context = context
-    ) {
-        TimePicker(
-            state = timePickerState,
-        )
-    }
-}
-
-@Composable
-fun TimePickerDialog(
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit,
-    context: Context,
-    content: @Composable () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        dismissButton = {
-            TextButton(onClick = { onDismiss() }) {
-                Text(context.getString(commonR.string.button_dismiss))
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { onConfirm() }) {
-                Text(context.getString(commonR.string.button_ok))
-            }
-        },
-        text = { content() }
-    )
-
 }
 
 const val MILLIS_IN_MINUTE = 60 * 1_000L

@@ -20,7 +20,7 @@ import com.balex.logged_user.LoggedUserComponent
 import com.balex.logged_user.LoggedUserStore
 import com.balex.logged_user.R
 import com.balex.logged_user.content.subcontent.GreetingRow
-import com.balex.logged_user.content.subcontent.InputOrEditTaskForm
+import com.balex.logged_user.content.subcontent.inputtask.InputOrEditTaskForm
 import com.balex.logged_user.content.subcontent.ShowTasksList
 
 @Composable

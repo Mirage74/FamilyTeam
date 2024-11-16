@@ -34,6 +34,7 @@ import com.balex.common.domain.usecases.shopList.RemoveFromShopListUseCase
 import com.balex.common.domain.usecases.user.AddExternalTaskToFirebaseUseCase
 import com.balex.common.domain.usecases.user.AddPrivateTaskToFirebaseUseCase
 import com.balex.common.domain.usecases.user.DeleteTaskFromFirebaseUseCase
+import com.balex.common.domain.usecases.user.SaveDeviceTokenUseCase
 import com.balex.logged_user.LoggedUserStore.Intent
 import com.balex.logged_user.LoggedUserStore.Label
 import com.balex.logged_user.LoggedUserStore.State
@@ -47,6 +48,8 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 
     sealed interface Intent {
 
+        data class SaveDeviceToken(val token: String) : Intent
+
         data object BackFromNewTaskFormClicked : Intent
 
         data object ClickedAddNewTask : Intent
@@ -58,7 +61,11 @@ interface LoggedUserStore : Store<Intent, State, Label> {
             val taskType: UserRepositoryImpl.Companion.TaskType
         ) : Intent
 
-        data class ClickedAddPrivateTaskOrEditToFirebase(val task: Task, val taskMode: TaskMode, val token: String) :
+        data class ClickedAddPrivateTaskOrEditToFirebase(
+            val task: Task,
+            val taskMode: TaskMode,
+            val token: String
+        ) :
             Intent
 
         data class ClickedAddShopItemToDatabase(val shopItem: ShopItemDBModel) : Intent
@@ -107,6 +114,7 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 
     data class State(
         val user: User,
+        val isDeviceTokenSaved: Boolean,
         val usersNicknamesList: List<String>,
         val shopItemsList: ShopItems,
         val isAddTaskClicked: Boolean,
@@ -148,6 +156,7 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 
 class LoggedUserStoreFactory @Inject constructor(
     private val getUserUseCase: GetUserUseCase,
+    private val saveDeviceTokenUseCase: SaveDeviceTokenUseCase,
     private val observeShopListUseCase: ObserveShopListUseCase,
     private val refreshShopListUseCase: RefreshShopListUseCase,
     private val getShopListUseCase: GetShopListUseCase,
@@ -174,6 +183,7 @@ class LoggedUserStoreFactory @Inject constructor(
             name = "LoggedUserStore",
             initialState = State(
                 getUserUseCase(),
+                isDeviceTokenSaved = false,
                 listOf(),
                 ShopItems(),
                 isAddShopItemClicked = false,
@@ -224,6 +234,8 @@ class LoggedUserStoreFactory @Inject constructor(
     }
 
     private sealed interface Msg {
+
+        data class isTokenSavedSuccussfully(val savingResult: Boolean) : Msg
 
         data object BackFromNewTaskFormClicked : Msg
 
@@ -327,6 +339,16 @@ class LoggedUserStoreFactory @Inject constructor(
     private inner class ExecutorImpl : CoroutineExecutor<Intent, Action, State, Msg, Label>() {
         override fun executeIntent(intent: Intent, getState: () -> State) {
             when (intent) {
+                is Intent.SaveDeviceToken -> {
+                    scope.launch {
+                        try {
+                            saveDeviceTokenUseCase(intent.token)
+                            dispatch(Msg.isTokenSavedSuccussfully(true))
+                        } catch (e: Exception) {
+                            dispatch(Msg.isTokenSavedSuccussfully(false))
+                        }
+                    }
+                }
 
                 Intent.BackFromNewTaskFormClicked -> {
                     dispatch(Msg.BackFromNewTaskFormClicked)
@@ -346,7 +368,11 @@ class LoggedUserStoreFactory @Inject constructor(
 
                 is Intent.ClickedDeleteTask -> {
                     scope.launch {
-                        deleteTaskFromFirebaseUseCase(intent.externalTask, intent.taskType, intent.token)
+                        deleteTaskFromFirebaseUseCase(
+                            intent.externalTask,
+                            intent.taskType,
+                            intent.token
+                        )
                     }
                 }
 
@@ -362,7 +388,11 @@ class LoggedUserStoreFactory @Inject constructor(
                 is Intent.ClickedAddPrivateTaskOrEditToFirebase -> {
                     if (intent.task.checkData()) {
                         scope.launch {
-                            addPrivateTaskToFirebaseUseCase(intent.task, intent.taskMode, intent.token)
+                            addPrivateTaskToFirebaseUseCase(
+                                intent.task,
+                                intent.taskMode,
+                                intent.token
+                            )
                         }
                         dispatch(Msg.ButtonAddTaskToFirebaseOrEditClickedAndTaskDataIsCorrect)
                     } else {
@@ -527,6 +557,19 @@ class LoggedUserStoreFactory @Inject constructor(
         override fun State.reduce(msg: Msg): State =
             when (msg) {
 
+                is Msg.isTokenSavedSuccussfully -> {
+                    if (this.user.nickName != User.DEFAULT_NICK_NAME) {
+                        copy(
+                            isDeviceTokenSaved = msg.savingResult,
+                            loggedUserState = State.LoggedUserState.Content
+                        )
+
+                    } else {
+                        copy(isDeviceTokenSaved = msg.savingResult)
+                    }
+
+                }
+
                 is Msg.ShopListIsChanged -> {
                     copy(shopItemsList = ShopItems(msg.shopList))
                 }
@@ -581,7 +624,7 @@ class LoggedUserStoreFactory @Inject constructor(
                 }
 
                 is Msg.UserIsChanged -> {
-                    if (msg.user.nickName != User.DEFAULT_NICK_NAME) {
+                    if (msg.user.nickName != User.DEFAULT_NICK_NAME && this.isDeviceTokenSaved) {
                         copy(
                             user = msg.user,
                             loggedUserState = State.LoggedUserState.Content

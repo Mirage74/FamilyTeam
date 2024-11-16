@@ -50,6 +50,8 @@ class UserRepositoryImpl @Inject constructor(
     private val usersCollection = db.collection(FIREBASE_USERS_COLLECTION)
     private val scheduleCollection = db.collection(FIREBASE_SCHEDULERS_COLLECTION)
     private val scheduleDeleteCollection = db.collection(FIREBASE_SCHEDULERS_DELETE_COLLECTION)
+
+
     private val coroutineScope = CoroutineScope(Dispatchers.Main.immediate)
 
     override fun observeUsersList(): StateFlow<List<String>> {
@@ -124,12 +126,12 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun addRemindersToDeleteSchedule(task: Task, token: String) {
+    private suspend fun addRemindersToDeleteSchedule(task: Task) {
         try {
 
             if (task.alarmTime1 != Task.NO_ALARM) {
                 scheduleDeleteCollection.add(
-                    Reminder(id = task.id + 1, deviceToken = token)
+                    Reminder(id = task.id + 1)
                 ).await()
 
                 val document = Firebase.firestore
@@ -143,7 +145,7 @@ class UserRepositoryImpl @Inject constructor(
             }
             if (task.alarmTime2 != Task.NO_ALARM) {
                 scheduleDeleteCollection.add(
-                    Reminder(id = task.id + 2, deviceToken = token)
+                    Reminder(id = task.id + 2)
                 ).await()
 
                 val document = Firebase.firestore
@@ -157,7 +159,7 @@ class UserRepositoryImpl @Inject constructor(
             }
             if (task.alarmTime3 != Task.NO_ALARM) {
                 scheduleDeleteCollection.add(
-                    Reminder(id = task.id + 3, deviceToken = token)
+                    Reminder(id = task.id + 3)
                 ).await()
 
                 val document = Firebase.firestore
@@ -174,7 +176,31 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun addOrModifyPrivateTaskToFirebase(task: Task, taskMode: TaskMode, token: String) {
+    override suspend fun saveDeviceToken(token: String) {
+        val user = getUserUseCase()
+        val userCollection =
+            usersCollection.document(user.adminEmailOrPhone)
+                .collection(user.nickName.lowercase())
+                .document(user.nickName.lowercase())
+        val userSnapshot = userCollection.get().await()
+        if (userSnapshot.exists()) {
+            val oldToken = userSnapshot.get("token").toString()
+            if (oldToken.isBlank()) {
+                userCollection.update("token", token).await()
+            } else {
+                if (oldToken != token) {
+                    userCollection.update("token", token).await()
+                    //updateRemindersToken(oldToken, token)
+                }
+            }
+        }
+    }
+
+    override suspend fun addOrModifyPrivateTaskToFirebase(
+        task: Task,
+        taskMode: TaskMode,
+        token: String
+    ) {
 
         val userForModify = getUserUseCase()
 
@@ -333,7 +359,7 @@ class UserRepositoryImpl @Inject constructor(
         token: String
     ) {
 
-        addRemindersToDeleteSchedule(externalTask.task, token)
+        addRemindersToDeleteSchedule(externalTask.task)
 
         val currentUser = getUserUseCase()
 

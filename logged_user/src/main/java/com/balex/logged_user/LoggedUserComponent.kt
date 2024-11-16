@@ -11,6 +11,8 @@ interface LoggedUserComponent {
 
     val model: StateFlow<LoggedUserStore.State>
 
+    fun sendIntent(intent: LoggedUserStore.Intent)
+
     fun onBackFromNewTaskFormClicked()
 
     fun onBackClickedHandle()

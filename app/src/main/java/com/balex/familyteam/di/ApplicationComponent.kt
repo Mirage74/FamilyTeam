@@ -20,6 +20,8 @@ interface ApplicationComponent {
 
     fun inject(activity: com.balex.familyteam.presentation.MainActivity)
 
+    fun inject(firebaseMessagingService: com.balex.familyteam.MyFirebaseMessagingService)
+
     fun provideDefaultRegAdminComponentFactory(): DefaultRegAdminComponent.Factory
 
     @Component.Factory

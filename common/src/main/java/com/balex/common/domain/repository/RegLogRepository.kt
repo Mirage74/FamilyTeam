@@ -67,9 +67,6 @@ interface RegLogRepository {
         password: String
     )
 
-    suspend fun addUserToCollection(userToAdd: User): Result<Unit>
-
-    suspend fun addAdminToCollection(admin: Admin): Result<Unit>
 
     suspend fun removeRecordFromCollection(collectionName: String, emailOrPhoneNumber: String, nickName: String)
 

@@ -9,7 +9,6 @@ import com.balex.familyteam.domain.repository.PhoneFirebaseRepository
 import com.balex.common.domain.usecases.regLog.EmitUserNeedRefreshUseCase
 import com.balex.common.domain.usecases.regLog.FindAdminInCollectionByDocumentNameUseCase
 import com.balex.common.domain.usecases.regLog.RegUserWithFakeEmailToAuthAndToUsersCollectionUseCase
-import com.balex.common.domain.usecases.regLog.RegUserWithFakeEmailUseCase
 import com.balex.common.domain.usecases.regLog.RemoveRecordFromCollectionUseCase
 import com.balex.common.domain.usecases.regLog.SetUserAsVerifiedUseCase
 import com.balex.common.domain.usecases.regLog.SetUserWithErrorUseCase
@@ -38,7 +37,6 @@ import kotlin.coroutines.resumeWithException
 
 class PhoneFirebaseRepositoryImpl @Inject constructor(
     private val regUserWithFakeEmailToAuthAndToUsersCollectionUseCase: RegUserWithFakeEmailToAuthAndToUsersCollectionUseCase,
-    private val regUserWithFakeEmailUseCase: RegUserWithFakeEmailUseCase,
     private val setUserAsVerifiedUseCase: SetUserAsVerifiedUseCase,
     private val setUserWithErrorUseCase: SetUserWithErrorUseCase,
     private val setWrongPasswordUserUseCase: SetWrongPasswordUserUseCase,
@@ -238,7 +236,7 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
                         user.reload().await()
 
                         if (user.phoneNumber == phoneNumber) {
-                            regUserWithFakeEmailUseCase(
+                            regUserWithFakeEmailToAuthAndToUsersCollectionUseCase(
                                 phoneNumber,
                                 nickName,
                                 displayName,

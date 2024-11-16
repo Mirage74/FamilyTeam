@@ -1,10 +1,32 @@
 package com.balex.familyteam
 
-import android.util.Log
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import com.balex.common.domain.usecases.user.SaveDeviceTokenUseCase
+import com.balex.familyteam.presentation.MainActivity
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class MyFirebaseMessagingService : FirebaseMessagingService() {
+class MyFirebaseMessagingService @Inject constructor() : FirebaseMessagingService() {
+
+    @Inject
+    lateinit var saveDeviceTokenUseCase: SaveDeviceTokenUseCase
+
+
+    override fun onCreate() {
+        appComponent.inject(this)
+        super.onCreate()
+        createNotificationChannel()
+    }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         remoteMessage.notification?.let {
@@ -13,52 +35,52 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     override fun onNewToken(token: String) {
-        Log.d(TAG, "Refreshed token: $token")
-        sendRegistrationToServer(token)
+        CoroutineScope(Dispatchers.IO).launch {
+            saveDeviceTokenUseCase(token)
+        }
+
     }
 
-    private fun sendNotification(messageBody: String?) {
-        // Реализуйте этот метод для отображения уведомления
+    private fun createNotificationChannel() {
+        val importance = NotificationManager.IMPORTANCE_HIGH
+        val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, importance).apply {
+            description = "Channel for important notifications"
+        }
+
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager?.createNotificationChannel(channel)
     }
 
-    private fun sendRegistrationToServer(token: String?) {
-        // Реализуйте этот метод для отправки токена на ваш сервер
-    }
 
     private fun showNotification(title: String?, message: String?) {
-//        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-//        val channelId = "default_channel_id"
-//
-//        // Создаем NotificationChannel для API 26+
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//            val channel = NotificationChannel(
-//                channelId,
-//                "Default Channel",
-//                NotificationManager.IMPORTANCE_DEFAULT
-//            )
-//            notificationManager.createNotificationChannel(channel)
-//        }
-//
-//        // Создаем намерение для открытия приложения при нажатии на уведомление
-//        val intent = Intent(this, MainActivity::class.java)
-//        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-//        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-//
-//        // Создаем и показываем уведомление
-//        val notification = NotificationCompat.Builder(this, channelId)
-//            .setContentTitle(title)
-//            .setContentText(message)
-//            .setSmallIcon(R.drawable.ic_notification) // Убедитесь, что у вас есть иконка уведомления
-//            .setContentIntent(pendingIntent)
-//            .setAutoCancel(true)
-//            .build()
-//
-//        notificationManager.notify(0, notification)
-//    }
-}
+        val notificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(com.balex.common.R.drawable.ic_language)
+            .setContentTitle(title ?: "Notification")
+            .setContentText(message ?: "You have a new message")
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+
+        notificationManager.notify(System.currentTimeMillis().toInt(), notificationBuilder.build())
+    }
+
 
     companion object {
-        private const val TAG = "MyFirebaseMsgService"
-        //token e5Ybgaa4TqWH6r5H-YeTW_:APA91bGmcp04a36ukmHK3AU7Zk2sDy5blMxVCZOMsDasTrzP4aQ8GDzDHxrlTld3NaO7TqPTdYLj1Ari0BcEE4sAdhd-6AJXlpOesffIywgzDgp8ep6PlteJewoglwF5cPX6zsCrt4FY
+        private const val CHANNEL_ID = "high_priority_channel"
+        private const val CHANNEL_NAME = "High Priority Notifications"
     }
+
+
 }
+

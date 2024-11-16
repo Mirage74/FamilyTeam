@@ -5,6 +5,8 @@ import android.content.res.Configuration
 import android.util.Log
 import com.balex.common.R
 import com.balex.common.data.datastore.Storage
+import com.balex.common.data.repository.UserRepositoryImpl.Companion.FIREBASE_SCHEDULERS_COLLECTION
+import com.balex.common.data.repository.UserRepositoryImpl.Companion.FIREBASE_SCHEDULERS_DELETE_COLLECTION
 import com.balex.common.domain.entity.Admin
 import com.balex.common.domain.entity.ExternalTasks
 import com.balex.common.domain.entity.Language
@@ -20,6 +22,7 @@ import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
@@ -28,7 +31,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -52,7 +54,7 @@ class RegLogRepositoryImpl @Inject constructor(
             field = value
             coroutineScope.launch {
                 isCurrentUserNeedRefreshFlow.emit(Unit)
-                if (!isUserListenerRegistered && value.adminEmailOrPhone != User.DEFAULT_FAKE_EMAIL && value.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES)  {
+                if (!isUserListenerRegistered && value.adminEmailOrPhone != User.DEFAULT_FAKE_EMAIL && value.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
                     addUserListenerInFirebase()
                     isUserListenerRegistered = true
                 }
@@ -68,7 +70,6 @@ class RegLogRepositoryImpl @Inject constructor(
         }
 
     private var language = Language.DEFAULT_LANGUAGE.symbol
-
 
 
     private var isUserMailOrPhoneVerified = false
@@ -88,11 +89,15 @@ class RegLogRepositoryImpl @Inject constructor(
     private val db = Firebase.firestore
     private val adminsCollection = db.collection(FIREBASE_ADMINS_COLLECTION)
     private val usersCollection = db.collection(FIREBASE_USERS_COLLECTION)
+    private val remindersCollection = db.collection(FIREBASE_REMINDERS_COLLECTION)
 
     private val coroutineScope = CoroutineScope(Dispatchers.Main.immediate)
 
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+
+    private val scheduleCollection = db.collection(FIREBASE_SCHEDULERS_COLLECTION)
+    private val scheduleDeleteCollection = db.collection(FIREBASE_SCHEDULERS_DELETE_COLLECTION)
 
     override fun observeUser(): StateFlow<User> = flow {
         val userFakeEmailFromStorage = Storage.getUser(context)
@@ -274,7 +279,7 @@ class RegLogRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun addAdminToCollection(admin: Admin): Result<Unit> {
+    private suspend fun addAdminToCollection(admin: Admin): Result<Unit> {
         val adminWithList = admin.copy(
             emailOrPhoneNumber = admin.emailOrPhoneNumber.lowercase(),
             nickName = admin.nickName.formatStringFirstLetterUppercase(),
@@ -314,7 +319,7 @@ class RegLogRepositoryImpl @Inject constructor(
         return userForFirebase
     }
 
-    override suspend fun addUserToCollection(userToAdd: User): Result<Unit> {
+    private suspend fun addUserToCollection(userToAdd: User): Result<Unit> {
         return try {
             val newUser = formatUser(userToAdd)
             val userCollection =
@@ -370,16 +375,16 @@ class RegLogRepositoryImpl @Inject constructor(
         }
     }
 
-
     override suspend fun refreshFCMLastTimeUpdated() {
         deleteOldTasks()
+        val currentTimestamp = System.currentTimeMillis()
         var isPremiumAccount = globalRepoUser.hasPremiumAccount
         if (isPremiumAccount) {
-            if (globalRepoUser.premiumAccountExpirationDate < System.currentTimeMillis()) {
+            if (globalRepoUser.premiumAccountExpirationDate < currentTimestamp) {
                 isPremiumAccount = false
             }
         }
-        if (System.currentTimeMillis() - globalRepoUser.lastTimeAvailableFCMWasUpdated > MILLIS_IN_DAY) {
+        if (currentTimestamp - globalRepoUser.lastTimeAvailableFCMWasUpdated > MILLIS_IN_DAY) {
 
             var maxTaskPerDay = if (globalRepoUser.hasPremiumAccount) {
                 context.resources.getInteger(R.integer.max_available_tasks_per_day_premium)
@@ -406,7 +411,7 @@ class RegLogRepositoryImpl @Inject constructor(
                 hasPremiumAccount = isPremiumAccount,
                 availableTasksToAdd = maxTaskPerDay,
                 availableFCM = maxFCMPerDay,
-                lastTimeAvailableFCMWasUpdated = System.currentTimeMillis()
+                lastTimeAvailableFCMWasUpdated = currentTimestamp
             )
 
             val userCollection =
@@ -636,20 +641,21 @@ class RegLogRepositoryImpl @Inject constructor(
                 if (firebaseUser != null) {
                     val userFromCollection = findUserInCollection(userToSignIn)
 
-                    globalRepoUser = if (userFromCollection != null && userFromCollection.nickName != User.DEFAULT_NICK_NAME) {
-                        userFromCollection
-                        //isCurrentUserNeedRefreshFlow.emit(Unit)
-
-                    } else {
-                        val result = addUserToCollection(newUser)
-                        if (result.isSuccess) {
-                            newUser
+                    globalRepoUser =
+                        if (userFromCollection != null && userFromCollection.nickName != User.DEFAULT_NICK_NAME) {
+                            userFromCollection
                             //isCurrentUserNeedRefreshFlow.emit(Unit)
+
                         } else {
-                            setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
-                            return StatusFakeEmailSignIn.OTHER_FAKE_EMAIL_SIGN_IN_ERROR
+                            val result = addUserToCollection(newUser)
+                            if (result.isSuccess) {
+                                newUser
+                                //isCurrentUserNeedRefreshFlow.emit(Unit)
+                            } else {
+                                setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
+                                return StatusFakeEmailSignIn.OTHER_FAKE_EMAIL_SIGN_IN_ERROR
+                            }
                         }
-                    }
                     return StatusFakeEmailSignIn.USER_SIGNED_IN
 
                 }
@@ -1033,20 +1039,72 @@ class RegLogRepositoryImpl @Inject constructor(
         }
     }
 
+    private suspend fun deleteOldRemindersFromSchedule(currentTimestamp: Long) {
+        try {
+            val querySnapshot = scheduleCollection
+                .whereLessThan("alarmTime", currentTimestamp)
+                .get()
+                .await()
+
+            for (document in querySnapshot.documents) {
+                scheduleCollection.document(document.id).delete().await()
+            }
+        } catch (e: Exception) {
+            println("Error deleting old reminders from schedule: ${e.message}")
+        }
+    }
+
+    private suspend fun deleteOldRemindersFromScheduleToDelete(currentTimestamp: Long) {
+        try {
+            val querySnapshot = scheduleDeleteCollection
+                .whereLessThan("id", currentTimestamp)
+                .get()
+                .await()
+
+            for (document in querySnapshot.documents) {
+                scheduleDeleteCollection.document(document.id).delete().await()
+            }
+        } catch (e: Exception) {
+            println("Error deleting old reminders  from schedule for delete: ${e.message}")
+        }
+    }
+
+    private suspend fun deleteOldDocumentsFromRemindersQueueCollection(currentTimestamp: Long) {
+        try {
+            val querySnapshot = remindersCollection
+                .whereLessThan(FieldPath.documentId(), currentTimestamp.toString())
+                .get()
+                .await()
+
+            for (document in querySnapshot.documents) {
+                remindersCollection.document(document.id).delete().await()
+            }
+        } catch (e: Exception) {
+            println("Error deleting old reminders from queue: ${e.message}")
+        }
+    }
+
+
+
     private suspend fun deleteOldTasks() {
+        val currentTimestamp = System.currentTimeMillis()
+        deleteOldRemindersFromSchedule(currentTimestamp)
+        deleteOldRemindersFromScheduleToDelete(currentTimestamp)
+        deleteOldDocumentsFromRemindersQueueCollection(currentTimestamp)
+
         val userForModify = globalRepoUser
         val taskMaxExpireTimeInMillis =
             context.resources.getInteger(R.integer.max_expired_task_save_in_days) * MILLIS_IN_DAY
         val privateTasks = userForModify.listToDo.thingsToDoPrivate.privateTasks.filter { task ->
-            task.cutoffTime - System.currentTimeMillis() > taskMaxExpireTimeInMillis
+            task.cutoffTime - currentTimestamp > taskMaxExpireTimeInMillis
         }
         val sharedTasks =
             userForModify.listToDo.thingsToDoShared.externalTasks.filter { externalTask ->
-                externalTask.task.cutoffTime - System.currentTimeMillis() > taskMaxExpireTimeInMillis
+                externalTask.task.cutoffTime - currentTimestamp > taskMaxExpireTimeInMillis
             }
         val tasksForOtherUsers =
             userForModify.listToDo.thingsToDoForOtherUsers.externalTasks.filter { externalTask ->
-                externalTask.task.cutoffTime - System.currentTimeMillis() > taskMaxExpireTimeInMillis
+                externalTask.task.cutoffTime - currentTimestamp > taskMaxExpireTimeInMillis
             }
 
         val toDoOld = userForModify.listToDo
@@ -1079,6 +1137,9 @@ class RegLogRepositoryImpl @Inject constructor(
 
         const val FIREBASE_ADMINS_COLLECTION = "admins"
         const val FIREBASE_USERS_COLLECTION = "users"
+        const val FIREBASE_REMINDERS_COLLECTION = "reminders-in-queue"
+
+
         const val FIREBASE_ADMINS_AND_USERS_COLLECTION = "adminsAndUsers"
 
         const val SMS_VERIFICATION_ERROR_INITIAL = "SMS_VERIFICATION_ERROR_INITIAL"

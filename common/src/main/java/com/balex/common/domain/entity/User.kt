@@ -18,6 +18,8 @@ data class User(
     val displayName: String = "",
     @SerializedName("password")
     val password: String = "",
+    @SerializedName("token")
+    val token: String = "",
     @SerializedName("hasPremiumAccount")
     val hasPremiumAccount: Boolean = false,
     @SerializedName("premiumAccountExpirationDate")
