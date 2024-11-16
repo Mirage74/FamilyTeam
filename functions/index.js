@@ -180,7 +180,7 @@ exports.onTokenChanged = onDocumentCreated("token-changed/{docId}", async (event
 
     
     await Promise.all(cancelTasksPromises);
-    console.log('All tasks from remindersList are done');
+    //console.log('All tasks from remindersList are done');
   } catch (error) {
     console.error('error deleting tasks:', error.message);
   }
