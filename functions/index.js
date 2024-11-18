@@ -67,6 +67,7 @@ const createTask = async (id, description, deviceToken, alarmTime) => {
 
     await admin.firestore().collection(collectionName).doc(documentId).set(
       { taskId: taskId,
+        alarmTime: alarmTime,
         token: deviceToken,
         description: description
        });
@@ -180,7 +181,7 @@ exports.onTokenChanged = onDocumentCreated("token-changed/{docId}", async (event
 
     
     await Promise.all(cancelTasksPromises);
-    //console.log('All tasks from remindersList are done');
+    console.log('All tasks from remindersList are done');
   } catch (error) {
     console.error('error deleting tasks:', error.message);
   }

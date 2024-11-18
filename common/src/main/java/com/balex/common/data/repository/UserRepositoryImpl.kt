@@ -128,7 +128,6 @@ class UserRepositoryImpl @Inject constructor(
 
     private suspend fun addRemindersToDeleteSchedule(task: Task) {
         try {
-
             if (task.alarmTime1 != Task.NO_ALARM) {
                 scheduleDeleteCollection.add(
                     Reminder(id = task.id + 1)
@@ -196,6 +195,57 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+
+    private suspend fun cancelOldCloudTaskANdCreateNew(oldTask: Task, task: Task, token: String) {
+        val listRemindersToCancel = mutableListOf<Reminder>()
+        val listRemindersToCreate = mutableListOf<Reminder>()
+
+        if (oldTask.alarmTime1 != task.alarmTime1) {
+            if (oldTask.alarmTime1 == Task.NO_ALARM) {
+                listRemindersToCreate.add(task.toReminder(1, token))
+            } else if (task.alarmTime1 == Task.NO_ALARM) {
+                listRemindersToCancel.add(Reminder(id = oldTask.id + 1))
+            } else {
+                listRemindersToCreate.add(task.toReminder(1, token))
+                listRemindersToCancel.add(Reminder(id = oldTask.id + 1))
+            }
+        }
+
+        if (oldTask.alarmTime2 != task.alarmTime2) {
+            if (oldTask.alarmTime2 == Task.NO_ALARM) {
+                listRemindersToCreate.add(task.toReminder(2, token))
+            } else if (task.alarmTime2 == Task.NO_ALARM) {
+                listRemindersToCancel.add(Reminder(id = oldTask.id + 2))
+            } else {
+                listRemindersToCreate.add(task.toReminder(2, token))
+                listRemindersToCancel.add(Reminder(id = oldTask.id + 2))
+            }
+        }
+
+        if (oldTask.alarmTime3 != task.alarmTime3) {
+            if (oldTask.alarmTime3 == Task.NO_ALARM) {
+                listRemindersToCreate.add(task.toReminder(3, token))
+            } else if (task.alarmTime3 == Task.NO_ALARM) {
+                listRemindersToCancel.add(Reminder(id = oldTask.id + 3))
+            } else {
+                listRemindersToCreate.add(task.toReminder(3, token))
+                listRemindersToCancel.add(Reminder(id = oldTask.id + 3))
+            }
+        }
+
+        listRemindersToCancel.forEach {
+            scheduleDeleteCollection.add(it).await()
+
+            //del from scheduler
+        }
+
+        listRemindersToCreate.forEach {
+            scheduleCollection.add(it).await()
+        }
+
+    }
+
+
     override suspend fun addOrModifyPrivateTaskToFirebase(
         task: Task,
         taskMode: TaskMode,
@@ -206,6 +256,10 @@ class UserRepositoryImpl @Inject constructor(
 
         if (userForModify.availableTasksToAdd > 0 || taskMode == TaskMode.EDIT) {
             val toDoOld = userForModify.listToDo
+            var oldTask = toDoOld.thingsToDoPrivate.privateTasks.find { it.id == task.id }
+            if (oldTask == null) {
+                oldTask = Task()
+            }
             val updatedTodoList =
                 if (taskMode == TaskMode.ADD) {
                     toDoOld.copy(
@@ -214,6 +268,7 @@ class UserRepositoryImpl @Inject constructor(
                         )
                     )
                 } else {
+                    cancelOldCloudTaskANdCreateNew(oldTask, task, token)
                     toDoOld.copy(
                         thingsToDoPrivate = toDoOld.thingsToDoPrivate.copy(
                             privateTasks = toDoOld.thingsToDoPrivate.privateTasks.map { taskItem ->
@@ -225,7 +280,14 @@ class UserRepositoryImpl @Inject constructor(
 
             val newAvailableFCM = if (taskMode == TaskMode.ADD) {
                 userForModify.availableFCM - task.numberOfReminders()
-            } else userForModify.availableFCM
+            } else {
+                val diffReminders = task.numberOfReminders() - oldTask.numberOfReminders()
+                if (diffReminders > 0) {
+                    userForModify.availableFCM - diffReminders
+                } else {
+                    userForModify.availableFCM
+                }
+            }
 
             val userForUpdate = userForModify.copy(
                 listToDo = updatedTodoList,

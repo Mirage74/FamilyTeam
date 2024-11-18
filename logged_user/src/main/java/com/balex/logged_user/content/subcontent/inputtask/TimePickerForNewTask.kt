@@ -169,7 +169,7 @@ fun TimePickerDialog(
 
 }
 
-private fun convertMillisToTime(millis: Long): String {
+fun convertMillisToTime(millis: Long): String {
     val formatter = SimpleDateFormat("HH:mm", Locale.getDefault())
     formatter.timeZone = TimeZone.getTimeZone("UTC")
     return formatter.format(Date(millis))

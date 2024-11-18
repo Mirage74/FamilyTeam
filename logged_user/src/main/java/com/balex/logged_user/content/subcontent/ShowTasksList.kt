@@ -36,6 +36,7 @@ import com.balex.common.extensions.isExpired
 import com.balex.logged_user.LoggedUserComponent
 import com.balex.logged_user.LoggedUserStore
 import com.balex.logged_user.content.subcontent.inputtask.convertMillisToDate
+import com.balex.logged_user.content.subcontent.inputtask.convertMillisToTime
 
 @Composable
 fun ShowTasksList(
@@ -55,6 +56,8 @@ fun ShowTasksList(
             val description = externalTask.task.description
             val taskOwner = externalTask.taskOwner
             val taskDate = convertMillisToDate(externalTask.task.cutoffTime)
+            val taskTime = convertMillisToTime(externalTask.task.cutoffTime)
+            val taskDateAndTime = "$taskDate, $taskTime"
             var offsetX by remember { mutableFloatStateOf(0f) }
             val animatedOffsetX by animateFloatAsState(targetValue = offsetX, label = "")
 
@@ -103,9 +106,9 @@ fun ShowTasksList(
 
 
                 Text(
-                    text = taskDate,
+                    text = taskDateAndTime,
                     modifier = Modifier
-                        .weight(3f),
+                        .weight(5f),
                     fontSize = 12.sp
                 )
 

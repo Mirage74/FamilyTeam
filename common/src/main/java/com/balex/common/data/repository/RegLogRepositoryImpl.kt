@@ -22,7 +22,6 @@ import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
@@ -1040,12 +1039,14 @@ class RegLogRepositoryImpl @Inject constructor(
     }
 
     private suspend fun deleteOldRemindersFromSchedule(currentTimestamp: Long) {
+        //Log.d("currentTimestamp", "currentTimestamp: ${currentTimestamp}")
         try {
             val querySnapshot = scheduleCollection
                 .whereLessThan("alarmTime", currentTimestamp)
                 .get()
                 .await()
 
+            //Log.d("currentTimestamp", "querySnapshot size: ${querySnapshot.size()}")
             for (document in querySnapshot.documents) {
                 scheduleCollection.document(document.id).delete().await()
             }
@@ -1071,12 +1072,14 @@ class RegLogRepositoryImpl @Inject constructor(
 
     private suspend fun deleteOldDocumentsFromRemindersQueueCollection(currentTimestamp: Long) {
         try {
+            //Log.d("currentTimestamp", "currentTimestamp: $currentTimestamp")
             val querySnapshot = remindersCollection
-                .whereLessThan(FieldPath.documentId(), currentTimestamp.toString())
+                .whereLessThan("alarmTime", currentTimestamp)
                 .get()
                 .await()
 
             for (document in querySnapshot.documents) {
+                //Log.d("currentTimestamp", "alarmTime: ${document.getString("alarmTime")}")
                 remindersCollection.document(document.id).delete().await()
             }
         } catch (e: Exception) {
