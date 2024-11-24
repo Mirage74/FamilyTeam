@@ -1,31 +1,29 @@
 package com.balex.logged_user
 
 import android.content.Context
+import android.util.Log
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
+import com.balex.common.R
 import com.balex.common.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
+import com.balex.common.data.local.model.ShopItemDBModel
+import com.balex.common.data.repository.TaskMode
+import com.balex.common.data.repository.UserRepositoryImpl
+import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.ExternalTasks
+import com.balex.common.domain.entity.ShopItems
+import com.balex.common.domain.entity.Task
 import com.balex.common.domain.entity.ToDoList
 import com.balex.common.domain.entity.User
-import com.balex.common.extensions.*
+import com.balex.common.domain.usecases.admin.CreateNewUserUseCase
 import com.balex.common.domain.usecases.regLog.GetUserUseCase
 import com.balex.common.domain.usecases.regLog.ObserveLanguageUseCase
 import com.balex.common.domain.usecases.regLog.ObserveUserUseCase
 import com.balex.common.domain.usecases.regLog.SaveLanguageUseCase
 import com.balex.common.domain.usecases.regLog.StorageSavePreferencesUseCase
-import com.balex.common.domain.usecases.user.ObserveUsersListUseCase
-import com.balex.common.domain.usecases.user.RemoveUserUseCase
-import com.balex.common.R
-import com.balex.common.data.local.model.ShopItemDBModel
-import com.balex.common.data.repository.TaskMode
-import com.balex.common.data.repository.UserRepositoryImpl
-import com.balex.common.domain.entity.ExternalTask
-import com.balex.common.domain.entity.ShopItems
-import com.balex.common.domain.entity.Task
-import com.balex.common.domain.usecases.admin.CreateNewUserUseCase
 import com.balex.common.domain.usecases.shopList.AddToShopListUseCase
 import com.balex.common.domain.usecases.shopList.GetShopListUseCase
 import com.balex.common.domain.usecases.shopList.ObserveShopListUseCase
@@ -34,11 +32,25 @@ import com.balex.common.domain.usecases.shopList.RemoveFromShopListUseCase
 import com.balex.common.domain.usecases.user.AddExternalTaskToFirebaseUseCase
 import com.balex.common.domain.usecases.user.AddPrivateTaskToFirebaseUseCase
 import com.balex.common.domain.usecases.user.DeleteTaskFromFirebaseUseCase
+import com.balex.common.domain.usecases.user.ObserveUsersListUseCase
+import com.balex.common.domain.usecases.user.RemoveUserUseCase
 import com.balex.common.domain.usecases.user.SaveDeviceTokenUseCase
+import com.balex.common.extensions.REGEX_PATTERN_NOT_ANY_LETTERS_NUMBERS_UNDERSCORE
+import com.balex.common.extensions.REGEX_PATTERN_NOT_LATIN_LETTERS_NUMBERS_UNDERSCORE
+import com.balex.common.extensions.REGEX_PATTERN_NOT_LETTERS
+import com.balex.common.extensions.checkData
 import com.balex.logged_user.LoggedUserStore.Intent
 import com.balex.logged_user.LoggedUserStore.Label
 import com.balex.logged_user.LoggedUserStore.State
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.takeWhile
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -113,6 +125,7 @@ interface LoggedUserStore : Store<Intent, State, Label> {
     }
 
     data class State(
+        val sessionId: String,
         val user: User,
         val isDeviceTokenSaved: Boolean,
         val usersNicknamesList: List<String>,
@@ -144,6 +157,10 @@ interface LoggedUserStore : Store<Intent, State, Label> {
             data object Loading : LoggedUserState
 
             data object Content : LoggedUserState
+        }
+
+        override fun toString(): String {
+            return "State(sessionId='$sessionId', loggedUserState=$loggedUserState)"
         }
     }
 
@@ -178,12 +195,15 @@ class LoggedUserStoreFactory @Inject constructor(
 
     val appContext: Context = context.applicationContext
 
-    fun create(language: String): LoggedUserStore =
-        object : LoggedUserStore, Store<Intent, State, Label> by storeFactory.create(
+    fun create(language: String, sessionId: String): LoggedUserStore {
+        val sharedBootstrapper = BootstrapperImpl()
+        return object : LoggedUserStore, Store<Intent, State, Label> by storeFactory.create(
             name = "LoggedUserStore",
             initialState = State(
+                sessionId,
                 getUserUseCase(),
-                isDeviceTokenSaved = false,
+                //isDeviceTokenSaved = false,
+                isDeviceTokenSaved = true,
                 listOf(),
                 ShopItems(),
                 isAddShopItemClicked = false,
@@ -208,16 +228,17 @@ class LoggedUserStoreFactory @Inject constructor(
                 myTasksForOtherUsersList = ExternalTasks(listOf()),
                 loggedUserState = State.LoggedUserState.Loading
             ),
-            bootstrapper = BootstrapperImpl(),
+            bootstrapper = sharedBootstrapper,
             executorFactory = ::ExecutorImpl,
             reducer = ReducerImpl
         ) {
-            private val bootstrapper: BootstrapperImpl = BootstrapperImpl()
 
             override fun stopBootstrapperCollectFlow() {
-                bootstrapper.stop()
+                sharedBootstrapper.stop()
+                sharedBootstrapper.dispose()
             }
         }
+    }
 
     private sealed interface Action {
 
@@ -235,7 +256,7 @@ class LoggedUserStoreFactory @Inject constructor(
 
     private sealed interface Msg {
 
-        data class isTokenSavedSuccussfully(val savingResult: Boolean) : Msg
+        data class IsTokenSavedSuccussfully(val savingResult: Boolean) : Msg
 
         data object BackFromNewTaskFormClicked : Msg
 
@@ -292,45 +313,27 @@ class LoggedUserStoreFactory @Inject constructor(
 
     private inner class BootstrapperImpl : CoroutineBootstrapper<Action>() {
 
-        private var userJob: Job? = null
-        private var languageJob: Job? = null
-        private var usersListJob: Job? = null
-        private var shopListJob: Job? = null
+        private val job = SupervisorJob()
+        private val scopeBootstrapper = CoroutineScope(Dispatchers.Main + job)
 
         override fun invoke() {
             start()
         }
 
         fun stop() {
-            userJob?.cancel()
-            languageJob?.cancel()
-            usersListJob?.cancel()
-            shopListJob?.cancel()
+            job.cancel()
         }
 
         fun start() {
             refreshShopListUseCase()
-            userJob = scope.launch {
-                observeUserUseCase().collect {
-                    dispatch(Action.UserIsChanged(it))
-                }
-            }
-
-            shopListJob = scope.launch {
-                observeShopListUseCase().collect {
-                    dispatch(Action.ShopListIsChanged(it))
-                }
-            }
-
-            languageJob = scope.launch {
-                observeLanguageUseCase().collect {
-                    dispatch(Action.LanguageIsChanged(it))
-                }
-            }
-
-            usersListJob = scope.launch {
-                observeUsersListUseCase().collect {
-                    dispatch(Action.UsersListIsChanged(it))
+            scopeBootstrapper.launch {
+                merge(
+                    observeUserUseCase().map { Action.UserIsChanged(it) },
+                    observeShopListUseCase().map { Action.ShopListIsChanged(it) },
+                    observeLanguageUseCase().map { Action.LanguageIsChanged(it) },
+                    observeUsersListUseCase().map { Action.UsersListIsChanged(it) }
+                ).collect { action ->
+                    dispatch(action)
                 }
             }
         }
@@ -340,14 +343,23 @@ class LoggedUserStoreFactory @Inject constructor(
         override fun executeIntent(intent: Intent, getState: () -> State) {
             when (intent) {
                 is Intent.SaveDeviceToken -> {
-                    scope.launch {
-                        try {
-                            saveDeviceTokenUseCase(intent.token)
-                            dispatch(Msg.isTokenSavedSuccussfully(true))
-                        } catch (e: Exception) {
-                            dispatch(Msg.isTokenSavedSuccussfully(false))
+                    if (intent.token.isNotEmpty()) {
+                        dispatch(Msg.IsTokenSavedSuccussfully(true))
+                        CoroutineScope(Dispatchers.IO).launch {
+                            try {
+                                saveDeviceTokenUseCase(intent.token)
+
+                            } catch (e: Exception) {
+                                scope.launch {
+                                    dispatch(Msg.IsTokenSavedSuccussfully(false))
+                                }
+                            }
                         }
+                    } else {
+                        Log.d("ExecutorImpl, SaveDeviceToken error", "token is empty")
+                        dispatch(Msg.IsTokenSavedSuccussfully(false))
                     }
+
                 }
 
                 Intent.BackFromNewTaskFormClicked -> {
@@ -557,7 +569,7 @@ class LoggedUserStoreFactory @Inject constructor(
         override fun State.reduce(msg: Msg): State =
             when (msg) {
 
-                is Msg.isTokenSavedSuccussfully -> {
+                is Msg.IsTokenSavedSuccussfully -> {
                     if (this.user.nickName != User.DEFAULT_NICK_NAME) {
                         copy(
                             isDeviceTokenSaved = msg.savingResult,
@@ -624,7 +636,8 @@ class LoggedUserStoreFactory @Inject constructor(
                 }
 
                 is Msg.UserIsChanged -> {
-                    if (msg.user.nickName != User.DEFAULT_NICK_NAME && this.isDeviceTokenSaved) {
+                    //if (msg.user.nickName != User.DEFAULT_NICK_NAME && this.isDeviceTokenSaved) {
+                    if (msg.user.nickName != User.DEFAULT_NICK_NAME) {
                         copy(
                             user = msg.user,
                             loggedUserState = State.LoggedUserState.Content

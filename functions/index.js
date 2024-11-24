@@ -143,49 +143,49 @@ exports.onScheduleCreate = onDocumentCreated("schedule/{docId}", async (event) =
 
 
 
-exports.onTokenChanged = onDocumentCreated("token-changed/{docId}", async (event) => {
+// exports.onTokenChanged = onDocumentCreated("token-changed/{docId}", async (event) => {
   
 
-  const snap = event.data;
-  if (!snap) {
-    console.log("No data associated with the event");
-    return;
-  }
+//   const snap = event.data;
+//   if (!snap) {
+//     console.log("No data associated with the event");
+//     return;
+//   }
 
 
-  const data = snap.data();
-  if (!data) {
-    console.log("No data found in the document");
-    return;
-  }
-  const { token, remindersList } = data;
+//   const data = snap.data();
+//   if (!data) {
+//     console.log("No data found in the document");
+//     return;
+//   }
+//   const { token, remindersList } = data;
     
-  if (!Array.isArray(remindersList) || remindersList.length === 0) {
-      return;
-  }
+//   if (!Array.isArray(remindersList) || remindersList.length === 0) {
+//       return;
+//   }
 
   
-  try {
+//   try {
   
-    const parent = client.queuePath(projectId, location, queue);
+//     const parent = client.queuePath(projectId, location, queue);
 
     
-    const cancelTasksPromises = remindersList.map(async (taskId) => {
-      const taskName = `${parent}/tasks/${taskId}`;
-      try {
-        await client.deleteTask({ name: taskName });
-      } catch (error) {
-        console.error(`Error delete task ID ${taskId}:`, error.message);
-      }
-    });
+//     const cancelTasksPromises = remindersList.map(async (taskId) => {
+//       const taskName = `${parent}/tasks/${taskId}`;
+//       try {
+//         await client.deleteTask({ name: taskName });
+//       } catch (error) {
+//         console.error(`Error delete task ID ${taskId}:`, error.message);
+//       }
+//     });
 
     
-    await Promise.all(cancelTasksPromises);
-    console.log('All tasks from remindersList are done');
-  } catch (error) {
-    console.error('error deleting tasks:', error.message);
-  }
-});
+//     await Promise.all(cancelTasksPromises);
+//     console.log('All tasks from remindersList are done');
+//   } catch (error) {
+//     console.error('error deleting tasks:', error.message);
+//   }
+// });
 
 
 

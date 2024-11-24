@@ -20,11 +20,13 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -57,11 +59,10 @@ class UserRepositoryImpl @Inject constructor(
     override fun observeUsersList(): StateFlow<List<String>> {
         val job = Job()
         return flow {
-            while (job.isActive) {
+            try {
                 usersNicknamesList = getUsersListFromFirebase()
                 if (usersNicknamesList.isNotEmpty()) {
                     emit(usersNicknamesList)
-                    job.complete()
                     if (!isAdminUsersNickNamesListListenerRegistered) {
                         addUsersListListenerInFirebase()
                         isAdminUsersNickNamesListListenerRegistered = true
@@ -71,8 +72,13 @@ class UserRepositoryImpl @Inject constructor(
                         emit(usersNicknamesList)
                     }
                 }
+
+            } finally {
+                job.cancel()
             }
         }
+
+            .takeWhile { job.isActive }
             .stateIn(
                 scope = coroutineScope,
                 started = SharingStarted.Lazily,
@@ -189,14 +195,58 @@ class UserRepositoryImpl @Inject constructor(
             } else {
                 if (oldToken != token) {
                     userCollection.update("token", token).await()
-                    //updateRemindersToken(oldToken, token)
+                    cancelOldRemindersAndCreateNew(oldToken, token)
                 }
             }
         }
     }
 
 
-    private suspend fun cancelOldCloudTaskANdCreateNew(oldTask: Task, task: Task, token: String) {
+    private suspend fun cancelOldRemindersAndCreateNew(oldToken: String, newToken: String) {
+        val listRemindersToCancel = mutableListOf<Reminder>()
+        val listRemindersToCreate = mutableListOf<Reminder>()
+
+        try {
+
+            val scheduleSnapshot = scheduleCollection.get().await()
+            val scheduleReminders = scheduleSnapshot.documents
+            val scheduleRemindersObjects = scheduleSnapshot.documents.mapNotNull { document ->
+                document.toObject(Reminder::class.java)
+            }
+
+            listRemindersToCancel.addAll(scheduleRemindersObjects.filter { it.deviceToken == oldToken })
+
+            listRemindersToCreate.addAll(
+                listRemindersToCancel.map { reminder ->
+                    reminder.copy(deviceToken = newToken)
+                }
+            )
+
+
+            for (reminderToCancel in listRemindersToCancel) {
+                scheduleDeleteCollection.add(reminderToCancel).await()
+
+                val documentToDelete = scheduleReminders.firstOrNull { doc ->
+                    val reminder = doc.toObject(Reminder::class.java)
+                    reminder?.id == reminderToCancel.id
+                }
+
+                if (documentToDelete != null) {
+                    documentToDelete.reference.delete().await()
+                    break
+                }
+            }
+
+            listRemindersToCreate.forEach {
+                scheduleCollection.add(it).await()
+            }
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private suspend fun cancelOldCloudTaskAndCreateNew(oldTask: Task, task: Task, token: String) {
         val listRemindersToCancel = mutableListOf<Reminder>()
         val listRemindersToCreate = mutableListOf<Reminder>()
 
@@ -233,10 +283,32 @@ class UserRepositoryImpl @Inject constructor(
             }
         }
 
-        listRemindersToCancel.forEach {
-            scheduleDeleteCollection.add(it).await()
+//        listRemindersToCancel.forEach {
+//            scheduleDeleteCollection.add(it).await()
+//
+//
+//        }
 
-            //del from scheduler
+        try {
+
+            val scheduleSnapshot = scheduleCollection.get().await()
+            val scheduleReminders = scheduleSnapshot.documents
+
+            for (reminderToCancel in listRemindersToCancel) {
+                scheduleDeleteCollection.add(reminderToCancel).await()
+
+                val documentToDelete = scheduleReminders.firstOrNull { doc ->
+                    val reminder = doc.toObject(Reminder::class.java)
+                    reminder?.id == reminderToCancel.id
+                }
+
+                if (documentToDelete != null) {
+                    documentToDelete.reference.delete().await()
+                    break
+                }
+            }
+        } catch (e: Exception) {
+            println("Error deleting from Scheduler, cancelOldCloudTaskANdCreateNew: ${e.message}")
         }
 
         listRemindersToCreate.forEach {
@@ -268,7 +340,7 @@ class UserRepositoryImpl @Inject constructor(
                         )
                     )
                 } else {
-                    cancelOldCloudTaskANdCreateNew(oldTask, task, token)
+                    cancelOldCloudTaskAndCreateNew(oldTask, task, token)
                     toDoOld.copy(
                         thingsToDoPrivate = toDoOld.thingsToDoPrivate.copy(
                             privateTasks = toDoOld.thingsToDoPrivate.privateTasks.map { taskItem ->
@@ -533,29 +605,34 @@ class UserRepositoryImpl @Inject constructor(
     private suspend fun getUsersListFromFirebase(): MutableList<String> {
         val admin = getRepoAdminUseCase()
         val usersList = mutableListOf<String>()
-        return try {
-            val adminDocumentSnapshot = adminsCollection
-                .document(admin.emailOrPhoneNumber)
-                .get()
-                .await()
 
-            val adminData = adminDocumentSnapshot?.toObject(Admin::class.java)
+        while (usersList.isEmpty()) {
+            delay(DELAY_TRY_GET_USERS_LIST)
+            try {
+                val adminDocumentSnapshot = adminsCollection
+                    .document(admin.emailOrPhoneNumber)
+                    .get()
+                    .await()
+
+                val adminData = adminDocumentSnapshot?.toObject(Admin::class.java)
 
 
-            if (adminData != null) {
-                usersList.addAll(adminData.usersNickNamesList)
-            } else {
-                usersList.add(admin.nickName)
+                if (adminData != null) {
+                    usersList.addAll(adminData.usersNickNamesList)
+                }
+//                else {
+//                    usersList.add(admin.nickName)
+//                }
+
+
+            } catch (exception: Exception) {
+                //exception.printStackTrace()
+                //throw RuntimeException("getUsersListFromFirebase: $ERROR_GET_USERS_LIST_FROM_FIREBASE")
+                Log.d("getUsersListFromFirebase", exception.toString())
+
             }
-
-            usersList
-
-        } catch (exception: Exception) {
-            //exception.printStackTrace()
-            //throw RuntimeException("getUsersListFromFirebase: $ERROR_GET_USERS_LIST_FROM_FIREBASE")
-            //Log.d(ERROR_GET_USERS_LIST_FROM_FIREBASE, exception.toString())
-            usersList
         }
+        return usersList
 
     }
 
@@ -564,6 +641,7 @@ class UserRepositoryImpl @Inject constructor(
 
         const val FIREBASE_SCHEDULERS_COLLECTION = "schedule"
         const val FIREBASE_SCHEDULERS_DELETE_COLLECTION = "schedule-delete"
+        const val DELAY_TRY_GET_USERS_LIST = 1000L
 
         enum class TaskType {
             PRIVATE,

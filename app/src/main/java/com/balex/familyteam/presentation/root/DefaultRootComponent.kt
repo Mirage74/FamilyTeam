@@ -6,21 +6,21 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
-import com.arkivanov.decompose.router.stack.popWhile
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
 import com.balex.common.domain.entity.User
 import com.balex.familyteam.presentation.about.DefaultAboutComponent
-import com.balex.logged_user.DefaultLoggedUserComponent
 import com.balex.familyteam.presentation.loginuser.DefaultLoginUserComponent
 import com.balex.familyteam.presentation.notlogged.DefaultNotLoggedComponent
 import com.balex.familyteam.presentation.regadmin.DefaultRegAdminComponent
 import com.balex.familyteam.presentation.root.RootComponent.Child
+import com.balex.logged_user.DefaultLoggedUserComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.serialization.Serializable
+import java.util.UUID
 
 
 class DefaultRootComponent @AssistedInject constructor(
@@ -60,7 +60,7 @@ class DefaultRootComponent @AssistedInject constructor(
                         navigation.push(Config.LoginUser(it))
                     },
                     onUserIsLogged = {
-                        navigation.replaceAll(Config.LoggedUser)
+                        navigation.replaceAll(Config.LoggedUser(UUID.randomUUID().toString()))
                     },
                     onAbout = {
                         navigation.push(Config.About)
@@ -73,7 +73,7 @@ class DefaultRootComponent @AssistedInject constructor(
             Config.RegAdmin -> {
                 val component = regAdminComponentFactory.create(
                     onAdminRegisteredAndVerified = {
-                        navigation.replaceAll(Config.LoggedUser)
+                        navigation.replaceAll(Config.LoggedUser(UUID.randomUUID().toString()))
                     }, onAbout = {
                         navigation.push(Config.About)
                     }, onAdminExistButWrongPassword = { userLogin ->
@@ -98,7 +98,7 @@ class DefaultRootComponent @AssistedInject constructor(
                         navigation.push(Config.About)
                     },
                     onUserLogged = {
-                        navigation.replaceAll(Config.LoggedUser)
+                        navigation.replaceAll(Config.LoggedUser(UUID.randomUUID().toString()))
                     },
                     componentContext = childComponentContext
                 )
@@ -114,6 +114,7 @@ class DefaultRootComponent @AssistedInject constructor(
 
             is Config.LoggedUser -> {
                 val component = loggedUserComponentFactory.create(
+                    sessionId = config.id,
                     onBackClicked = {
                         navigation.pop()
                     },
@@ -148,7 +149,8 @@ class DefaultRootComponent @AssistedInject constructor(
         data class LoginUser(val user: User) : Config
 
         @Serializable
-        data object LoggedUser : Config
+        data class LoggedUser(val id: String) : Config
+        //data object LoggedUser : Config
 
         @Serializable
         data object About : Config

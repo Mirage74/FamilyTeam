@@ -35,6 +35,7 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     private val storageClearPreferencesUseCase: StorageClearPreferencesUseCase,
     private val refreshFCMLastTimeUpdatedUseCase: RefreshFCMLastTimeUpdatedUseCase,
     private val emitUsersNicknamesListNeedRefreshUseCase: EmitUsersNicknamesListNeedRefreshUseCase,
+    @Assisted("sessionId") private val sessionId: String,
     @Assisted("onAbout") private val onAbout: () -> Unit,
     @Assisted("onBackClicked") private val onBackClicked: () -> Unit,
     @Assisted("onLogout") private val onLogout: () -> Unit,
@@ -42,8 +43,8 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
 ) : LoggedUserComponent, ComponentContext by componentContext {
 
     private val store =
-        instanceKeeper.getStore { storeFactory.create(getLanguageUseCase()) }
-    private val scope = componentScope()
+        instanceKeeper.getStore { storeFactory.create(getLanguageUseCase(), sessionId) }
+    private var scope = componentScope()
 
     init {
         scope.launch {
@@ -60,7 +61,10 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         }
 
         lifecycle.doOnDestroy {
+            stopCollectingLabels()
+            store.stopBootstrapperCollectFlow()
             scope.cancel()
+            store.dispose()
         }
     }
 
@@ -75,8 +79,6 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
             }
         }
     }
-
-
 
     private fun stopCollectingLabels() {
         scope.coroutineContext.cancelChildren()
@@ -105,11 +107,18 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         store.accept(LoggedUserStore.Intent.ClickedAddShopItem)
     }
 
-    override fun onClickEditTask(externalTask: ExternalTask, taskType: UserRepositoryImpl.Companion.TaskType) {
+    override fun onClickEditTask(
+        externalTask: ExternalTask,
+        taskType: UserRepositoryImpl.Companion.TaskType
+    ) {
         store.accept(LoggedUserStore.Intent.ClickedEditTask(externalTask, taskType))
     }
 
-    override fun onClickDeleteTask(externalTask: ExternalTask, taskType: UserRepositoryImpl.Companion.TaskType, token: String) {
+    override fun onClickDeleteTask(
+        externalTask: ExternalTask,
+        taskType: UserRepositoryImpl.Companion.TaskType,
+        token: String
+    ) {
         store.accept(LoggedUserStore.Intent.ClickedDeleteTask(externalTask, taskType, token))
     }
 
@@ -117,16 +126,36 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         store.accept(LoggedUserStore.Intent.ClickedDeleteShopItem(itemId))
     }
 
-    override fun onClickAddNewTaskOrEditForMeToFirebase(task: Task, taskMode: TaskMode, token: String) {
-        store.accept(LoggedUserStore.Intent.ClickedAddPrivateTaskOrEditToFirebase(task, taskMode, token))
+    override fun onClickAddNewTaskOrEditForMeToFirebase(
+        task: Task,
+        taskMode: TaskMode,
+        token: String
+    ) {
+        store.accept(
+            LoggedUserStore.Intent.ClickedAddPrivateTaskOrEditToFirebase(
+                task,
+                taskMode,
+                token
+            )
+        )
     }
 
     override fun onClickedAddShopItemToDatabase(shopItem: ShopItemDBModel) {
         store.accept(LoggedUserStore.Intent.ClickedAddShopItemToDatabase(shopItem))
     }
 
-    override fun onClickAddNewTaskOrEditForOtherUserToFirebase(externalTask: ExternalTask, taskMode: TaskMode, token: String) {
-        store.accept(LoggedUserStore.Intent.ClickedAddExternalTaskOrEditToFirebase(externalTask, taskMode, token))
+    override fun onClickAddNewTaskOrEditForOtherUserToFirebase(
+        externalTask: ExternalTask,
+        taskMode: TaskMode,
+        token: String
+    ) {
+        store.accept(
+            LoggedUserStore.Intent.ClickedAddExternalTaskOrEditToFirebase(
+                externalTask,
+                taskMode,
+                token
+            )
+        )
     }
 
     override fun onClickEditUsersList() {
@@ -201,7 +230,8 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     interface Factory {
 
         fun create(
-            @Assisted("onBackClicked") onBackClicked :() -> Unit,
+            @Assisted("sessionId") sessionId: String,
+            @Assisted("onBackClicked") onBackClicked: () -> Unit,
             @Assisted("onAbout") onAbout: () -> Unit,
             @Assisted("onLogout") onLogout: () -> Unit,
             @Assisted("componentContext") componentContext: ComponentContext

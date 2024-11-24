@@ -49,7 +49,7 @@ import kotlinx.coroutines.Dispatchers
 @Composable
 fun RegAdminContent(component: RegAdminComponent, activity: MainActivity) {
 
-    val state by component.model.collectAsState(context = CoroutineScope(Dispatchers.Main.immediate).coroutineContext)
+    val state by component.model.collectAsState(Dispatchers.Main.immediate)
 
     com.balex.common.LocalizedContextProvider(languageCode = state.language.lowercase()) {
         when (state.regAdminState) {

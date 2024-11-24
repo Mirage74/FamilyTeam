@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.takeWhile
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -31,6 +33,7 @@ class ShopListRepositoryImpl @Inject constructor(
             shopItems = items
             shopItems
         }
+            .takeWhile { coroutineScope.isActive }
             .stateIn(
                 scope = coroutineScope,
                 started = SharingStarted.Lazily,

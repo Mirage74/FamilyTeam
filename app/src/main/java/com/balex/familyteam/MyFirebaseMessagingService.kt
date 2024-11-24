@@ -16,7 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class MyFirebaseMessagingService @Inject constructor() : FirebaseMessagingService() {
+class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     @Inject
     lateinit var saveDeviceTokenUseCase: SaveDeviceTokenUseCase

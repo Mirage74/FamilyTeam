@@ -41,7 +41,7 @@ import kotlinx.coroutines.Dispatchers
 @Composable
 fun LoginUserContent(component: LoginUserComponent) {
 
-    val state by component.model.collectAsState(context = CoroutineScope(Dispatchers.Main.immediate).coroutineContext)
+    val state by component.model.collectAsState(Dispatchers.Main.immediate)
 
     com.balex.common.LocalizedContextProvider(languageCode = state.language.lowercase()) {
 

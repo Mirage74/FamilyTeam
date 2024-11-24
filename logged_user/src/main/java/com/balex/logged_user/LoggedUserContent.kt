@@ -1,5 +1,6 @@
 package com.balex.logged_user
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,10 +31,14 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -60,12 +65,31 @@ fun LoggedUserContent(
     component: LoggedUserComponent,
     deviceToken: String
 ) {
-    LaunchedEffect(deviceToken) {
-        component.sendIntent(LoggedUserStore.Intent.SaveDeviceToken(deviceToken))
+
+
+    val state by component.model.collectAsState(Dispatchers.Main.immediate)
+
+
+    var previousSessionId by remember { mutableStateOf<String?>(null) }
+    var isFirstRun by remember { mutableStateOf(true) }
+
+    Log.d("LoggedUserContent", "state: $state")
+    Log.d("LoggedUserContent", "state.loggedUserState: ${state.loggedUserState}")
+    Log.d("LoggedUserContent", "state.sessionId: ${state.sessionId}")
+
+    SideEffect {
+        if (isFirstRun  || state.sessionId != previousSessionId ) {
+            Log.d("LoggedUserContent", "deviceToken: $deviceToken")
+            if (deviceToken.isNotEmpty()) {
+                component.sendIntent(LoggedUserStore.Intent.SaveDeviceToken(deviceToken))
+            } else {
+                Log.d("LoggedUserContent", "deviceToken is empty")
+            }
+            isFirstRun = false
+            previousSessionId = state.sessionId
+        }
     }
 
-
-    val state by component.model.collectAsState(context = CoroutineScope(Dispatchers.Main.immediate).coroutineContext)
 
     BackHandler {
         if (state.isAddTaskClicked || state.isEditTaskClicked || state.isAddShopItemClicked) {

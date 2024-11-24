@@ -26,17 +26,22 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 
 class RegLogRepositoryImpl @Inject constructor(
@@ -98,44 +103,56 @@ class RegLogRepositoryImpl @Inject constructor(
     private val scheduleCollection = db.collection(FIREBASE_SCHEDULERS_COLLECTION)
     private val scheduleDeleteCollection = db.collection(FIREBASE_SCHEDULERS_DELETE_COLLECTION)
 
-    override fun observeUser(): StateFlow<User> = flow {
-        val userFakeEmailFromStorage = Storage.getUser(context)
-        val phoneLanguageFromStorage = Storage.getLanguage(context)
+    override fun observeUser(): StateFlow<User> {
+        val job = Job()
+        return flow {
+            try {
 
-        val phoneLang =
-            if (phoneLanguageFromStorage != Storage.NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES) {
-                language = phoneLanguageFromStorage
-                isCurrentLanguageNeedRefreshFlow.emit(Unit)
-                phoneLanguageFromStorage
+            val userFakeEmailFromStorage = Storage.getUser(context)
+            val phoneLanguageFromStorage = Storage.getLanguage(context)
+
+            val phoneLang =
+                if (phoneLanguageFromStorage != Storage.NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES) {
+                    language = phoneLanguageFromStorage
+                    isCurrentLanguageNeedRefreshFlow.emit(Unit)
+                    phoneLanguageFromStorage
+                } else {
+                    language = getCurrentLanguage(context)
+                    language
+                }
+
+            if (userFakeEmailFromStorage == Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
+                val emptyUserNotSaved =
+                    User(
+                        nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES,
+                        language = phoneLang
+                    )
+                globalRepoUser = emptyUserNotSaved
+                //isCurrentUserNeedRefreshFlow.emit(Unit)
+
             } else {
-                language = getCurrentLanguage(context)
-                language
+                signToFirebaseWithEmailAndPasswordFromPreferences(
+                    userFakeEmailFromStorage,
+                    Storage.getUsersPassword(context),
+                    phoneLang
+                )
             }
-
-        if (userFakeEmailFromStorage == Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
-            val emptyUserNotSaved =
-                User(nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES, language = phoneLang)
-            globalRepoUser = emptyUserNotSaved
-            //isCurrentUserNeedRefreshFlow.emit(Unit)
-
-        } else {
-            signToFirebaseWithEmailAndPasswordFromPreferences(
-                userFakeEmailFromStorage,
-                Storage.getUsersPassword(context),
-                phoneLang
-            )
-        }
-        emit(globalRepoUser)
-        addUserListenerInFirebase()
-        isCurrentUserNeedRefreshFlow.collect {
             emit(globalRepoUser)
+            addUserListenerInFirebase()
+            isCurrentUserNeedRefreshFlow.collect {
+                emit(globalRepoUser)
+            }
+            } finally {
+                job.cancel()
+            }
         }
+            .takeWhile { job.isActive}
+            .stateIn(
+                scope = coroutineScope,
+                started = SharingStarted.Lazily,
+                initialValue = globalRepoUser
+            )
     }
-        .stateIn(
-            scope = coroutineScope,
-            started = SharingStarted.Lazily,
-            initialValue = globalRepoUser
-        )
 
     private fun addUserListenerInFirebase() {
         if (globalRepoUser.adminEmailOrPhone != User.DEFAULT_FAKE_EMAIL && globalRepoUser.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
@@ -166,28 +183,35 @@ class RegLogRepositoryImpl @Inject constructor(
             initialValue = isWrongPassword
         )
 
-    override fun observeLanguage(): StateFlow<String> = flow {
-        val phoneLanguageFromStorage = Storage.getLanguage(context)
-        val phoneLang =
-            if (phoneLanguageFromStorage != Storage.NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES) {
-                language = phoneLanguageFromStorage
-                phoneLanguageFromStorage
-            } else {
-                getCurrentLanguage(context)
+    override fun observeLanguage(): StateFlow<String> {
+        val job = Job()
+        return flow {
+            try {
+                val phoneLanguageFromStorage = Storage.getLanguage(context)
+                val phoneLang =
+                    if (phoneLanguageFromStorage != Storage.NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES) {
+                        language = phoneLanguageFromStorage
+                        phoneLanguageFromStorage
+                    } else {
+                        getCurrentLanguage(context)
+                    }
+                language = phoneLang
+                isCurrentLanguageNeedRefreshFlow.emit(Unit)
+
+                isCurrentLanguageNeedRefreshFlow.collect {
+                    emit(language)
+                }
+            } finally {
+                job.cancel()
             }
-        language = phoneLang
-        isCurrentLanguageNeedRefreshFlow.emit(Unit)
-
-        isCurrentLanguageNeedRefreshFlow.collect {
-            emit(language)
         }
+            .takeWhile { job.isActive }
+            .stateIn(
+                scope = coroutineScope,
+                started = SharingStarted.Lazily,
+                initialValue = language
+            )
     }
-        .stateIn(
-            scope = coroutineScope,
-            started = SharingStarted.Lazily,
-            initialValue = language
-        )
-
 
     override fun observeSmsVerificationError(): StateFlow<String> = flow {
 
@@ -378,6 +402,11 @@ class RegLogRepositoryImpl @Inject constructor(
         deleteOldTasks()
         val currentTimestamp = System.currentTimeMillis()
         var isPremiumAccount = globalRepoUser.hasPremiumAccount
+
+        val userCollection =
+            usersCollection.document(globalRepoUser.adminEmailOrPhone)
+                .collection(globalRepoUser.nickName.lowercase())
+                .document(globalRepoUser.nickName.lowercase())
         if (isPremiumAccount) {
             if (globalRepoUser.premiumAccountExpirationDate < currentTimestamp) {
                 isPremiumAccount = false
@@ -413,11 +442,6 @@ class RegLogRepositoryImpl @Inject constructor(
                 lastTimeAvailableFCMWasUpdated = currentTimestamp
             )
 
-            val userCollection =
-                usersCollection.document(globalRepoUser.adminEmailOrPhone)
-                    .collection(globalRepoUser.nickName.lowercase())
-                    .document(globalRepoUser.nickName.lowercase())
-
             try {
                 userCollection.set(userForUpdate).await()
 
@@ -426,6 +450,7 @@ class RegLogRepositoryImpl @Inject constructor(
             }
         }
     }
+
 
     private suspend fun signToFirebaseWithEmailAndPasswordFromPreferences(
         fakeEmail: String,
@@ -989,8 +1014,8 @@ class RegLogRepositoryImpl @Inject constructor(
     ): User {
         val adminEmailOrPhoneWithPlus =
             adminEmailOrPhone.formatStringPhoneDelLeadNullAndAddPlus()
-        val admin = findAdminInCollectionByDocumentName(adminEmailOrPhoneWithPlus)
-        if (admin == null || admin.emailOrPhoneNumber.trim() != adminEmailOrPhoneWithPlus.trim()) {
+        val adminData = findAdminInCollectionByDocumentName(adminEmailOrPhoneWithPlus)
+        if (adminData == null || adminData.emailOrPhoneNumber.trim() != adminEmailOrPhoneWithPlus.trim()) {
             return User(
                 existErrorInData = true,
                 errorMessage = CheckUserInCollectionAndLoginIfExistErrorMessages.ADMIN_NOT_FOUND.name
@@ -1013,7 +1038,7 @@ class RegLogRepositoryImpl @Inject constructor(
                     val trySignIn = signToFirebaseWithFakeEmail(
                         User(
                             adminEmailOrPhone = adminEmailOrPhoneWithPlus,
-                            nickName = admin.nickName,
+                            nickName = adminData.nickName,
                             fakeEmail = createFakeUserEmail(
                                 nickName,
                                 adminEmailOrPhoneWithPlus
@@ -1023,6 +1048,7 @@ class RegLogRepositoryImpl @Inject constructor(
                     )
                     if (trySignIn == StatusFakeEmailSignIn.USER_SIGNED_IN) {
                         globalRepoUser = userFromCollection
+                        admin = adminData
                         //isCurrentUserNeedRefreshFlow.emit(Unit)
                     }
                     return globalRepoUser
@@ -1048,8 +1074,11 @@ class RegLogRepositoryImpl @Inject constructor(
 
             //Log.d("currentTimestamp", "querySnapshot size: ${querySnapshot.size()}")
             for (document in querySnapshot.documents) {
+                currentCoroutineContext().ensureActive()
                 scheduleCollection.document(document.id).delete().await()
             }
+        } catch (e: CancellationException) {
+            println("Coroutine was cancelled: ${e.message}")
         } catch (e: Exception) {
             println("Error deleting old reminders from schedule: ${e.message}")
         }
@@ -1063,10 +1092,13 @@ class RegLogRepositoryImpl @Inject constructor(
                 .await()
 
             for (document in querySnapshot.documents) {
-                scheduleDeleteCollection.document(document.id).delete().await()
+                currentCoroutineContext().ensureActive()
+                scheduleCollection.document(document.id).delete().await()
             }
+        } catch (e: CancellationException) {
+            println("Coroutine was cancelled: ${e.message}")
         } catch (e: Exception) {
-            println("Error deleting old reminders  from schedule for delete: ${e.message}")
+            println("Error deleting schedulers from schedule: ${e.message}")
         }
     }
 
@@ -1079,14 +1111,15 @@ class RegLogRepositoryImpl @Inject constructor(
                 .await()
 
             for (document in querySnapshot.documents) {
-                //Log.d("currentTimestamp", "alarmTime: ${document.getString("alarmTime")}")
-                remindersCollection.document(document.id).delete().await()
+                currentCoroutineContext().ensureActive()
+                scheduleCollection.document(document.id).delete().await()
             }
+        } catch (e: CancellationException) {
+            println("Coroutine was cancelled: ${e.message}")
         } catch (e: Exception) {
             println("Error deleting old reminders from queue: ${e.message}")
         }
     }
-
 
 
     private suspend fun deleteOldTasks() {
@@ -1158,8 +1191,8 @@ class RegLogRepositoryImpl @Inject constructor(
 
         const val AUTH_USER_NOT_FOUND = "ERROR_USER_NOT_FOUND"
 
-        const val MILLIS_IN_MINUTE = 60 * 1_000L
-        const val MILLIS_IN_HOUR = MILLIS_IN_MINUTE * 60
+        private const val MILLIS_IN_MINUTE = 60 * 1_000L
+        private const val MILLIS_IN_HOUR = MILLIS_IN_MINUTE * 60
         const val MILLIS_IN_DAY = MILLIS_IN_HOUR * 24
 
         enum class CheckUserInCollectionAndLoginIfExistErrorMessages {

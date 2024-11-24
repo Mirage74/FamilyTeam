@@ -54,7 +54,7 @@ import com.balex.common.R as commonR
 @Composable
 fun NotLoggedContent(component: NotLoggedComponent) {
 
-    val state by component.model.collectAsState(context = CoroutineScope(Dispatchers.Main.immediate).coroutineContext)
+    val state by component.model.collectAsState(Dispatchers.Main.immediate)
 
     var showLoader by remember { mutableStateOf(false) }
 
