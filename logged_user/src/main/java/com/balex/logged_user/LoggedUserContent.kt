@@ -2,6 +2,8 @@ package com.balex.logged_user
 
 import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
@@ -31,6 +34,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -73,11 +77,7 @@ fun LoggedUserContent(
     var previousSessionId by remember { mutableStateOf<String?>(null) }
     var isFirstRun by remember { mutableStateOf(true) }
 
-    Log.d("LoggedUserContent", "state: $state")
-    Log.d("LoggedUserContent", "state.loggedUserState: ${state.loggedUserState}")
-    Log.d("LoggedUserContent", "state.sessionId: ${state.sessionId}")
-
-    SideEffect {
+    LaunchedEffect(deviceToken) {
         if (isFirstRun  || state.sessionId != previousSessionId ) {
             Log.d("LoggedUserContent", "deviceToken: $deviceToken")
             if (deviceToken.isNotEmpty()) {
@@ -131,16 +131,27 @@ fun LoggedUserScreen(
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            DrawerContent(
-                items = MenuItems().items,
-                onItemClick = {
-                    scope.launch {
-                        drawerState.close()
-                        component.onClickAbout()
-                    }
-
+            Column(
+                modifier = Modifier
+                    .background(Color.White)
+                    .padding(16.dp)
+            ) {
+                MenuItems().items.forEach { menuItem ->
+                    Text(
+                        text = menuItem,
+                        modifier = Modifier
+                            .padding(vertical = 8.dp)
+                            .clickable {
+                                scope.launch {
+                                    drawerState.close()
+                                    component.onClickAbout()
+                                }
+                            },
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.Black
+                    )
                 }
-            )
+            }
         }
     ) {
         Column {

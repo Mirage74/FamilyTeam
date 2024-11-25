@@ -6,4 +6,6 @@ interface AdminRepository {
 
     suspend fun createNewUser(user: User)
 
+    suspend fun deleteUser(userName: String)
+
 }

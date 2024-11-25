@@ -22,6 +22,7 @@ import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
@@ -50,6 +51,8 @@ class RegLogRepositoryImpl @Inject constructor(
 ) : RegLogRepository {
 
     private val appContext: Context = context.applicationContext
+
+    private val listenerRegistrations = mutableListOf<ListenerRegistration>()
 
     private var admin = Admin()
 
@@ -160,7 +163,7 @@ class RegLogRepositoryImpl @Inject constructor(
                 .collection(globalRepoUser.nickName.lowercase())
                 .document(globalRepoUser.nickName.lowercase())
 
-            userCollection.addSnapshotListener { snapshot, error ->
+            val registration = userCollection.addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     return@addSnapshotListener
                 }
@@ -168,6 +171,7 @@ class RegLogRepositoryImpl @Inject constructor(
                     globalRepoUser = it.toObject(User::class.java) ?: globalRepoUser
                 }
             }
+            listenerRegistrations.add(registration)
         }
     }
 
@@ -232,8 +236,8 @@ class RegLogRepositoryImpl @Inject constructor(
         admin = Admin()
         isWrongPassword = User()
         isUserMailOrPhoneVerified = false
-        //isCurrentUserNeedRefreshFlow.emit(Unit)
-        //isCurrentLanguageNeedRefreshFlow.emit(Unit)
+        listenerRegistrations.forEach { it.remove() }
+        listenerRegistrations.clear()
     }
 
     override suspend fun resetWrongPasswordUserToDefault() {

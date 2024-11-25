@@ -605,8 +605,9 @@ class UserRepositoryImpl @Inject constructor(
     private suspend fun getUsersListFromFirebase(): MutableList<String> {
         val admin = getRepoAdminUseCase()
         val usersList = mutableListOf<String>()
+        var currentTry = 0
 
-        while (usersList.isEmpty()) {
+        while (usersList.isEmpty() && currentTry < MAX_TRY_GET_USERS_LIST) {
             delay(DELAY_TRY_GET_USERS_LIST)
             try {
                 val adminDocumentSnapshot = adminsCollection
@@ -631,6 +632,10 @@ class UserRepositoryImpl @Inject constructor(
                 Log.d("getUsersListFromFirebase", exception.toString())
 
             }
+            currentTry++
+        }
+        if (usersList.isEmpty()) {
+            throw RuntimeException("getUsersListFromFirebase: $ERROR_GET_USERS_LIST_FROM_FIREBASE")
         }
         return usersList
 
@@ -642,6 +647,8 @@ class UserRepositoryImpl @Inject constructor(
         const val FIREBASE_SCHEDULERS_COLLECTION = "schedule"
         const val FIREBASE_SCHEDULERS_DELETE_COLLECTION = "schedule-delete"
         const val DELAY_TRY_GET_USERS_LIST = 1000L
+        const val MAX_TRY_GET_USERS_LIST = 10
+        const val ERROR_GET_USERS_LIST_FROM_FIREBASE = "Error getting users list from firebase"
 
         enum class TaskType {
             PRIVATE,

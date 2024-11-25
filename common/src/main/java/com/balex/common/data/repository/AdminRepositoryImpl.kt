@@ -71,8 +71,6 @@ class AdminRepositoryImpl @Inject constructor(
                 val documentAdminSnapshot = adminCollection.get().await()
                 val adminData = documentAdminSnapshot?.toObject(Admin::class.java)
                 if (adminData != null) {
-//                    val newUsersNickNamesList =
-//                        adminData.usersNickNamesList.toMutableList().apply { add(newUser.nickName) }.sortedBy { it }
                     val newUsersNickNamesList = adminData.usersNickNamesList
                         .toMutableList()
                         .apply { if (!contains(newUser.nickName)) add(newUser.nickName) }
@@ -81,6 +79,43 @@ class AdminRepositoryImpl @Inject constructor(
                     adminCollection.update("usersNickNamesList", newUsersNickNamesList).await()
                     emitUsersNicknamesListNeedRefreshUseCase()
                 }
+            } catch (e: Exception) {
+                Log.d("AdminRepositoryImpl", "Error: ${e.message}")
+            }
+        }
+    }
+
+    override suspend fun deleteUser(userName: String) {
+        val currentUser = getUserUseCase()
+        if (currentUser.hasAdminRights) {
+
+            val auth: FirebaseAuth = Firebase.auth
+            val admin = getRepoAdminUseCase()
+
+            val userCollection =
+                usersCollection.document(admin.emailOrPhoneNumber)
+                    .collection(userName.lowercase())
+                    .document(userName.lowercase())
+
+            val adminCollection =
+                adminsCollection.document(admin.emailOrPhoneNumber)
+
+
+            try {
+//                auth.createUserWithEmailAndPassword(newUser.fakeEmail, newUser.password).await()
+//                userCollection.delete().await()
+//
+//                val documentAdminSnapshot = adminCollection.get().await()
+//                val adminData = documentAdminSnapshot?.toObject(Admin::class.java)
+//                if (adminData != null) {
+//                    val newUsersNickNamesList = adminData.usersNickNamesList
+//                        .toMutableList()
+//                        .apply { if (!contains(newUser.nickName)) add(newUser.nickName) }
+//                        .sortedBy { it }
+//
+//                    adminCollection.update("usersNickNamesList", newUsersNickNamesList).await()
+//                    emitUsersNicknamesListNeedRefreshUseCase()
+//                }
             } catch (e: Exception) {
                 Log.d("AdminRepositoryImpl", "Error: ${e.message}")
             }
