@@ -20,6 +20,4 @@ interface UserRepository {
 
     suspend fun emitUsersNicknamesListNeedRefresh()
 
-    suspend fun removeUser(nickName: String)
-
 }

@@ -19,6 +19,7 @@ import com.balex.common.domain.entity.Task
 import com.balex.common.domain.entity.ToDoList
 import com.balex.common.domain.entity.User
 import com.balex.common.domain.usecases.admin.CreateNewUserUseCase
+import com.balex.common.domain.usecases.admin.DeleteUserUseCase
 import com.balex.common.domain.usecases.regLog.GetUserUseCase
 import com.balex.common.domain.usecases.regLog.ObserveLanguageUseCase
 import com.balex.common.domain.usecases.regLog.ObserveUserUseCase
@@ -33,7 +34,6 @@ import com.balex.common.domain.usecases.user.AddExternalTaskToFirebaseUseCase
 import com.balex.common.domain.usecases.user.AddPrivateTaskToFirebaseUseCase
 import com.balex.common.domain.usecases.user.DeleteTaskFromFirebaseUseCase
 import com.balex.common.domain.usecases.user.ObserveUsersListUseCase
-import com.balex.common.domain.usecases.user.RemoveUserUseCase
 import com.balex.common.domain.usecases.user.SaveDeviceTokenUseCase
 import com.balex.common.extensions.REGEX_PATTERN_NOT_ANY_LETTERS_NUMBERS_UNDERSCORE
 import com.balex.common.extensions.REGEX_PATTERN_NOT_LATIN_LETTERS_NUMBERS_UNDERSCORE
@@ -44,13 +44,9 @@ import com.balex.logged_user.LoggedUserStore.Label
 import com.balex.logged_user.LoggedUserStore.State
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.flow.takeWhile
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -98,8 +94,6 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 
         data object ClickedCreateNewUser : Intent
 
-        data object ClickedEditUsersList : Intent
-
         data object ClickedRegisterNewUserInFirebase : Intent
 
         data object ClickedCancelRegisterNewUserInFirebase : Intent
@@ -135,10 +129,8 @@ interface LoggedUserStore : Store<Intent, State, Label> {
         val isAddShopItemClicked: Boolean,
         val taskForEdit: ExternalTask,
         val taskType: UserRepositoryImpl.Companion.TaskType,
-        //val isAddOrEditTaskToFirebaseClicked: Boolean,
         val isWrongTaskData: Boolean,
         val isCreateNewUserClicked: Boolean,
-        val isEditUsersListClicked: Boolean,
         val passwordVisible: Boolean,
         val nickName: String,
         val displayName: String,
@@ -183,7 +175,7 @@ class LoggedUserStoreFactory @Inject constructor(
     private val createNewUserUseCase: CreateNewUserUseCase,
     private val addToShopListUseCase: AddToShopListUseCase,
     private val storageSavePreferencesUseCase: StorageSavePreferencesUseCase,
-    private val removeUserUseCase: RemoveUserUseCase,
+    private val deleteUserUseCase: DeleteUserUseCase,
     private val deleteTaskFromFirebaseUseCase: DeleteTaskFromFirebaseUseCase,
     private val removeFromShopListUseCase: RemoveFromShopListUseCase,
     private val observeUsersListUseCase: ObserveUsersListUseCase,
@@ -214,7 +206,6 @@ class LoggedUserStoreFactory @Inject constructor(
                 //isAddOrEditTaskToFirebaseClicked = false,
                 isWrongTaskData = false,
                 isCreateNewUserClicked = false,
-                isEditUsersListClicked = false,
                 passwordVisible = false,
                 nickName = "",
                 displayName = "",
@@ -290,8 +281,6 @@ class LoggedUserStoreFactory @Inject constructor(
         data object ClickedCancelRegisterNewUserInFirebase : Msg
 
         data object ButtonRegisterNewUserInFirebaseClicked : Msg
-
-        data object ButtonEditUsersListClicked : Msg
 
         data object NickNameMatched : Msg
 
@@ -458,8 +447,11 @@ class LoggedUserStoreFactory @Inject constructor(
                     dispatch(Msg.ClickedCancelRegisterNewUserInFirebase)
                 }
 
-                Intent.ClickedEditUsersList -> TODO()
-                is Intent.ClickedRemoveUserFromFirebase -> TODO()
+                is Intent.ClickedRemoveUserFromFirebase -> {
+                    scope.launch {
+                        deleteUserUseCase(intent.nickName)
+                    }
+                }
 
                 is Intent.ChangePage -> {
                     dispatch(Msg.PageIsChanged(intent.page))
@@ -669,10 +661,6 @@ class LoggedUserStoreFactory @Inject constructor(
 
                 Msg.ButtonCreateNewUserClicked -> {
                     copy(isCreateNewUserClicked = true)
-                }
-
-                Msg.ButtonEditUsersListClicked -> {
-                    copy(isEditUsersListClicked = true)
                 }
 
                 is Msg.UpdateNickNameFieldText -> {

@@ -6,6 +6,7 @@ import com.balex.common.R
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_ADMINS_COLLECTION
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_USERS_COLLECTION
 import com.balex.common.domain.entity.Admin
+import com.balex.common.domain.entity.DeletedSubUser
 import com.balex.common.domain.entity.User
 import com.balex.common.domain.repository.AdminRepository
 import com.balex.common.domain.usecases.regLog.CreateFakeUserEmailUseCase
@@ -32,6 +33,7 @@ class AdminRepositoryImpl @Inject constructor(
     private val db = Firebase.firestore
     private val adminsCollection = db.collection(FIREBASE_ADMINS_COLLECTION)
     private val usersCollection = db.collection(FIREBASE_USERS_COLLECTION)
+    private val deletedSubUsersCollection = db.collection(FIREBASE_DELETED_SUBUSERS_COLLECTION)
 
     override suspend fun createNewUser(user: User) {
         val currentUser = getUserUseCase()
@@ -80,7 +82,7 @@ class AdminRepositoryImpl @Inject constructor(
                     emitUsersNicknamesListNeedRefreshUseCase()
                 }
             } catch (e: Exception) {
-                Log.d("AdminRepositoryImpl", "Error: ${e.message}")
+                Log.d("AdminRepositoryImpl", "deleteUser, Error: ${e.message}")
             }
         }
     }
@@ -89,7 +91,6 @@ class AdminRepositoryImpl @Inject constructor(
         val currentUser = getUserUseCase()
         if (currentUser.hasAdminRights) {
 
-            val auth: FirebaseAuth = Firebase.auth
             val admin = getRepoAdminUseCase()
 
             val userCollection =
@@ -102,23 +103,34 @@ class AdminRepositoryImpl @Inject constructor(
 
 
             try {
-//                auth.createUserWithEmailAndPassword(newUser.fakeEmail, newUser.password).await()
-//                userCollection.delete().await()
-//
-//                val documentAdminSnapshot = adminCollection.get().await()
-//                val adminData = documentAdminSnapshot?.toObject(Admin::class.java)
-//                if (adminData != null) {
-//                    val newUsersNickNamesList = adminData.usersNickNamesList
-//                        .toMutableList()
-//                        .apply { if (!contains(newUser.nickName)) add(newUser.nickName) }
-//                        .sortedBy { it }
-//
-//                    adminCollection.update("usersNickNamesList", newUsersNickNamesList).await()
-//                    emitUsersNicknamesListNeedRefreshUseCase()
-//                }
+                userCollection.delete().await()
+
+                val documentAdminSnapshot = adminCollection.get().await()
+                val adminData = documentAdminSnapshot?.toObject(Admin::class.java)
+                if (adminData != null) {
+                    val newUsersNickNamesList = adminData.usersNickNamesList
+                        .filter { it != userName }
+                        .sortedBy { it }
+                        .toMutableList()
+                    adminCollection.update("usersNickNamesList", newUsersNickNamesList).await()
+                    emitUsersNicknamesListNeedRefreshUseCase()
+                }
             } catch (e: Exception) {
-                Log.d("AdminRepositoryImpl", "Error: ${e.message}")
+                Log.d("AdminRepositoryImpl", "deleteUser del data, Error: ${e.message}")
             }
+            val deletedUser = DeletedSubUser(
+                adminEmailOrPhone = admin.emailOrPhoneNumber,
+                nickName = userName,
+                fakeEmail = createFakeUserEmailUseCase(userName, admin.emailOrPhoneNumber)
+            )
+            try {
+                deletedSubUsersCollection.add(deletedUser).await()
+            } catch (e: Exception) {
+                Log.d("AdminRepositoryImpl", "deleteUser add to collection, Error: ${e.message}")
+            }
+
         }
     }
 }
+
+const val FIREBASE_DELETED_SUBUSERS_COLLECTION = "deletedSubUsers"

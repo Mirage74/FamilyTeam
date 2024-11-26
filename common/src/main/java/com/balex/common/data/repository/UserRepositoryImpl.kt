@@ -111,11 +111,6 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun removeUser(nickName: String) {
-        TODO("Not yet implemented")
-    }
-
-
     private suspend fun addRemindersToSchedule(task: Task, token: String) {
         try {
             if (task.alarmTime1 != Task.NO_ALARM) {

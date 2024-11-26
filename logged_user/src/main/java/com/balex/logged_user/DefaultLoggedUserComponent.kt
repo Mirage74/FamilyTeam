@@ -158,15 +158,6 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         )
     }
 
-    override fun onClickEditUsersList() {
-        store.accept(LoggedUserStore.Intent.ClickedEditUsersList)
-    }
-
-
-    override fun onClickRemoveUserFromFirebase(nickName: String) {
-        store.accept(LoggedUserStore.Intent.ClickedRemoveUserFromFirebase(nickName))
-    }
-
 
     override fun onNavigateToBottomItem(page: PagesNames) {
         store.accept(LoggedUserStore.Intent.ChangePage(page))
@@ -178,10 +169,6 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
 
     override fun onAdminPageRegisterNewUserInFirebaseClicked() {
         store.accept(LoggedUserStore.Intent.ClickedRegisterNewUserInFirebase)
-    }
-
-    override fun onAdminPageEditUsersListClicked() {
-        store.accept(LoggedUserStore.Intent.ClickedEditUsersList)
     }
 
     override fun onAdminPageCancelCreateNewUserClicked() {

@@ -168,7 +168,10 @@ class RegLogRepositoryImpl @Inject constructor(
                     return@addSnapshotListener
                 }
                 snapshot?.let {
-                    globalRepoUser = it.toObject(User::class.java) ?: globalRepoUser
+                    val userListener = it.toObject(User::class.java)
+                    if (userListener != null && userListener.nickName == globalRepoUser.nickName) {
+                        globalRepoUser = userListener
+                    }
                 }
             }
             listenerRegistrations.add(registration)

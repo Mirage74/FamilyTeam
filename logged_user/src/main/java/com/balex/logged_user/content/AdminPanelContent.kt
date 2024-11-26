@@ -43,7 +43,6 @@ import com.balex.logged_user.content.subcontent.DisplayNameTextField
 import com.balex.logged_user.content.subcontent.NickNameTextField
 import com.balex.logged_user.content.subcontent.PasswordTextField
 import com.balex.logged_user.content.subcontent.RegisterNewUserButton
-import com.balex.logged_user.content.subcontent.getTaskType
 
 @Composable
 fun AdminPanelContent(
@@ -86,7 +85,7 @@ fun AdminPanelContent(
                     text = context.getString(R.string.button_text_edit_users_list)
                 )
             }
-            ShowUsersList(state, paddingValues)
+            ShowUsersList(state, paddingValues, component)
         }
 
 
@@ -106,7 +105,8 @@ fun AdminPanelContent(
 @Composable
 fun ShowUsersList(
     state: LoggedUserStore.State,
-    paddingValues: PaddingValues
+    paddingValues: PaddingValues,
+    component: LoggedUserComponent
 ) {
     LazyColumn(
         modifier = Modifier.padding(paddingValues),
@@ -123,7 +123,7 @@ fun ShowUsersList(
                         detectHorizontalDragGestures(
                             onDragEnd = {
                                 if (offsetX > 100f) {
-                                    //component.onClickDeleteUser(userNickname)
+                                    component.onAdminPageRemoveUserClicked(userNickname)
                                 } else {
                                     offsetX = 0f
                                 }
@@ -154,8 +154,8 @@ fun ShowUsersList(
 
                 IconButton(
                     onClick = {
-                        //component.onClickDeleteUserTask(userNickname)
-                              },
+                        component.onAdminPageRemoveUserClicked(userNickname)
+                    },
                     modifier = Modifier.size(32.dp)
                 ) {
                     Icon(

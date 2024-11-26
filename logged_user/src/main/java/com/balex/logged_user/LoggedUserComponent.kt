@@ -33,17 +33,11 @@ interface LoggedUserComponent {
 
     fun onClickAddNewTaskOrEditForOtherUserToFirebase(externalTask: ExternalTask, taskMode: TaskMode, token: String)
 
-    fun onClickEditUsersList()
-
-    fun onClickRemoveUserFromFirebase(nickName: String)
-
     fun onNavigateToBottomItem(page: PagesNames)
 
     fun onAdminPageCreateNewUserClicked()
 
     fun onAdminPageRegisterNewUserInFirebaseClicked()
-
-    fun onAdminPageEditUsersListClicked()
 
     fun onAdminPageCancelCreateNewUserClicked()
 
