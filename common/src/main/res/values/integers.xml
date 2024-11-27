@@ -7,8 +7,15 @@
     <integer name="sms_code_length">6</integer>
     <integer name="max_available_tasks_per_day_default">5</integer>
     <integer name="max_available_tasks_per_day_premium">100</integer>
+    <integer name="available_coins_by_registration">1</integer>
     <integer name="max_available_FCM_per_day_default">5</integer>
     <integer name="max_available_FCM_per_day_premium">100</integer>
     <integer name="min_time_task_from_current_in_min">30</integer>
     <integer name="max_expired_task_save_in_days">1</integer>
+    <integer name="rate_one_eur_to_coin">10</integer>
+    <integer name="rate_one_coin_to_task">1</integer>
+    <integer name="rate_one_coin_to_FCM">10</integer>
+    <integer name="premium_account_one_month_cost_in_eur">9</integer>
+    <integer name="premium_account_one_year_cost_in_eur">49</integer>
+    <integer name="premium_account_unlimited_cost_in_eur">199</integer>
 </resources>

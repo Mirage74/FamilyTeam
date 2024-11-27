@@ -32,6 +32,8 @@ data class User(
     val lastTimeAvailableFCMWasUpdated: Long = System.currentTimeMillis(),
     @SerializedName("availableTasksToAdd")
     val availableTasksToAdd: Int = 0,
+    @SerializedName("teamCoins")
+    val teamCoins: Int = 0,
     @SerializedName("listToDo")
     val listToDo: ToDoList = ToDoList(),
     @Exclude
