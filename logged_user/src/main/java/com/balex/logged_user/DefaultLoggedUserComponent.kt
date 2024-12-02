@@ -107,6 +107,22 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         store.accept(LoggedUserStore.Intent.ClickedAddShopItem)
     }
 
+    override fun onExchangeCoinsClicked() {
+        store.accept(LoggedUserStore.Intent.ClickedExchangeCoins)
+    }
+
+    override fun onConfirmExchangeClicked() {
+        store.accept(LoggedUserStore.Intent.ClickedConfirmExchange)
+    }
+
+    override fun onBuyCoinsClicked() {
+        store.accept(LoggedUserStore.Intent.ClickedBuyCoins)
+    }
+
+    override fun onBeginPaymentTransactionClicked() {
+        store.accept(LoggedUserStore.Intent.ClickedBeginPaymentTransaction)
+    }
+
     override fun onClickEditTask(
         externalTask: ExternalTask,
         taskType: UserRepositoryImpl.Companion.TaskType

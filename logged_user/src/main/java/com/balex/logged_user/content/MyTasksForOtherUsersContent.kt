@@ -40,7 +40,7 @@ fun MyTasksForOtherUsersContent(
     ) {
 
         if (!state.isAddTaskClicked && !state.isEditTaskClicked) {
-            GreetingRow(state)
+            GreetingRow(state.user.nickName, state.user.displayName)
             Button(
                 onClick = { component.onClickAddNewTask() },
                 modifier = Modifier

@@ -26,6 +26,7 @@ import com.balex.logged_user.LoggedUserStore
 import com.balex.logged_user.R
 import com.balex.logged_user.content.subcontent.GreetingRow
 import com.balex.logged_user.content.subcontent.ShowShopList
+import com.balex.logged_user.content.subcontent.recourses.ShowAvailableResources
 
 @Composable
 fun ShopListContent(
@@ -47,7 +48,12 @@ fun ShopListContent(
         verticalArrangement = arrangement
     ) {
         if (!state.isAddShopItemClicked) {
-            GreetingRow(state)
+            GreetingRow(state.user.nickName, state.user.displayName)
+            Spacer(modifier = Modifier.height(16.dp))
+            if (state.isExchangeCoinsClicked) {
+                //ShowAvailableResources(state, component::onBuyCoinsClicked, component::onConfirmExchangeClicked)
+            }
+            ShowAvailableResources(state, component::onExchangeCoinsClicked)
             Button(
                 onClick = { component.onClickAddShopItem() },
                 modifier = Modifier
@@ -66,7 +72,7 @@ fun ShopListContent(
         } else {
             var description by remember { mutableStateOf(TextFieldValue("")) }
             Spacer(modifier = Modifier.height(16.dp))
-            GreetingRow(state)
+            GreetingRow(state.user.nickName, state.user.displayName)
             Spacer(modifier = Modifier.height(16.dp))
             Text(context.getString(R.string.shop_item_description))
             Spacer(modifier = Modifier.height(16.dp))

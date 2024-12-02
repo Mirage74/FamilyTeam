@@ -21,6 +21,14 @@ interface LoggedUserComponent {
 
     fun onClickAddShopItem()
 
+    fun onExchangeCoinsClicked()
+
+    fun onConfirmExchangeClicked()
+
+    fun onBuyCoinsClicked()
+
+    fun onBeginPaymentTransactionClicked()
+
     fun onClickEditTask(externalTask: ExternalTask, taskType: UserRepositoryImpl.Companion.TaskType)
 
     fun onClickDeleteTask(externalTask: ExternalTask, taskType: UserRepositoryImpl.Companion.TaskType, token: String)

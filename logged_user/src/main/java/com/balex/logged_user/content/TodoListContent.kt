@@ -22,6 +22,7 @@ import com.balex.logged_user.R
 import com.balex.logged_user.content.subcontent.GreetingRow
 import com.balex.logged_user.content.subcontent.inputtask.InputOrEditTaskForm
 import com.balex.logged_user.content.subcontent.ShowTasksList
+import com.balex.logged_user.content.subcontent.recourses.ShowAvailableResources
 
 @Composable
 fun TodoListContent(
@@ -41,7 +42,14 @@ fun TodoListContent(
     ) {
 
         if (!state.isAddTaskClicked && !state.isEditTaskClicked) {
-            GreetingRow(state)
+            GreetingRow(state.user.nickName, state.user.displayName)
+            Spacer(modifier = Modifier.height(16.dp))
+            if (!state.isExchangeCoinsClicked && !state.isBuyCoinsClicked && !state.isPaymentDataEnteredAndBuyCoinsClicked) {
+                ShowAvailableResources(state) { component.onExchangeCoinsClicked() }
+            }
+            if (state.isExchangeCoinsClicked) {
+
+            }
             Button(
                 onClick = { component.onClickAddNewTask() },
                 modifier = Modifier

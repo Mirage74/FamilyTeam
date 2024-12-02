@@ -94,10 +94,11 @@ fun LoggedUserContent(
     BackHandler {
         if (state.isAddTaskClicked || state.isEditTaskClicked || state.isAddShopItemClicked) {
             component.onBackFromNewTaskFormClicked()
+        } else if (state.isExchangeCoinsClicked) {
+            component.onExchangeCoinsClicked()
         } else {
             component.onBackClickedHandle()
         }
-
     }
 
     com.balex.common.LocalizedContextProvider(languageCode = state.language.lowercase()) {

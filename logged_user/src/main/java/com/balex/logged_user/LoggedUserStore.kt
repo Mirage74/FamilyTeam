@@ -64,6 +64,14 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 
         data object ClickedAddShopItem : Intent
 
+        data object ClickedExchangeCoins : Intent
+
+        data object ClickedConfirmExchange : Intent
+
+        data object ClickedBuyCoins : Intent
+
+        data object ClickedBeginPaymentTransaction : Intent
+
         data class ClickedEditTask(
             val externalTask: ExternalTask,
             val taskType: UserRepositoryImpl.Companion.TaskType
@@ -124,6 +132,9 @@ interface LoggedUserStore : Store<Intent, State, Label> {
         val isDeviceTokenSaved: Boolean,
         val usersNicknamesList: List<String>,
         val shopItemsList: ShopItems,
+        val isExchangeCoinsClicked: Boolean,
+        val isBuyCoinsClicked: Boolean,
+        val isPaymentDataEnteredAndBuyCoinsClicked: Boolean,
         val isAddTaskClicked: Boolean,
         val isEditTaskClicked: Boolean,
         val isAddShopItemClicked: Boolean,
@@ -199,11 +210,13 @@ class LoggedUserStoreFactory @Inject constructor(
                 listOf(),
                 ShopItems(),
                 isAddShopItemClicked = false,
+                isExchangeCoinsClicked = false,
+                isBuyCoinsClicked = false,
+                isPaymentDataEnteredAndBuyCoinsClicked = false,
                 isAddTaskClicked = false,
                 isEditTaskClicked = false,
                 taskForEdit = ExternalTask(),
                 taskType = UserRepositoryImpl.Companion.TaskType.PRIVATE,
-                //isAddOrEditTaskToFirebaseClicked = false,
                 isWrongTaskData = false,
                 isCreateNewUserClicked = false,
                 passwordVisible = false,
@@ -247,13 +260,19 @@ class LoggedUserStoreFactory @Inject constructor(
 
     private sealed interface Msg {
 
-        data class IsTokenSavedSuccussfully(val savingResult: Boolean) : Msg
+        data class IsTokenSavedSuccessfully(val savingResult: Boolean) : Msg
 
         data object BackFromNewTaskFormClicked : Msg
 
         data object ButtonAddTaskClicked : Msg
 
         data object ButtonAddShopItemClicked : Msg
+
+        data object ClickedExchangeCoins : Msg
+
+        data object ClickedBuyCoins : Msg
+
+        data object ClickedBeginPaymentTransaction : Msg
 
         data object ButtonAddShopItemToDatabaseClicked : Msg
 
@@ -333,20 +352,20 @@ class LoggedUserStoreFactory @Inject constructor(
             when (intent) {
                 is Intent.SaveDeviceToken -> {
                     if (intent.token.isNotEmpty()) {
-                        dispatch(Msg.IsTokenSavedSuccussfully(true))
+                        dispatch(Msg.IsTokenSavedSuccessfully(true))
                         CoroutineScope(Dispatchers.IO).launch {
                             try {
                                 saveDeviceTokenUseCase(intent.token)
 
                             } catch (e: Exception) {
                                 scope.launch {
-                                    dispatch(Msg.IsTokenSavedSuccussfully(false))
+                                    dispatch(Msg.IsTokenSavedSuccessfully(false))
                                 }
                             }
                         }
                     } else {
                         Log.d("ExecutorImpl, SaveDeviceToken error", "token is empty")
-                        dispatch(Msg.IsTokenSavedSuccussfully(false))
+                        dispatch(Msg.IsTokenSavedSuccessfully(false))
                     }
 
                 }
@@ -361,6 +380,22 @@ class LoggedUserStoreFactory @Inject constructor(
 
                 Intent.ClickedAddShopItem -> {
                     dispatch(Msg.ButtonAddShopItemClicked)
+                }
+
+                Intent.ClickedExchangeCoins -> {
+                    dispatch(Msg.ClickedExchangeCoins)
+                }
+
+                Intent.ClickedConfirmExchange -> {
+                    //dispatch(Msg.ClickedConfirmExchange)
+                }
+
+                Intent.ClickedBuyCoins -> {
+                    dispatch(Msg.ClickedBuyCoins)
+                }
+
+                Intent.ClickedBeginPaymentTransaction -> {
+                    dispatch(Msg.ClickedBeginPaymentTransaction)
                 }
 
                 is Intent.ClickedEditTask -> {
@@ -561,7 +596,7 @@ class LoggedUserStoreFactory @Inject constructor(
         override fun State.reduce(msg: Msg): State =
             when (msg) {
 
-                is Msg.IsTokenSavedSuccussfully -> {
+                is Msg.IsTokenSavedSuccessfully -> {
                     if (this.user.nickName != User.DEFAULT_NICK_NAME) {
                         copy(
                             isDeviceTokenSaved = msg.savingResult,
@@ -599,6 +634,30 @@ class LoggedUserStoreFactory @Inject constructor(
                     )
                 }
 
+                Msg.ClickedExchangeCoins -> {
+                    copy(
+                        isExchangeCoinsClicked = true,
+                        isBuyCoinsClicked = false,
+                        isPaymentDataEnteredAndBuyCoinsClicked = false
+                    )
+                }
+
+                Msg.ClickedBuyCoins -> {
+                    copy(
+                        isExchangeCoinsClicked = false,
+                        isBuyCoinsClicked = true,
+                        isPaymentDataEnteredAndBuyCoinsClicked = false
+                    )
+                }
+
+                Msg.ClickedBeginPaymentTransaction -> {
+                    copy(
+                        isExchangeCoinsClicked = false,
+                        isBuyCoinsClicked = false,
+                        isPaymentDataEnteredAndBuyCoinsClicked = true
+                    )
+                }
+
                 is Msg.ClickedEditTask -> {
                     copy(
                         isEditTaskClicked = true,
@@ -622,7 +681,6 @@ class LoggedUserStoreFactory @Inject constructor(
 
                 Msg.ButtonAddTaskToFirebaseOrEditClickedButTaskDataIsIncorrect -> {
                     copy(
-                        //isAddOrEditTaskToFirebaseClicked = false,
                         isWrongTaskData = true
                     )
                 }

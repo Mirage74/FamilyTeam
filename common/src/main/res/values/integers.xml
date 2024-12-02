@@ -14,7 +14,7 @@
     <integer name="max_expired_task_save_in_days">1</integer>
     <integer name="rate_one_eur_to_coin">10</integer>
     <integer name="rate_one_coin_to_task">1</integer>
-    <integer name="rate_one_coin_to_FCM">10</integer>
+    <integer name="rate_one_coin_to_FCM">3</integer>
     <integer name="premium_account_one_month_cost_in_eur">9</integer>
     <integer name="premium_account_one_year_cost_in_eur">49</integer>
     <integer name="premium_account_unlimited_cost_in_eur">199</integer>
