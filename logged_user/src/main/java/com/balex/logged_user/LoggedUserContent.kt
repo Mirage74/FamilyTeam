@@ -35,13 +35,11 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,7 +48,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import com.balex.common.DrawerContent
 import com.balex.common.LocalLocalizedContext
 import com.balex.common.SwitchLanguage
 import com.balex.common.domain.entity.MenuItems
@@ -59,6 +56,8 @@ import com.balex.logged_user.content.AdminPanelContent
 import com.balex.logged_user.content.MyTasksForOtherUsersContent
 import com.balex.logged_user.content.ShopListContent
 import com.balex.logged_user.content.TodoListContent
+import com.balex.logged_user.content.subcontent.recourses.ShowBuyCoinsForm
+import com.balex.logged_user.content.subcontent.recourses.ShowExchangeCoinsForm
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -94,10 +93,10 @@ fun LoggedUserContent(
     BackHandler {
         if (state.isAddTaskClicked || state.isEditTaskClicked || state.isAddShopItemClicked) {
             component.onBackFromNewTaskFormClicked()
-        } else if (state.isExchangeCoinsClicked) {
-            component.onExchangeCoinsClicked()
-        } else {
+        } else if (state.loggedUserState == LoggedUserStore.State.LoggedUserState.Content) {
             component.onBackClickedHandle()
+        } else {
+            component.onBackFromExchangeOrBuyCoinClicked()
         }
     }
 
@@ -115,6 +114,16 @@ fun LoggedUserContent(
                     CircularProgressIndicator(color = DarkBlue)
                 }
             }
+
+            LoggedUserStore.State.LoggedUserState.ExchangeCoins -> {
+                ShowExchangeCoinsForm(state, component)
+            }
+
+            LoggedUserStore.State.LoggedUserState.BuyCoins -> {
+                ShowBuyCoinsForm()
+            }
+
+
         }
     }
 }

@@ -33,6 +33,7 @@ import com.balex.common.domain.usecases.shopList.RemoveFromShopListUseCase
 import com.balex.common.domain.usecases.user.AddExternalTaskToFirebaseUseCase
 import com.balex.common.domain.usecases.user.AddPrivateTaskToFirebaseUseCase
 import com.balex.common.domain.usecases.user.DeleteTaskFromFirebaseUseCase
+import com.balex.common.domain.usecases.user.ExchangeCoinsUseCase
 import com.balex.common.domain.usecases.user.ObserveUsersListUseCase
 import com.balex.common.domain.usecases.user.SaveDeviceTokenUseCase
 import com.balex.common.extensions.REGEX_PATTERN_NOT_ANY_LETTERS_NUMBERS_UNDERSCORE
@@ -60,13 +61,15 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 
         data object BackFromNewTaskFormClicked : Intent
 
+        data object BackFromExchangeOrBuyCoinClicked : Intent
+
         data object ClickedAddNewTask : Intent
 
         data object ClickedAddShopItem : Intent
 
         data object ClickedExchangeCoins : Intent
 
-        data object ClickedConfirmExchange : Intent
+        data class ClickedConfirmExchange(val coins: Int, val tasks: Int, val reminders: Int) : Intent
 
         data object ClickedBuyCoins : Intent
 
@@ -160,6 +163,11 @@ interface LoggedUserStore : Store<Intent, State, Label> {
             data object Loading : LoggedUserState
 
             data object Content : LoggedUserState
+
+            data object ExchangeCoins : LoggedUserState
+
+            data object BuyCoins : LoggedUserState
+
         }
 
         override fun toString(): String {
@@ -192,6 +200,7 @@ class LoggedUserStoreFactory @Inject constructor(
     private val observeUsersListUseCase: ObserveUsersListUseCase,
     private val addPrivateTaskToFirebaseUseCase: AddPrivateTaskToFirebaseUseCase,
     private val addExternalTaskToFirebaseUseCase: AddExternalTaskToFirebaseUseCase,
+    private val exchangeCoinsUseCase: ExchangeCoinsUseCase,
     private val storeFactory: StoreFactory,
     context: Context
 ) {
@@ -264,11 +273,15 @@ class LoggedUserStoreFactory @Inject constructor(
 
         data object BackFromNewTaskFormClicked : Msg
 
+        data object BackFromExchangeOrBuyCoinClicked : Msg
+
         data object ButtonAddTaskClicked : Msg
 
         data object ButtonAddShopItemClicked : Msg
 
         data object ClickedExchangeCoins : Msg
+
+        data class ClickedConfirmExchange(val coins: Int, val tasks: Int, val reminders: Int) : Msg
 
         data object ClickedBuyCoins : Msg
 
@@ -374,6 +387,10 @@ class LoggedUserStoreFactory @Inject constructor(
                     dispatch(Msg.BackFromNewTaskFormClicked)
                 }
 
+                Intent.BackFromExchangeOrBuyCoinClicked -> {
+                    dispatch(Msg.BackFromExchangeOrBuyCoinClicked)
+                }
+
                 Intent.ClickedAddNewTask -> {
                     dispatch(Msg.ButtonAddTaskClicked)
                 }
@@ -386,8 +403,11 @@ class LoggedUserStoreFactory @Inject constructor(
                     dispatch(Msg.ClickedExchangeCoins)
                 }
 
-                Intent.ClickedConfirmExchange -> {
-                    //dispatch(Msg.ClickedConfirmExchange)
+                is Intent.ClickedConfirmExchange -> {
+                    scope.launch {
+                        exchangeCoinsUseCase(intent.coins, intent.tasks, intent.reminders)
+                    }
+                    dispatch(Msg.ClickedConfirmExchange(intent.coins, intent.tasks, intent.reminders))
                 }
 
                 Intent.ClickedBuyCoins -> {
@@ -622,6 +642,15 @@ class LoggedUserStoreFactory @Inject constructor(
                     )
                 }
 
+                Msg.BackFromExchangeOrBuyCoinClicked -> {
+                    copy(
+                        isExchangeCoinsClicked = false,
+                        isBuyCoinsClicked = false,
+                        isPaymentDataEnteredAndBuyCoinsClicked = false,
+                        loggedUserState = State.LoggedUserState.Content
+                    )
+                }
+
                 Msg.ButtonAddTaskClicked -> {
                     copy(
                         isAddTaskClicked = true
@@ -637,23 +666,26 @@ class LoggedUserStoreFactory @Inject constructor(
                 Msg.ClickedExchangeCoins -> {
                     copy(
                         isExchangeCoinsClicked = true,
-                        isBuyCoinsClicked = false,
-                        isPaymentDataEnteredAndBuyCoinsClicked = false
+                        loggedUserState = State.LoggedUserState.ExchangeCoins
+                    )
+                }
+
+                is Msg.ClickedConfirmExchange -> {
+                    copy(
+                        isExchangeCoinsClicked = false,
+                        loggedUserState = State.LoggedUserState.Content
                     )
                 }
 
                 Msg.ClickedBuyCoins -> {
                     copy(
-                        isExchangeCoinsClicked = false,
                         isBuyCoinsClicked = true,
-                        isPaymentDataEnteredAndBuyCoinsClicked = false
+                        loggedUserState = State.LoggedUserState.BuyCoins
                     )
                 }
 
                 Msg.ClickedBeginPaymentTransaction -> {
                     copy(
-                        isExchangeCoinsClicked = false,
-                        isBuyCoinsClicked = false,
                         isPaymentDataEnteredAndBuyCoinsClicked = true
                     )
                 }

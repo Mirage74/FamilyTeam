@@ -23,6 +23,7 @@ import com.balex.logged_user.content.subcontent.GreetingRow
 import com.balex.logged_user.content.subcontent.inputtask.InputOrEditTaskForm
 import com.balex.logged_user.content.subcontent.ShowTasksList
 import com.balex.logged_user.content.subcontent.recourses.ShowAvailableResources
+import com.balex.logged_user.content.subcontent.recourses.ShowExchangeCoinsForm
 
 @Composable
 fun TodoListContent(
@@ -44,12 +45,7 @@ fun TodoListContent(
         if (!state.isAddTaskClicked && !state.isEditTaskClicked) {
             GreetingRow(state.user.nickName, state.user.displayName)
             Spacer(modifier = Modifier.height(16.dp))
-            if (!state.isExchangeCoinsClicked && !state.isBuyCoinsClicked && !state.isPaymentDataEnteredAndBuyCoinsClicked) {
-                ShowAvailableResources(state) { component.onExchangeCoinsClicked() }
-            }
-            if (state.isExchangeCoinsClicked) {
-
-            }
+            ShowAvailableResources(state) { component.onExchangeCoinsClicked() }
             Button(
                 onClick = { component.onClickAddNewTask() },
                 modifier = Modifier
@@ -64,13 +60,16 @@ fun TodoListContent(
             }
             Spacer(modifier = Modifier.height(16.dp))
             val tasks = state.user.listToDo.allMyTasks(state.user.nickName).externalTasks
-            ShowTasksList(tasks, state, component, true, deviceToken, modifier = Modifier.weight(4f).padding(paddingValues))
-        } else {
-            if (state.isAddTaskClicked) {
-                InputOrEditTaskForm(component, state, true, TaskMode.ADD, deviceToken, context)
-            } else {
-                InputOrEditTaskForm(component, state, true, TaskMode.EDIT, deviceToken, context)
-            }
+            ShowTasksList(
+                tasks,
+                state,
+                component,
+                true,
+                deviceToken,
+                modifier = Modifier
+                    .weight(4f)
+                    .padding(paddingValues)
+            )
         }
     }
 }

@@ -99,6 +99,10 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         onBackClicked()
     }
 
+    override fun onBackFromExchangeOrBuyCoinClicked() {
+        store.accept(LoggedUserStore.Intent.BackFromExchangeOrBuyCoinClicked)
+    }
+
     override fun onClickAddNewTask() {
         store.accept(LoggedUserStore.Intent.ClickedAddNewTask)
     }
@@ -111,8 +115,8 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         store.accept(LoggedUserStore.Intent.ClickedExchangeCoins)
     }
 
-    override fun onConfirmExchangeClicked() {
-        store.accept(LoggedUserStore.Intent.ClickedConfirmExchange)
+    override fun onConfirmExchangeClicked(coins: Int, tasks: Int, reminders: Int) {
+        store.accept(LoggedUserStore.Intent.ClickedConfirmExchange(coins, tasks, reminders))
     }
 
     override fun onBuyCoinsClicked() {

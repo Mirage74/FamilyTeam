@@ -637,6 +637,26 @@ class UserRepositoryImpl @Inject constructor(
     }
 
 
+    override suspend fun exchangeCoins(coins: Int, tasks: Int, reminders: Int) {
+        val userForModify = getUserUseCase()
+        val userForUpdate = userForModify.copy(
+            teamCoins = coins,
+            availableTasksToAdd = tasks,
+            availableFCM = reminders
+        )
+
+        val userCollection =
+            usersCollection.document(userForModify.adminEmailOrPhone)
+                .collection(userForModify.nickName.lowercase())
+                .document(userForModify.nickName.lowercase())
+
+        try {
+            userCollection.set(userForUpdate).await()
+        } catch (e: Exception) {
+            Log.d("exchangeCoins error", "error update coins in firebase: $e")
+        }
+    }
+
     companion object {
 
         const val FIREBASE_SCHEDULERS_COLLECTION = "schedule"

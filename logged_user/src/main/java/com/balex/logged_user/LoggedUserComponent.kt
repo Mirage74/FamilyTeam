@@ -17,13 +17,15 @@ interface LoggedUserComponent {
 
     fun onBackClickedHandle()
 
+    fun onBackFromExchangeOrBuyCoinClicked()
+
     fun onClickAddNewTask()
 
     fun onClickAddShopItem()
 
     fun onExchangeCoinsClicked()
 
-    fun onConfirmExchangeClicked()
+    fun onConfirmExchangeClicked(coins: Int, tasks: Int, reminders: Int)
 
     fun onBuyCoinsClicked()
 
