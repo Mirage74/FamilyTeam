@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.balex.common"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 30
@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.mvikotlin.logging)
 
     implementation(libs.dagger.core)
+    implementation(libs.billing.ktx)
     ksp(libs.dagger.compiler)
 
     implementation(libs.room.core)

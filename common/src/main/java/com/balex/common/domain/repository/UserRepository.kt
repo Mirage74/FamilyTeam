@@ -1,5 +1,6 @@
 package com.balex.common.domain.repository
 
+import com.balex.common.data.repository.BillingRepositoryImpl
 import com.balex.common.data.repository.TaskMode
 import com.balex.common.data.repository.UserRepositoryImpl
 import com.balex.common.domain.entity.ExternalTask
@@ -17,6 +18,8 @@ interface UserRepository {
     suspend fun deleteTaskFromFirebase(externalTask: ExternalTask, taskType: UserRepositoryImpl.Companion.TaskType, token: String)
 
     suspend fun exchangeCoins(coins: Int, tasks: Int, reminders: Int)
+
+    suspend fun setPremiumStatus(premiumStatus: BillingRepositoryImpl.Companion.PremiumStatus)
 
     fun observeUsersList(): StateFlow<List<String>>
 

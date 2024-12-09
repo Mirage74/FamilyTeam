@@ -1,39 +1,42 @@
 [versions]
 
 agp = "8.5.2"
-firebaseBom = "33.5.1"
+billingVersion = "7.1.1"
+firebaseBom = "33.7.0"
 firebaseDatabase = "21.0.0"
 kotlin = "2.0.10"
-coreKtx = "1.13.1"
+coreKtx = "1.15.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 kotlinxSerializationCore = "1.7.1"
 kotlinxSerializationJson = "1.7.1"
-lifecycleRuntimeKtx = "2.8.6"
+lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.9.3"
-composeBom = "2024.10.00"
+composeBom = "2024.11.00"
 loggingInterceptor = "4.11.0"
 mvikotlin = "3.2.1"
 decompose = "2.2.3"
 ext-compose-jetpack = "2.2.3"
 mvikotlinLogging = "3.2.1"
-navigationCompose = "2.8.3"
+navigationCompose = "2.8.4"
 reaktive = "1.2.3"
 room = "2.6.1"
 ksp = "2.0.10-1.0.24"
 dagger = "2.48.1"
 glide = "1.0.0-beta01"
 retrofit = "2.9.0"
-firebaseMessagingKtx = "24.0.3"
+firebaseMessagingKtx = "24.1.0"
 securityCrypto = "1.0.0"
-material = "1.7.4"
+material = "1.7.5"
 appcompat = "1.7.0"
 materialVersion = "1.12.0"
+billingKtx = "7.1.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+billing = { module = "com.android.billingclient:billing", version.ref = "billingVersion" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
@@ -78,6 +81,7 @@ firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messa
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "materialVersion" }
+billing-ktx = { group = "com.android.billingclient", name = "billing-ktx", version.ref = "billingKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

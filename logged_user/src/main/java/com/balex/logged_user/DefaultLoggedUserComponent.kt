@@ -1,5 +1,6 @@
 package com.balex.logged_user
 
+import android.app.Activity
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.arkivanov.essenty.lifecycle.doOnPause
@@ -8,6 +9,7 @@ import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
 import com.balex.common.data.local.model.ShopItemDBModel
+import com.balex.common.data.repository.BillingRepositoryImpl
 import com.balex.common.data.repository.TaskMode
 import com.balex.common.data.repository.UserRepositoryImpl
 import com.balex.common.domain.entity.ExternalTask
@@ -111,6 +113,10 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         store.accept(LoggedUserStore.Intent.ClickedAddShopItem)
     }
 
+    override fun onBuyPremiumClicked(optionValue: BillingRepositoryImpl.Companion.PremiumStatus) {
+        store.accept(LoggedUserStore.Intent.ClickedBuyPremium(optionValue))
+    }
+
     override fun onExchangeCoinsClicked() {
         store.accept(LoggedUserStore.Intent.ClickedExchangeCoins)
     }
@@ -119,8 +125,8 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         store.accept(LoggedUserStore.Intent.ClickedConfirmExchange(coins, tasks, reminders))
     }
 
-    override fun onBuyCoinsClicked() {
-        store.accept(LoggedUserStore.Intent.ClickedBuyCoins)
+    override fun onBuyCoinsClicked(activity: Activity) {
+        store.accept(LoggedUserStore.Intent.ClickedBuyCoins(activity))
     }
 
     override fun onBeginPaymentTransactionClicked() {

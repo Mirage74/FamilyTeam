@@ -54,7 +54,9 @@ class AdminRepositoryImpl @Inject constructor(
                 ),
                 password = user.password,
                 availableTasksToAdd = context.resources.getInteger(R.integer.max_available_FCM_per_day_default),
-                availableFCM = context.resources.getInteger(R.integer.max_available_FCM_per_day_default)
+                availableFCM = context.resources.getInteger(R.integer.max_available_FCM_per_day_default),
+                teamCoins = context.resources.getInteger(R.integer.available_coins_by_registration)
+
             )
 
             val userCollection =
@@ -67,8 +69,7 @@ class AdminRepositoryImpl @Inject constructor(
 
 
             try {
-                auth.createUserWithEmailAndPassword(newUser.fakeEmail, newUser.password).await()
-                userCollection.set(newUser).await()
+
 
                 val documentAdminSnapshot = adminCollection.get().await()
                 val adminData = documentAdminSnapshot?.toObject(Admin::class.java)
@@ -77,7 +78,9 @@ class AdminRepositoryImpl @Inject constructor(
                         .toMutableList()
                         .apply { if (!contains(newUser.nickName)) add(newUser.nickName) }
                         .sortedBy { it }
-
+                    val newUserWithId = newUser.copy(id = newUsersNickNamesList.size)
+                    auth.createUserWithEmailAndPassword(newUserWithId.fakeEmail, newUserWithId.password).await()
+                    userCollection.set(newUserWithId).await()
                     adminCollection.update("usersNickNamesList", newUsersNickNamesList).await()
                     emitUsersNicknamesListNeedRefreshUseCase()
                 }

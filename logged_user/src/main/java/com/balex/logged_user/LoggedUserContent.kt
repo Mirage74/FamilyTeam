@@ -1,6 +1,8 @@
 package com.balex.logged_user
 
+import android.app.Activity
 import android.util.Log
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -56,7 +58,6 @@ import com.balex.logged_user.content.AdminPanelContent
 import com.balex.logged_user.content.MyTasksForOtherUsersContent
 import com.balex.logged_user.content.ShopListContent
 import com.balex.logged_user.content.TodoListContent
-import com.balex.logged_user.content.subcontent.recourses.ShowBuyCoinsForm
 import com.balex.logged_user.content.subcontent.recourses.ShowExchangeCoinsForm
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -66,7 +67,8 @@ import com.balex.common.R as commonR
 @Composable
 fun LoggedUserContent(
     component: LoggedUserComponent,
-    deviceToken: String
+    deviceToken: String,
+    activity: Activity
 ) {
 
 
@@ -104,7 +106,7 @@ fun LoggedUserContent(
 
         when (state.loggedUserState) {
             LoggedUserStore.State.LoggedUserState.Content -> {
-                LoggedUserScreen(component, state, deviceToken)
+                LoggedUserScreen(component, state, deviceToken, activity )
             }
 
             LoggedUserStore.State.LoggedUserState.Loading -> {
@@ -116,11 +118,7 @@ fun LoggedUserContent(
             }
 
             LoggedUserStore.State.LoggedUserState.ExchangeCoins -> {
-                ShowExchangeCoinsForm(state, component)
-            }
-
-            LoggedUserStore.State.LoggedUserState.BuyCoins -> {
-                ShowBuyCoinsForm()
+                ShowExchangeCoinsForm(state, component, activity)
             }
 
 
@@ -133,7 +131,8 @@ fun LoggedUserContent(
 fun LoggedUserScreen(
     component: LoggedUserComponent,
     state: LoggedUserStore.State,
-    deviceToken: String
+    deviceToken: String,
+    activity: Activity
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -194,7 +193,7 @@ fun LoggedUserScreen(
                     }
                 }
             )
-            MainContent(component, state, deviceToken)
+            MainContent(component, state, deviceToken, activity)
         }
     }
 }
@@ -204,7 +203,8 @@ fun LoggedUserScreen(
 fun MainContent(
     component: LoggedUserComponent,
     state: LoggedUserStore.State,
-    deviceToken: String
+    deviceToken: String,
+    activity: Activity
 ) {
     val selectedColor = androidx.compose.material.MaterialTheme.colors.secondary
     val unSelectedColor = androidx.compose.material.MaterialTheme.colors.onSecondary
@@ -344,6 +344,7 @@ fun MainContent(
                     component = component,
                     state = state,
                     deviceToken = deviceToken,
+                    activity = activity,
                     paddingValues = paddingValues
                 )
 

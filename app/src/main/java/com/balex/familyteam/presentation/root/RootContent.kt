@@ -30,7 +30,7 @@ fun RootContent(component: RootComponent, activity: MainActivity, deviceToken: S
                 }
 
                 is RootComponent.Child.LoggedUser -> {
-                    LoggedUserContent(component = instance.component, deviceToken = deviceToken)
+                    LoggedUserContent(component = instance.component, deviceToken = deviceToken, activity = activity)
                 }
 
                 is RootComponent.Child.About -> {

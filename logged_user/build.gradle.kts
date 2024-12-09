@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.balex.logged_user"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 30
@@ -58,6 +58,8 @@ dependencies {
     implementation(libs.mvikotlin.core)
     implementation(libs.mvikotlin.coroutines)
     implementation(libs.mvikotlin.logging)
+
+    implementation(libs.billing)
 
     implementation(libs.kotlinx.serialization.core)
     implementation(libs.kotlinx.serialization.json)

@@ -1,6 +1,14 @@
 package com.balex.common.data.repository
 
+import android.content.Context
 import android.util.Log
+import com.android.billingclient.api.AcknowledgePurchaseParams
+import com.android.billingclient.api.BillingClient
+import com.android.billingclient.api.BillingClientStateListener
+import com.android.billingclient.api.BillingResult
+import com.android.billingclient.api.PendingPurchasesParams
+import com.android.billingclient.api.Purchase
+import com.balex.common.R
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_ADMINS_COLLECTION
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_USERS_COLLECTION
 import com.balex.common.domain.entity.Admin
@@ -33,7 +41,8 @@ import javax.inject.Inject
 
 class UserRepositoryImpl @Inject constructor(
     private val getUserUseCase: GetUserUseCase,
-    private val getRepoAdminUseCase: GetRepoAdminUseCase
+    private val getRepoAdminUseCase: GetRepoAdminUseCase,
+    private val context: Context
 ) : UserRepository {
 
     private var usersNicknamesList: MutableList<String> = mutableListOf()
@@ -657,6 +666,70 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun setPremiumStatus(premiumStatus: BillingRepositoryImpl.Companion.PremiumStatus) {
+        if (premiumStatus != BillingRepositoryImpl.Companion.PremiumStatus.NO_PREMIUM) {
+
+            val userForModify = getUserUseCase()
+            val coinCost = when (premiumStatus) {
+                BillingRepositoryImpl.Companion.PremiumStatus.ONE_MONTH -> {
+                    context.resources.getInteger(R.integer.premium_account_one_month_cost)
+                }
+
+                BillingRepositoryImpl.Companion.PremiumStatus.ONE_YEAR -> {
+                    context.resources.getInteger(R.integer.premium_account_one_year_cost)
+                }
+
+                BillingRepositoryImpl.Companion.PremiumStatus.UNLIMITED -> {
+                    context.resources.getInteger(R.integer.premium_account_unlimited_cost)
+                }
+
+                BillingRepositoryImpl.Companion.PremiumStatus.NO_PREMIUM -> 0
+            }
+            val premiumStatusExpiration = when (premiumStatus) {
+
+                BillingRepositoryImpl.Companion.PremiumStatus.ONE_MONTH -> {
+                    if (userForModify.hasPremiumAccount) {
+                        userForModify.premiumAccountExpirationDate + MILLIS_IN_MONTH
+                    } else {
+                        System.currentTimeMillis() + MILLIS_IN_MONTH
+                    }
+                }
+
+                BillingRepositoryImpl.Companion.PremiumStatus.ONE_YEAR -> {
+                    if (userForModify.hasPremiumAccount) {
+                        userForModify.premiumAccountExpirationDate + MILLIS_IN_YEAR
+                    } else {
+                        System.currentTimeMillis() + MILLIS_IN_YEAR
+                    }
+                }
+
+                BillingRepositoryImpl.Companion.PremiumStatus.UNLIMITED -> {
+                    System.currentTimeMillis() + MILLIS_IN_100_YEAR
+                }
+
+                BillingRepositoryImpl.Companion.PremiumStatus.NO_PREMIUM -> {
+                    userForModify.premiumAccountExpirationDate
+                }
+            }
+            val userForUpdate = userForModify.copy(
+                hasPremiumAccount = true,
+                premiumAccountExpirationDate = premiumStatusExpiration,
+                teamCoins = userForModify.teamCoins - coinCost
+            )
+
+            val userCollection =
+                usersCollection.document(userForModify.adminEmailOrPhone)
+                    .collection(userForModify.nickName.lowercase())
+                    .document(userForModify.nickName.lowercase())
+
+            try {
+                userCollection.set(userForUpdate).await()
+            } catch (e: Exception) {
+                Log.d("setPremiumStatus error", "error setPremiumStatus in firebase: $e")
+            }
+        }
+    }
+
     companion object {
 
         const val FIREBASE_SCHEDULERS_COLLECTION = "schedule"
@@ -664,6 +737,11 @@ class UserRepositoryImpl @Inject constructor(
         const val DELAY_TRY_GET_USERS_LIST = 1000L
         const val MAX_TRY_GET_USERS_LIST = 10
         const val ERROR_GET_USERS_LIST_FROM_FIREBASE = "Error getting users list from firebase"
+
+
+        const val MILLIS_IN_MONTH = 31 * 24 * 60 * 60 * 1000L
+        const val MILLIS_IN_YEAR = 366 * 24 * 60 * 60 * 1000L
+        const val MILLIS_IN_100_YEAR = MILLIS_IN_YEAR * 100
 
         enum class TaskType {
             PRIVATE,

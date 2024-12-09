@@ -30,4 +30,12 @@
         Wrong input data. Must be:\n1) Task later, then %d min\n
         2)Reminder greater than %d minutes from task time\n3)Greater than %d min between reminders
     </string>
+    <string name="buy_premium_account_text">Buy premium account:</string>
+    <string name="premium_one_month">1 month</string>
+    <string name="premium_one_year">1 year</string>
+    <string name="premium_unlimited">unlimited time (never expires)</string>
+    <string name="buy_coins_button_text">Buy coins</string>
+    <string name="exchange_button_text">Exchange</string>
+    <string name="buy_premium_account_button_text">Buy premium:</string>
+    <string name="team_coin">Team coin</string>
 </resources>

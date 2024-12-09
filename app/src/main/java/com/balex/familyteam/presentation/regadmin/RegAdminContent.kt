@@ -26,11 +26,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.balex.common.R
-import com.balex.common.domain.entity.RegistrationOption
 import com.balex.common.ANIMATION_DURATION
-import com.balex.familyteam.presentation.MainActivity
+import com.balex.common.R
 import com.balex.common.TopAppBarOnlyLanguage
+import com.balex.common.domain.entity.RegistrationOption
+import com.balex.common.rememberImeState
+import com.balex.common.theme.DarkBlue
+import com.balex.familyteam.presentation.MainActivity
 import com.balex.familyteam.presentation.regadmin.content.ChooseEmailOrPhoneButton
 import com.balex.familyteam.presentation.regadmin.content.CodeSmsTextField
 import com.balex.familyteam.presentation.regadmin.content.DisplayNameTextField
@@ -41,9 +43,6 @@ import com.balex.familyteam.presentation.regadmin.content.PhoneTextField
 import com.balex.familyteam.presentation.regadmin.content.RegisterOrTryAgainButton
 import com.balex.familyteam.presentation.regadmin.content.ResendSmsButton
 import com.balex.familyteam.presentation.regadmin.content.VerifyEmailOrPhoneText
-import com.balex.common.rememberImeState
-import com.balex.common.theme.DarkBlue
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
 @Composable

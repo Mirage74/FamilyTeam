@@ -19,21 +19,35 @@ object Storage {
 
 
     private fun getEncryptedSharedPreferences(context: Context): SharedPreferences {
-        return (EncryptedSharedPreferences.create(
+        context.getSharedPreferences("encrypted_prefs", Context.MODE_PRIVATE).edit().clear().apply()
+        val pref = (EncryptedSharedPreferences.create(
             FILE_NAME,
             masterKeyAlias,
             context,
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         ))
+//        return (EncryptedSharedPreferences.create(
+//            FILE_NAME,
+//            masterKeyAlias,
+//            context,
+//            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+//            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+//        ))
+        return pref
     }
 
 
     fun getUser(context: Context): String {
-        return getEncryptedSharedPreferences(context).getString(
-            USER_KEY,
-            NO_USER_SAVED_IN_SHARED_PREFERENCES
-        ).toString().trim()
+        //context.deleteSharedPreferences(FILE_NAME)
+        //context.getSharedPreferences("encrypted_prefs", Context.MODE_PRIVATE).edit().clear().apply()
+        val sharedPreferences = getEncryptedSharedPreferences(context)
+        val user = sharedPreferences.getString(USER_KEY, NO_USER_SAVED_IN_SHARED_PREFERENCES)
+//        return getEncryptedSharedPreferences(context).getString(
+//            USER_KEY,
+//            NO_USER_SAVED_IN_SHARED_PREFERENCES
+//        ).toString().trim()
+        return user.toString()
     }
 
     fun saveUser(context: Context, userName: String) {

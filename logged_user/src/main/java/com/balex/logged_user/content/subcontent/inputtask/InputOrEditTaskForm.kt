@@ -133,7 +133,7 @@ fun InputOrEditTaskForm(
 
 
 
-            GreetingRow(state.user.nickName, state.user.displayName)
+            GreetingRow(state.user.nickName, state.user.displayName, state.user.hasPremiumAccount)
 
             val usersListWithoutMe = state.usersNicknamesList.filter { it != state.user.nickName }
 

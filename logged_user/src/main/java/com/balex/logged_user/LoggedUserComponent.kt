@@ -1,6 +1,8 @@
 package com.balex.logged_user
 
+import android.app.Activity
 import com.balex.common.data.local.model.ShopItemDBModel
+import com.balex.common.data.repository.BillingRepositoryImpl
 import com.balex.common.data.repository.TaskMode
 import com.balex.common.data.repository.UserRepositoryImpl
 import com.balex.common.domain.entity.ExternalTask
@@ -23,11 +25,13 @@ interface LoggedUserComponent {
 
     fun onClickAddShopItem()
 
+    fun onBuyPremiumClicked(optionValue: BillingRepositoryImpl.Companion.PremiumStatus)
+
     fun onExchangeCoinsClicked()
 
     fun onConfirmExchangeClicked(coins: Int, tasks: Int, reminders: Int)
 
-    fun onBuyCoinsClicked()
+    fun onBuyCoinsClicked(activity: Activity)
 
     fun onBeginPaymentTransactionClicked()
 

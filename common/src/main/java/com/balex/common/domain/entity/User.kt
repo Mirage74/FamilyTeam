@@ -6,6 +6,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class User(
+    @SerializedName("id")
+    val id: Int = 0,
     @SerializedName("nickName")
     val nickName: String = DEFAULT_NICK_NAME,
     @SerializedName("hasAdminRights")

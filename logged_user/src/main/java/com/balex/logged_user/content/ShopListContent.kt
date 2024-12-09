@@ -48,11 +48,8 @@ fun ShopListContent(
         verticalArrangement = arrangement
     ) {
         if (!state.isAddShopItemClicked) {
-            GreetingRow(state.user.nickName, state.user.displayName)
+            GreetingRow(state.user.nickName, state.user.displayName, state.user.hasPremiumAccount)
             Spacer(modifier = Modifier.height(16.dp))
-            if (state.isExchangeCoinsClicked) {
-                //ShowAvailableResources(state, component::onBuyCoinsClicked, component::onConfirmExchangeClicked)
-            }
             ShowAvailableResources(state, component::onExchangeCoinsClicked)
             Button(
                 onClick = { component.onClickAddShopItem() },
@@ -72,7 +69,7 @@ fun ShopListContent(
         } else {
             var description by remember { mutableStateOf(TextFieldValue("")) }
             Spacer(modifier = Modifier.height(16.dp))
-            GreetingRow(state.user.nickName, state.user.displayName)
+            GreetingRow(state.user.nickName, state.user.displayName, state.user.hasPremiumAccount)
             Spacer(modifier = Modifier.height(16.dp))
             Text(context.getString(R.string.shop_item_description))
             Spacer(modifier = Modifier.height(16.dp))

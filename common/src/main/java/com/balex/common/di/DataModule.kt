@@ -4,10 +4,12 @@ import android.content.Context
 import com.balex.common.data.local.db.ShopDatabase
 import com.balex.common.data.local.db.ShopItemsDao
 import com.balex.common.data.repository.AdminRepositoryImpl
+import com.balex.common.data.repository.BillingRepositoryImpl
 import com.balex.common.data.repository.RegLogRepositoryImpl
 import com.balex.common.data.repository.ShopListRepositoryImpl
 import com.balex.common.data.repository.UserRepositoryImpl
 import com.balex.common.domain.repository.AdminRepository
+import com.balex.common.domain.repository.BillingRepository
 import com.balex.common.domain.repository.RegLogRepository
 import com.balex.common.domain.repository.ShopListRepository
 import com.balex.common.domain.repository.UserRepository
@@ -29,6 +31,9 @@ interface DataModule {
 
     @[ApplicationScope Binds]
     fun bindShopListRepository(impl: ShopListRepositoryImpl): ShopListRepository
+
+    @[ApplicationScope Binds]
+    fun bindSBillingRepository(impl: BillingRepositoryImpl): BillingRepository
 
     companion object {
 

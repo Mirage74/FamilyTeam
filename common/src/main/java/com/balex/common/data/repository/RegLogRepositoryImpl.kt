@@ -106,16 +106,64 @@ class RegLogRepositoryImpl @Inject constructor(
     private val scheduleCollection = db.collection(FIREBASE_SCHEDULERS_COLLECTION)
     private val scheduleDeleteCollection = db.collection(FIREBASE_SCHEDULERS_DELETE_COLLECTION)
 
+//    override fun observeUser(): StateFlow<User> {
+//        val job = Job()
+//        return flow {
+//            try {
+//
+//            val userFakeEmailFromStorage = Storage.getUser(context)
+//            val phoneLanguageFromStorage = Storage.getLanguage(context)
+//
+//            val phoneLang =
+//                if (phoneLanguageFromStorage != Storage.NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES) {
+//                    language = phoneLanguageFromStorage
+//                    isCurrentLanguageNeedRefreshFlow.emit(Unit)
+//                    phoneLanguageFromStorage
+//                } else {
+//                    language = getCurrentLanguage(context)
+//                    language
+//                }
+//
+//            if (userFakeEmailFromStorage == Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
+//                val emptyUserNotSaved =
+//                    User(
+//                        nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES,
+//                        language = phoneLang
+//                    )
+//                globalRepoUser = emptyUserNotSaved
+//                //isCurrentUserNeedRefreshFlow.emit(Unit)
+//
+//            } else {
+//                signToFirebaseWithEmailAndPasswordFromPreferences(
+//                    userFakeEmailFromStorage,
+//                    Storage.getUsersPassword(context),
+//                    phoneLang
+//                )
+//            }
+//            emit(globalRepoUser)
+//            addUserListenerInFirebase()
+//            isCurrentUserNeedRefreshFlow.collect {
+//                emit(globalRepoUser)
+//            }
+//            } finally {
+//                job.cancel()
+//            }
+//        }
+//            .takeWhile { job.isActive}
+//            .stateIn(
+//                scope = coroutineScope,
+//                started = SharingStarted.Lazily,
+//                initialValue = globalRepoUser
+//            )
+//    }
+
     override fun observeUser(): StateFlow<User> {
-        val job = Job()
         return flow {
             try {
+                val userFakeEmailFromStorage = Storage.getUser(context)
+                val phoneLanguageFromStorage = Storage.getLanguage(context)
 
-            val userFakeEmailFromStorage = Storage.getUser(context)
-            val phoneLanguageFromStorage = Storage.getLanguage(context)
-
-            val phoneLang =
-                if (phoneLanguageFromStorage != Storage.NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES) {
+                val phoneLang = if (phoneLanguageFromStorage != Storage.NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES) {
                     language = phoneLanguageFromStorage
                     isCurrentLanguageNeedRefreshFlow.emit(Unit)
                     phoneLanguageFromStorage
@@ -124,38 +172,49 @@ class RegLogRepositoryImpl @Inject constructor(
                     language
                 }
 
-            if (userFakeEmailFromStorage == Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
-                val emptyUserNotSaved =
-                    User(
+                if (userFakeEmailFromStorage == Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
+                    val emptyUserNotSaved = User(
                         nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES,
                         language = phoneLang
                     )
-                globalRepoUser = emptyUserNotSaved
-                //isCurrentUserNeedRefreshFlow.emit(Unit)
+                    globalRepoUser = emptyUserNotSaved
+                    emit(globalRepoUser)
+                } else {
+                    signToFirebaseWithEmailAndPasswordFromPreferences(
+                        userFakeEmailFromStorage,
+                        Storage.getUsersPassword(context),
+                        phoneLang
+                    )
+                }
 
-            } else {
-                signToFirebaseWithEmailAndPasswordFromPreferences(
-                    userFakeEmailFromStorage,
-                    Storage.getUsersPassword(context),
-                    phoneLang
-                )
-            }
-            emit(globalRepoUser)
-            addUserListenerInFirebase()
-            isCurrentUserNeedRefreshFlow.collect {
-                emit(globalRepoUser)
-            }
-            } finally {
-                job.cancel()
+                addUserListenerInFirebase()
+
+                isCurrentUserNeedRefreshFlow.collect {
+                    emit(globalRepoUser)
+                }
+            } catch (e: Exception) {
+                Log.e("observeUser", "Error: ${e.message}", e)
             }
         }
-            .takeWhile { job.isActive}
             .stateIn(
                 scope = coroutineScope,
                 started = SharingStarted.Lazily,
                 initialValue = globalRepoUser
             )
     }
+
+
+    override fun observeIsWrongPassword(): StateFlow<User> = flow {
+        emit(isWrongPassword)
+        isWrongPasswordNeedRefreshFlow.collect {
+            emit(isWrongPassword)
+        }
+    }
+        .stateIn(
+            scope = coroutineScope,
+            started = SharingStarted.Lazily,
+            initialValue = isWrongPassword
+        )
 
     private fun addUserListenerInFirebase() {
         if (globalRepoUser.adminEmailOrPhone != User.DEFAULT_FAKE_EMAIL && globalRepoUser.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
@@ -178,17 +237,7 @@ class RegLogRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun observeIsWrongPassword(): StateFlow<User> = flow {
-        emit(isWrongPassword)
-        isWrongPasswordNeedRefreshFlow.collect {
-            emit(isWrongPassword)
-        }
-    }
-        .stateIn(
-            scope = coroutineScope,
-            started = SharingStarted.Lazily,
-            initialValue = isWrongPassword
-        )
+
 
     override fun observeLanguage(): StateFlow<String> {
         val job = Job()
@@ -424,13 +473,23 @@ class RegLogRepositoryImpl @Inject constructor(
             var maxTaskPerDay = if (globalRepoUser.hasPremiumAccount) {
                 context.resources.getInteger(R.integer.max_available_tasks_per_day_premium)
             } else {
-                context.resources.getInteger(R.integer.max_available_tasks_per_day_default)
+                if (globalRepoUser.id > 0 && globalRepoUser.id <= context.resources.getInteger(R.integer.max_users_with_renew_tasks)) {
+                    context.resources.getInteger(R.integer.max_available_tasks_per_day_default)
+                } else {
+                    globalRepoUser.availableTasksToAdd
+                }
+
             }
 
             var maxFCMPerDay = if (globalRepoUser.hasPremiumAccount) {
                 context.resources.getInteger(R.integer.max_available_FCM_per_day_premium)
             } else {
-                context.resources.getInteger(R.integer.max_available_FCM_per_day_default)
+                if (globalRepoUser.id > 0 && globalRepoUser.id <= context.resources.getInteger(R.integer.max_users_with_renew_tasks)) {
+                    context.resources.getInteger(R.integer.max_available_FCM_per_day_default)
+                } else {
+                    globalRepoUser.availableFCM
+                }
+
             }
 
             if (maxTaskPerDay < globalRepoUser.availableTasksToAdd) {
@@ -656,6 +715,7 @@ class RegLogRepositoryImpl @Inject constructor(
 
 
                 val newUser = User(
+                    id = userToSignIn.id,
                     fakeEmail = userToSignIn.fakeEmail,
                     displayName = userToSignIn.displayName,
                     password = userToSignIn.password,
@@ -848,6 +908,7 @@ class RegLogRepositoryImpl @Inject constructor(
             emailOrPhoneNumberVerified = true
         )
         val newUser = User(
+            id = 1,
             nickName = nickName,
             hasAdminRights = true,
             fakeEmail = fakeEmail,

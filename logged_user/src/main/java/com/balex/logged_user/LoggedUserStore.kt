@@ -1,5 +1,6 @@
 package com.balex.logged_user
 
+import android.app.Activity
 import android.content.Context
 import android.util.Log
 import com.arkivanov.mvikotlin.core.store.Reducer
@@ -10,6 +11,7 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.balex.common.R
 import com.balex.common.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
 import com.balex.common.data.local.model.ShopItemDBModel
+import com.balex.common.data.repository.BillingRepositoryImpl
 import com.balex.common.data.repository.TaskMode
 import com.balex.common.data.repository.UserRepositoryImpl
 import com.balex.common.domain.entity.ExternalTask
@@ -20,6 +22,7 @@ import com.balex.common.domain.entity.ToDoList
 import com.balex.common.domain.entity.User
 import com.balex.common.domain.usecases.admin.CreateNewUserUseCase
 import com.balex.common.domain.usecases.admin.DeleteUserUseCase
+import com.balex.common.domain.usecases.billing.LaunchPurchaseFlowUseCase
 import com.balex.common.domain.usecases.regLog.GetUserUseCase
 import com.balex.common.domain.usecases.regLog.ObserveLanguageUseCase
 import com.balex.common.domain.usecases.regLog.ObserveUserUseCase
@@ -36,6 +39,7 @@ import com.balex.common.domain.usecases.user.DeleteTaskFromFirebaseUseCase
 import com.balex.common.domain.usecases.user.ExchangeCoinsUseCase
 import com.balex.common.domain.usecases.user.ObserveUsersListUseCase
 import com.balex.common.domain.usecases.user.SaveDeviceTokenUseCase
+import com.balex.common.domain.usecases.user.SetPremiumStatusUseCase
 import com.balex.common.extensions.REGEX_PATTERN_NOT_ANY_LETTERS_NUMBERS_UNDERSCORE
 import com.balex.common.extensions.REGEX_PATTERN_NOT_LATIN_LETTERS_NUMBERS_UNDERSCORE
 import com.balex.common.extensions.REGEX_PATTERN_NOT_LETTERS
@@ -69,9 +73,11 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 
         data object ClickedExchangeCoins : Intent
 
+        data class ClickedBuyPremium(val premiumStatus: BillingRepositoryImpl.Companion.PremiumStatus) : Intent
+
         data class ClickedConfirmExchange(val coins: Int, val tasks: Int, val reminders: Int) : Intent
 
-        data object ClickedBuyCoins : Intent
+        data class ClickedBuyCoins(val activity: Activity) : Intent
 
         data object ClickedBeginPaymentTransaction : Intent
 
@@ -136,7 +142,6 @@ interface LoggedUserStore : Store<Intent, State, Label> {
         val usersNicknamesList: List<String>,
         val shopItemsList: ShopItems,
         val isExchangeCoinsClicked: Boolean,
-        val isBuyCoinsClicked: Boolean,
         val isPaymentDataEnteredAndBuyCoinsClicked: Boolean,
         val isAddTaskClicked: Boolean,
         val isEditTaskClicked: Boolean,
@@ -165,8 +170,6 @@ interface LoggedUserStore : Store<Intent, State, Label> {
             data object Content : LoggedUserState
 
             data object ExchangeCoins : LoggedUserState
-
-            data object BuyCoins : LoggedUserState
 
         }
 
@@ -201,6 +204,8 @@ class LoggedUserStoreFactory @Inject constructor(
     private val addPrivateTaskToFirebaseUseCase: AddPrivateTaskToFirebaseUseCase,
     private val addExternalTaskToFirebaseUseCase: AddExternalTaskToFirebaseUseCase,
     private val exchangeCoinsUseCase: ExchangeCoinsUseCase,
+    private val launchPurchaseFlowUseCase: LaunchPurchaseFlowUseCase,
+    private val setPremiumStatusUseCase: SetPremiumStatusUseCase,
     private val storeFactory: StoreFactory,
     context: Context
 ) {
@@ -220,7 +225,6 @@ class LoggedUserStoreFactory @Inject constructor(
                 ShopItems(),
                 isAddShopItemClicked = false,
                 isExchangeCoinsClicked = false,
-                isBuyCoinsClicked = false,
                 isPaymentDataEnteredAndBuyCoinsClicked = false,
                 isAddTaskClicked = false,
                 isEditTaskClicked = false,
@@ -281,9 +285,11 @@ class LoggedUserStoreFactory @Inject constructor(
 
         data object ClickedExchangeCoins : Msg
 
+        data class ClickedBuyPremium(val premiumStatus: BillingRepositoryImpl.Companion.PremiumStatus) : Msg
+
         data class ClickedConfirmExchange(val coins: Int, val tasks: Int, val reminders: Int) : Msg
 
-        data object ClickedBuyCoins : Msg
+        data class ClickedBuyCoins(val activity: Activity) : Msg
 
         data object ClickedBeginPaymentTransaction : Msg
 
@@ -403,6 +409,13 @@ class LoggedUserStoreFactory @Inject constructor(
                     dispatch(Msg.ClickedExchangeCoins)
                 }
 
+                is Intent.ClickedBuyPremium -> {
+                    scope.launch {
+                        setPremiumStatusUseCase(intent.premiumStatus)
+                    }
+                    dispatch(Msg.ClickedBuyPremium(intent.premiumStatus))
+                }
+
                 is Intent.ClickedConfirmExchange -> {
                     scope.launch {
                         exchangeCoinsUseCase(intent.coins, intent.tasks, intent.reminders)
@@ -410,8 +423,9 @@ class LoggedUserStoreFactory @Inject constructor(
                     dispatch(Msg.ClickedConfirmExchange(intent.coins, intent.tasks, intent.reminders))
                 }
 
-                Intent.ClickedBuyCoins -> {
-                    dispatch(Msg.ClickedBuyCoins)
+                is Intent.ClickedBuyCoins -> {
+                    launchPurchaseFlowUseCase(intent.activity)
+                    dispatch(Msg.ClickedBuyCoins(intent.activity))
                 }
 
                 Intent.ClickedBeginPaymentTransaction -> {
@@ -645,7 +659,6 @@ class LoggedUserStoreFactory @Inject constructor(
                 Msg.BackFromExchangeOrBuyCoinClicked -> {
                     copy(
                         isExchangeCoinsClicked = false,
-                        isBuyCoinsClicked = false,
                         isPaymentDataEnteredAndBuyCoinsClicked = false,
                         loggedUserState = State.LoggedUserState.Content
                     )
@@ -677,10 +690,16 @@ class LoggedUserStoreFactory @Inject constructor(
                     )
                 }
 
-                Msg.ClickedBuyCoins -> {
+                is Msg.ClickedBuyPremium -> {
                     copy(
-                        isBuyCoinsClicked = true,
-                        loggedUserState = State.LoggedUserState.BuyCoins
+                        isExchangeCoinsClicked = false,
+                        loggedUserState = State.LoggedUserState.Content
+                    )
+                }
+
+                is Msg.ClickedBuyCoins -> {
+                    copy(
+                        loggedUserState = State.LoggedUserState.Content
                     )
                 }
 
