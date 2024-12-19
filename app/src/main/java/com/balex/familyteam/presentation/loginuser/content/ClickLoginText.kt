@@ -16,11 +16,9 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.balex.common.R
-import com.balex.familyteam.presentation.loginuser.LoginUserComponent
-import com.balex.familyteam.presentation.loginuser.LoginUserStore
 
 @Composable
-fun ClickLoginText(state: LoginUserStore.State, component: LoginUserComponent, context: Context) {
+fun ClickLoginText(context: Context) {
 
     Box(
         modifier = Modifier

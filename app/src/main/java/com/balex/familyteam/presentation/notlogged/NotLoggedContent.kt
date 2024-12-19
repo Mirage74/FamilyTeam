@@ -24,10 +24,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,7 +42,6 @@ import com.balex.common.R
 import com.balex.common.SwitchLanguage
 import com.balex.common.domain.entity.MenuItems
 import com.balex.common.theme.DarkBlue
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.balex.common.R as commonR
@@ -55,17 +51,6 @@ import com.balex.common.R as commonR
 fun NotLoggedContent(component: NotLoggedComponent) {
 
     val state by component.model.collectAsState(Dispatchers.Main.immediate)
-
-    var showLoader by remember { mutableStateOf(false) }
-
-//    LaunchedEffect(state.logChooseState) {
-//        if (state.logChooseState == NotLoggedStore.State.LogChooseState.Initial) {
-//            delay(3000)
-//            showLoader = true
-//        } else {
-//            showLoader = false
-//        }
-//    }
 
     when (state.logChooseState) {
 
@@ -147,7 +132,6 @@ fun NotLoggedScreen(component: NotLoggedComponent) {
                         }
                     }
                 )
-                //MainContent(component)
                 com.balex.common.LocalizedContextProvider(languageCode = state.language.lowercase()) {
                     ShowContent(true, component)
                 }
@@ -173,7 +157,6 @@ fun ShowContent(
 
         val context = com.balex.common.LocalLocalizedContext.current
         val regAdmText = context.getString(R.string.reg_adm)
-        //val logAdmText = context.getString(R.string.log_adm)
         val logUserText = context.getString(R.string.log_user)
         val textSize = dimensionResource(id = commonR.dimen.button_text_size).value.sp
 

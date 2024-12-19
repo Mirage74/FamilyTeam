@@ -26,4 +26,11 @@
     <string name="button_cancel">Cancel</string>
     <string name="button_dismiss">Dismiss</string>
     <string name="button_resend_sms">Resend SMS code</string>
+
+    <string name="coins">Coins</string>
+    <string name="tasks">Tasks</string>
+    <string name="reminders">Reminders</string>
+    <string name="sell"> Sell </string>
+    <string name="buy"> Buy </string>
+    <string name="rate">Rate</string>
 </resources>

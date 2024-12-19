@@ -46,7 +46,7 @@ class BillingRepositoryImpl @Inject constructor(
         billingClient.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(billingResult: BillingResult) {
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                    Log.d("setupBillingClient", "Billing setup finished successfully")
+                    Log.d("setupBillingClient", "startConnection billingResult.responseCode == BillingClient.BillingResponseCode.OK ")
                 } else {
                     Log.e(
                         "setupBillingClient",
@@ -77,8 +77,12 @@ class BillingRepositoryImpl @Inject constructor(
     }
 
     private suspend fun handlePurchase(billingResult: BillingResult, purchases: List<Purchase>?) {
+        Log.d("handlePurchase", "billingResult: $billingResult")
+        Log.d("handlePurchase", "billingResult.responseCode: ${billingResult.responseCode}")
+        Log.d("handlePurchase", "purchases: $purchases")
         if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
             for (purchase in purchases) {
+                Log.d("handlePurchase", "Purchase: ${purchase.products}, State: ${purchase.purchaseState}")
                 if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
                     consumePurchase(purchase)
                     addCreditsToUser(purchase.quantity)
@@ -87,8 +91,9 @@ class BillingRepositoryImpl @Inject constructor(
                     Log.e("handlePurchase", "Error: ${billingResult.debugMessage}")
                 }
             }
+        } else {
+            Log.e("handlePurchase", "BillingResult not OK: ${billingResult.debugMessage}")
         }
-
     }
 
     private suspend fun addCreditsToUser(credits: Int) {
@@ -106,6 +111,7 @@ class BillingRepositoryImpl @Inject constructor(
                 Log.d("acknowledgePurchase", "billingResult.responseCode == OK")
             } else {
                 Log.d("acknowledgePurchase", "billingResult.responseCode not OK: ${billingResult.responseCode}")
+                Log.e("acknowledgePurchase", "Failed to acknowledge purchase: ${billingResult.debugMessage}")
             }
         }
     }
@@ -123,7 +129,25 @@ class BillingRepositoryImpl @Inject constructor(
             )
             .build()
 
+//        val productDetailsParams = QueryProductDetailsParams.newBuilder()
+//            .setProductList(
+//                listOf(
+//                    QueryProductDetailsParams.Product.newBuilder()
+//                        .setProductId("android.test.purchased")
+//                        .setProductType(BillingClient.ProductType.INAPP)
+//                        .build()
+//                )
+//            )
+//            .build()
+
+        if (!billingClient.isReady) {
+            Log.e("launchPurchaseFlow", "BillingClient not ready")
+        }
+
         billingClient.queryProductDetailsAsync(productDetailsParams) { billingResult, productDetailsList ->
+            Log.d("launchPurchaseFlow", "billingResult: $billingResult")
+            Log.d("launchPurchaseFlow", "billingResult.responseCode: ${billingResult.responseCode}")
+            Log.d("launchPurchaseFlow", "productDetailsList: $productDetailsList")
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && productDetailsList.isNotEmpty()) {
                 val productDetails = productDetailsList.firstOrNull()
                 if (productDetails != null) {
@@ -137,8 +161,11 @@ class BillingRepositoryImpl @Inject constructor(
                         )
                         .build()
 
-                    billingClient.launchBillingFlow(activity, flowParams)
+                    val result = billingClient.launchBillingFlow(activity, flowParams)
+                    Log.d("launchPurchaseFlow", "Launch result: ${result.responseCode}")
                 }
+            } else {
+                Log.e("launchPurchaseFlow", "Error: ${billingResult.debugMessage}")
             }
         }
     }

@@ -1,7 +1,6 @@
 package com.balex.logged_user.content.subcontent.recourses
 
 import android.app.Activity
-import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -93,9 +92,13 @@ fun SectionBuyCoins(onClickedBuyCoins: () -> Unit) {
 fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComponent) {
     val context = LocalContext.current
 
+    val coinName = ( context.getString(commonR.string.coins) ).trim()
+    val taskName = ( context.getString(commonR.string.tasks) ).trim()
+    val reminderName = ( context.getString(commonR.string.reminders) ).trim()
+
     var selectedCoins by remember { mutableIntStateOf(state.user.teamCoins) }
-    var selectedOption by remember { mutableStateOf("Tasks") }
-    val rateResource = if (selectedOption == "Tasks") {
+    var selectedOption by remember { mutableStateOf(taskName) }
+    val rateResource = if (selectedOption == taskName) {
         context.resources.getInteger(commonR.integer.rate_one_coin_to_task)
     } else {
         context.resources.getInteger(commonR.integer.rate_one_coin_to_FCM)
@@ -115,7 +118,7 @@ fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComp
         )
 
         Text(
-            text = " Sell ",
+            text = context.getString(commonR.string.sell),
             style = MaterialTheme.typography.bodyLarge
         )
 
@@ -127,7 +130,7 @@ fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComp
         )
 
         Text(
-            text = "Coins",
+            text = coinName,
             style = MaterialTheme.typography.bodyMedium
         )
     }
@@ -138,9 +141,9 @@ fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComp
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-
+        val rateText = context.getString(commonR.string.rate)
         Text(
-            text = "Rate: $rateResource",
+            text = "$rateText: $rateResource",
             style = MaterialTheme.typography.bodyLarge
         )
 
@@ -152,7 +155,7 @@ fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComp
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        val icon = if (selectedOption == "Tasks") {
+        val icon = if (selectedOption == taskName) {
             Icons.Default.AddTask
         } else {
             Icons.AutoMirrored.Filled.Message
@@ -166,7 +169,7 @@ fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComp
 
         val result = selectedCoins * rateResource
         Text(
-            text = " Buy ",
+            text = context.getString(commonR.string.buy),
             style = MaterialTheme.typography.bodyLarge
         )
 
@@ -176,7 +179,7 @@ fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComp
         )
 
         DropdownMenuWithItems(
-            items = listOf("Tasks", "Reminders"),
+            items = listOf(taskName, reminderName),
             selectedValue = selectedOption,
             onItemSelected = { selectedOption = it }
         )
@@ -186,12 +189,12 @@ fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComp
     Button(
         onClick = {
             val newCoins = state.user.teamCoins - selectedCoins
-            val newTasks = if (selectedOption == "Tasks") {
+            val newTasks = if (selectedOption == taskName) {
                 state.user.availableTasksToAdd + selectedCoins * rateResource
             } else {
                 state.user.availableTasksToAdd
             }
-            val newReminders = if (selectedOption == "Reminders") {
+            val newReminders = if (selectedOption == reminderName) {
                 state.user.availableFCM + selectedCoins * rateResource
             } else {
                 state.user.availableFCM
@@ -222,6 +225,8 @@ fun SectionBuyPremiumAccount(state: LoggedUserStore.State, component: LoggedUser
 
         val appContext = context.applicationContext
 
+        val coinName = ( context.getString(commonR.string.coins) ).trim()
+
         var defaultPremiumStatus = BillingRepositoryImpl.Companion.PremiumStatus.NO_PREMIUM
         if (state.user.teamCoins >= context.resources.getInteger(commonR.integer.premium_account_one_month_cost)) {
             defaultPremiumStatus = oneMonth
@@ -248,7 +253,7 @@ fun SectionBuyPremiumAccount(state: LoggedUserStore.State, component: LoggedUser
                 enabled = isEnabled
             )
             val text = context.getString(R.string.premium_one_month) + " (" +
-                    appContext.resources.getInteger(commonR.integer.premium_account_one_month_cost) + " coins )"
+                    appContext.resources.getInteger(commonR.integer.premium_account_one_month_cost) + " $coinName )"
             Text(
                 text = text,
                 color = if (isEnabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
@@ -265,7 +270,7 @@ fun SectionBuyPremiumAccount(state: LoggedUserStore.State, component: LoggedUser
                 enabled = state.user.teamCoins >= context.resources.getInteger(commonR.integer.premium_account_one_year_cost)
             )
             val text = context.getString(R.string.premium_one_year) + " (" +
-                    appContext.resources.getInteger(commonR.integer.premium_account_one_year_cost) + " coins )"
+                    appContext.resources.getInteger(commonR.integer.premium_account_one_year_cost) + " $coinName )"
             Text(
                 text = text,
                 color = if (isEnabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
@@ -282,7 +287,7 @@ fun SectionBuyPremiumAccount(state: LoggedUserStore.State, component: LoggedUser
                 enabled = state.user.teamCoins >= context.resources.getInteger(commonR.integer.premium_account_unlimited_cost)
             )
             val text = context.getString(R.string.premium_unlimited) + " (" +
-                    appContext.resources.getInteger(commonR.integer.premium_account_unlimited_cost) + " coins )"
+                    appContext.resources.getInteger(commonR.integer.premium_account_unlimited_cost) + " $coinName )"
             Text(
                 text = text,
                 color = if (isEnabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)

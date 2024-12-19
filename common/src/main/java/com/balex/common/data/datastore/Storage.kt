@@ -19,7 +19,7 @@ object Storage {
 
 
     private fun getEncryptedSharedPreferences(context: Context): SharedPreferences {
-        context.getSharedPreferences("encrypted_prefs", Context.MODE_PRIVATE).edit().clear().apply()
+        //context.getSharedPreferences("encrypted_prefs", Context.MODE_PRIVATE).edit().clear().apply()
         val pref = (EncryptedSharedPreferences.create(
             FILE_NAME,
             masterKeyAlias,

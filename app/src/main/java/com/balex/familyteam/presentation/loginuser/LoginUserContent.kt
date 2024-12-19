@@ -28,14 +28,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.balex.common.ANIMATION_DURATION
 import com.balex.common.TopAppBarOnlyLanguage
+import com.balex.common.rememberImeState
+import com.balex.common.theme.DarkBlue
 import com.balex.familyteam.presentation.loginuser.content.ClickLoginText
 import com.balex.familyteam.presentation.loginuser.content.EmailTextField
 import com.balex.familyteam.presentation.loginuser.content.LoginButton
 import com.balex.familyteam.presentation.loginuser.content.NickNameTextField
 import com.balex.familyteam.presentation.loginuser.content.PasswordTextField
-import com.balex.common.rememberImeState
-import com.balex.common.theme.DarkBlue
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
 @Composable
@@ -110,12 +109,8 @@ fun MainLoginUserContent(
                 Spacer(modifier = Modifier.height(24.dp))
                 NickNameTextField(state, component, context)
                 PasswordTextField(state, component, context)
-                ClickLoginText(state, component, context)
+                ClickLoginText(context)
                 LoginButton(state, component, context)
-
-
-//                Spacer(modifier = Modifier.height(24.dp))
-//                RegisterOrTryAgainButton(state, component, context, activity)
             }
         }
     }
