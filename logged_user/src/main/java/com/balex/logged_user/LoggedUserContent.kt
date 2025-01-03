@@ -89,6 +89,7 @@ fun LoggedUserContent(
             isFirstRun = false
             previousSessionId = state.sessionId
         }
+        component.initIapConnector(activity)
     }
 
 

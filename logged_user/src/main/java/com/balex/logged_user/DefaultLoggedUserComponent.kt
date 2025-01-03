@@ -93,6 +93,10 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         store.accept(intent)
     }
 
+    override fun initIapConnector(activity: Activity) {
+        store.accept(LoggedUserStore.Intent.InitIapConnector(activity))
+    }
+
     override fun onBackFromNewTaskFormClicked() {
         store.accept(LoggedUserStore.Intent.BackFromNewTaskFormClicked)
     }

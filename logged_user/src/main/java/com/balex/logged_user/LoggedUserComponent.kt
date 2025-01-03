@@ -15,6 +15,8 @@ interface LoggedUserComponent {
 
     fun sendIntent(intent: LoggedUserStore.Intent)
 
+    fun initIapConnector(activity: Activity)
+
     fun onBackFromNewTaskFormClicked()
 
     fun onBackClickedHandle()

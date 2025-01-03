@@ -22,7 +22,9 @@ import com.balex.common.domain.entity.ToDoList
 import com.balex.common.domain.entity.User
 import com.balex.common.domain.usecases.admin.CreateNewUserUseCase
 import com.balex.common.domain.usecases.admin.DeleteUserUseCase
+import com.balex.common.domain.usecases.billing.InitIapConnectorInRepositoryUseCase
 import com.balex.common.domain.usecases.billing.LaunchPurchaseFlowUseCase
+import com.balex.common.domain.usecases.billing.PurchaseCoinsUseCase
 import com.balex.common.domain.usecases.regLog.GetUserUseCase
 import com.balex.common.domain.usecases.regLog.ObserveLanguageUseCase
 import com.balex.common.domain.usecases.regLog.ObserveUserUseCase
@@ -62,6 +64,8 @@ interface LoggedUserStore : Store<Intent, State, Label> {
     sealed interface Intent {
 
         data class SaveDeviceToken(val token: String) : Intent
+
+        data class InitIapConnector(val activity: Activity) : Intent
 
         data object BackFromNewTaskFormClicked : Intent
 
@@ -205,6 +209,8 @@ class LoggedUserStoreFactory @Inject constructor(
     private val addExternalTaskToFirebaseUseCase: AddExternalTaskToFirebaseUseCase,
     private val exchangeCoinsUseCase: ExchangeCoinsUseCase,
     private val launchPurchaseFlowUseCase: LaunchPurchaseFlowUseCase,
+    private val initIapConnectorInRepositoryUseCase: InitIapConnectorInRepositoryUseCase,
+    private val purchaseCoinsUseCase: PurchaseCoinsUseCase,
     private val setPremiumStatusUseCase: SetPremiumStatusUseCase,
     private val storeFactory: StoreFactory,
     context: Context
@@ -389,6 +395,11 @@ class LoggedUserStoreFactory @Inject constructor(
 
                 }
 
+                is Intent.InitIapConnector -> {
+                    initIapConnectorInRepositoryUseCase(intent.activity)
+                    launchPurchaseFlowUseCase(intent.activity)
+                }
+
                 Intent.BackFromNewTaskFormClicked -> {
                     dispatch(Msg.BackFromNewTaskFormClicked)
                 }
@@ -424,7 +435,7 @@ class LoggedUserStoreFactory @Inject constructor(
                 }
 
                 is Intent.ClickedBuyCoins -> {
-                    launchPurchaseFlowUseCase(intent.activity)
+                    purchaseCoinsUseCase(intent.activity)
                     dispatch(Msg.ClickedBuyCoins(intent.activity))
                 }
 

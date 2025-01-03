@@ -15,9 +15,8 @@ android {
         applicationId = "com.balex.familyteam"
         minSdk = 30
         targetSdk = 35
-        versionCode = 10
-        versionName = "1.10" +
-                ""
+        versionCode = 20
+        versionName = "3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -35,11 +34,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
     buildFeatures {
         compose = true
@@ -98,9 +97,13 @@ dependencies {
     implementation(libs.firebase.firestore.ktx)
 
 
-    implementation (libs.androidx.navigation.compose)
+    implementation(libs.androidx.navigation.compose)
 
     implementation(libs.reaktive)
+
+    implementation(libs.billing)
+    implementation(libs.billing.ktx)
+
 
     implementation(libs.kotlinx.serialization.core)
     implementation(libs.kotlinx.serialization.json)
