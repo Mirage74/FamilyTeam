@@ -228,8 +228,11 @@ class RegLogRepositoryImpl @Inject constructor(
                 }
                 snapshot?.let {
                     val userListener = it.toObject(User::class.java)
-                    if (userListener != null && userListener.nickName == globalRepoUser.nickName) {
+                    if (userListener != null && userListener.nickName == globalRepoUser.nickName && globalRepoUser != userListener) {
                         globalRepoUser = userListener
+//                        coroutineScope.launch {
+//                            isCurrentUserNeedRefreshFlow.emit(Unit)
+//                        }
                     }
                 }
             }

@@ -4,8 +4,8 @@ import android.app.Activity
 import com.balex.common.domain.repository.BillingRepository
 import javax.inject.Inject
 
-class LaunchPurchaseFlowUseCase @Inject constructor(
+class InitIapConnectorUseCase @Inject constructor(
     private val repository: BillingRepository
 ) {
-    operator fun invoke(activity: Activity) = repository.launchPurchaseFlow(activity)
+    operator fun invoke(activity: Activity) = repository.initIapConnector(activity)
 }

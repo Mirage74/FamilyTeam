@@ -1,5 +1,6 @@
 package com.balex.familyteam.presentation.notlogged
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -90,8 +91,8 @@ fun NotLoggedScreen(component: NotLoggedComponent) {
                         drawerState.close()
                         component.onClickAbout()
                     }
-
-                }
+                },
+                modifier = Modifier.background(Color.Blue)
             )
         }
     ) {

@@ -3,7 +3,7 @@
     <dimen name="current_language_text_size">24sp</dimen>
     <dimen name="language_list_text_size">20sp</dimen>
     <dimen name="button_text_size">20sp</dimen>
-    <dimen name="hamburger_text_size">20sp</dimen>
+    <dimen name="hamburger_text_size">24sp</dimen>
     <dimen name="verify_text_size">28sp</dimen>
     <dimen name="reg_admin_button_text_size">16sp</dimen>
 

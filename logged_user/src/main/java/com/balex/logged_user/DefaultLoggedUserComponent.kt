@@ -18,7 +18,6 @@ import com.balex.common.domain.usecases.regLog.GetLanguageUseCase
 import com.balex.common.domain.usecases.regLog.LogoutUserUseCase
 import com.balex.common.domain.usecases.regLog.RefreshFCMLastTimeUpdatedUseCase
 import com.balex.common.domain.usecases.regLog.StorageClearPreferencesUseCase
-import com.balex.common.domain.usecases.user.EmitUsersNicknamesListNeedRefreshUseCase
 import com.balex.common.extensions.componentScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -36,7 +35,6 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     private val logoutUserUseCase: LogoutUserUseCase,
     private val storageClearPreferencesUseCase: StorageClearPreferencesUseCase,
     private val refreshFCMLastTimeUpdatedUseCase: RefreshFCMLastTimeUpdatedUseCase,
-    private val emitUsersNicknamesListNeedRefreshUseCase: EmitUsersNicknamesListNeedRefreshUseCase,
     @Assisted("sessionId") private val sessionId: String,
     @Assisted("onAbout") private val onAbout: () -> Unit,
     @Assisted("onBackClicked") private val onBackClicked: () -> Unit,
@@ -54,7 +52,8 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         }
 
         lifecycle.doOnResume {
-            onRefreshLanguage()
+            //onRefreshLanguage()
+            store.startBootstrapperCollectFlow()
             startCollectingLabels()
         }
         lifecycle.doOnPause {

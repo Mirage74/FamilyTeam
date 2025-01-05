@@ -40,7 +40,7 @@ fun RegisterNewUserButton(
     Spacer(modifier = Modifier.height(24.dp))
 
     Button(
-        enabled = state.isPasswordEnabled && state.isRegisterInFirebaseButtonEnabled && state.isCreateNewUserClicked,
+        enabled = true,
         onClick = {
             component.onAdminPageCancelCreateNewUserClicked()
         },
@@ -53,5 +53,7 @@ fun RegisterNewUserButton(
             fontSize = dimensionResource(id = R.dimen.reg_admin_button_text_size).value.sp
         )
     }
+
+    Spacer(modifier = Modifier.height(48.dp))
 
 }

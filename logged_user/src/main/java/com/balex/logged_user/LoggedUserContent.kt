@@ -79,7 +79,7 @@ fun LoggedUserContent(
     var isFirstRun by remember { mutableStateOf(true) }
 
     LaunchedEffect(deviceToken) {
-        if (isFirstRun  || state.sessionId != previousSessionId ) {
+        if (isFirstRun || state.sessionId != previousSessionId) {
             Log.d("LoggedUserContent", "deviceToken: $deviceToken")
             if (deviceToken.isNotEmpty()) {
                 component.sendIntent(LoggedUserStore.Intent.SaveDeviceToken(deviceToken))
@@ -93,21 +93,35 @@ fun LoggedUserContent(
     }
 
 
+//    BackHandler {
+//        if (state.isCreateNewUserClicked) {
+//            component.onAdminPageCancelCreateNewUserClicked()
+//        } else {
+//            if (state.isAddTaskClicked || state.isEditTaskClicked || state.isAddShopItemClicked) {
+//                component.onBackFromNewTaskFormClicked()
+//            } else if (state.loggedUserState == LoggedUserStore.State.LoggedUserState.Content) {
+//                component.onBackClickedHandle()
+//            } else {
+//                component.onBackFromExchangeOrBuyCoinClicked()
+//            }
+//        }
+//    }
+
     BackHandler {
-        if (state.isAddTaskClicked || state.isEditTaskClicked || state.isAddShopItemClicked) {
-            component.onBackFromNewTaskFormClicked()
-        } else if (state.loggedUserState == LoggedUserStore.State.LoggedUserState.Content) {
-            component.onBackClickedHandle()
-        } else {
-            component.onBackFromExchangeOrBuyCoinClicked()
+        when {
+            state.isCreateNewUserClicked -> component.onAdminPageCancelCreateNewUserClicked()
+            state.isAddTaskClicked || state.isEditTaskClicked || state.isAddShopItemClicked -> component.onBackFromNewTaskFormClicked()
+            state.loggedUserState == LoggedUserStore.State.LoggedUserState.Content -> component.onBackClickedHandle()
+            else -> component.onBackFromExchangeOrBuyCoinClicked()
         }
     }
+
 
     com.balex.common.LocalizedContextProvider(languageCode = state.language.lowercase()) {
 
         when (state.loggedUserState) {
             LoggedUserStore.State.LoggedUserState.Content -> {
-                LoggedUserScreen(component, state, deviceToken, activity )
+                LoggedUserScreen(component, state, deviceToken, activity)
             }
 
             LoggedUserStore.State.LoggedUserState.Loading -> {
