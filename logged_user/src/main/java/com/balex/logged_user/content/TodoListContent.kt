@@ -17,12 +17,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.balex.common.LocalLocalizedContext
+import com.balex.common.data.repository.TaskMode
 import com.balex.common.extensions.allMyTasks
 import com.balex.logged_user.LoggedUserComponent
 import com.balex.logged_user.LoggedUserStore
 import com.balex.logged_user.R
 import com.balex.logged_user.content.subcontent.GreetingRow
 import com.balex.logged_user.content.subcontent.ShowTasksList
+import com.balex.logged_user.content.subcontent.inputtask.InputOrEditTaskForm
 import com.balex.logged_user.content.subcontent.inputtask.convertMillisToDate
 import com.balex.logged_user.content.subcontent.recourses.ShowAvailableResources
 
@@ -97,6 +99,13 @@ fun TodoListContent(
                     .weight(4f)
                     .padding(paddingValues)
             )
+        } else {
+            if (state.isAddTaskClicked) {
+                InputOrEditTaskForm(component, state, true, TaskMode.ADD, deviceToken,  context)
+            } else {
+                InputOrEditTaskForm(component, state, true, TaskMode.EDIT, deviceToken, context)
+            }
+
         }
     }
 }

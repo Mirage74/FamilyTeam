@@ -33,4 +33,6 @@
     <string name="sell"> Sell </string>
     <string name="buy"> Buy </string>
     <string name="rate">Rate</string>
+
+    <string name="about_text">This is ABOUT text</string>
 </resources>

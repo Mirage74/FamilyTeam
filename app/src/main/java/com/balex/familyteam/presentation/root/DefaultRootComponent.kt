@@ -15,6 +15,7 @@ import com.balex.familyteam.presentation.loginuser.DefaultLoginUserComponent
 import com.balex.familyteam.presentation.notlogged.DefaultNotLoggedComponent
 import com.balex.familyteam.presentation.regadmin.DefaultRegAdminComponent
 import com.balex.familyteam.presentation.root.RootComponent.Child
+import com.balex.familyteam.presentation.rules.DefaultRulesComponent
 import com.balex.logged_user.DefaultLoggedUserComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -27,6 +28,7 @@ class DefaultRootComponent @AssistedInject constructor(
     private val notLoggedComponentFactory: DefaultNotLoggedComponent.Factory,
     private val regAdminComponentFactory: DefaultRegAdminComponent.Factory,
     private val loggedUserComponentFactory: DefaultLoggedUserComponent.Factory,
+    private val rulesComponentFactory: DefaultRulesComponent.Factory,
     private val aboutComponentFactory: DefaultAboutComponent.Factory,
     private val loginUserComponent: DefaultLoginUserComponent.Factory,
     @Assisted("componentContext") componentContext: ComponentContext
@@ -61,6 +63,9 @@ class DefaultRootComponent @AssistedInject constructor(
                     },
                     onUserIsLogged = {
                         navigation.replaceAll(Config.LoggedUser(UUID.randomUUID().toString()))
+                    },
+                    onRules = {
+                        navigation.push(Config.Rules)
                     },
                     onAbout = {
                         navigation.push(Config.About)
@@ -105,6 +110,14 @@ class DefaultRootComponent @AssistedInject constructor(
                 Child.LoginUser(component)
             }
 
+            Config.Rules -> {
+                val component = rulesComponentFactory.create(
+                    componentContext = childComponentContext
+                )
+                Child.Rules(component)
+            }
+
+
             Config.About -> {
                 val component = aboutComponentFactory.create(
                     componentContext = childComponentContext
@@ -115,8 +128,8 @@ class DefaultRootComponent @AssistedInject constructor(
             is Config.LoggedUser -> {
                 val component = loggedUserComponentFactory.create(
                     sessionId = config.id,
-                    onBackClicked = {
-                        navigation.pop()
+                    onRules = {
+                        navigation.push(Config.Rules)
                     },
                     onAbout = {
                         navigation.push(Config.About)
@@ -150,10 +163,12 @@ class DefaultRootComponent @AssistedInject constructor(
 
         @Serializable
         data class LoggedUser(val id: String) : Config
-        //data object LoggedUser : Config
 
         @Serializable
         data object About : Config
+
+        @Serializable
+        data object Rules : Config
 
     }
 

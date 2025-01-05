@@ -10,6 +10,8 @@ interface NotLoggedComponent {
 
     fun onClickLoginUser()
 
+    fun onClickRules()
+
     fun onClickAbout()
 
     fun onRefreshLanguage()

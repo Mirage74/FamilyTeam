@@ -2,7 +2,6 @@ package com.balex.logged_user
 
 import android.app.Activity
 import android.util.Log
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,8 +14,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material.TabRowDefaults.Divider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.Logout
@@ -93,26 +94,14 @@ fun LoggedUserContent(
     }
 
 
-//    BackHandler {
-//        if (state.isCreateNewUserClicked) {
-//            component.onAdminPageCancelCreateNewUserClicked()
-//        } else {
-//            if (state.isAddTaskClicked || state.isEditTaskClicked || state.isAddShopItemClicked) {
-//                component.onBackFromNewTaskFormClicked()
-//            } else if (state.loggedUserState == LoggedUserStore.State.LoggedUserState.Content) {
-//                component.onBackClickedHandle()
-//            } else {
-//                component.onBackFromExchangeOrBuyCoinClicked()
-//            }
-//        }
-//    }
-
     BackHandler {
         when {
             state.isCreateNewUserClicked -> component.onAdminPageCancelCreateNewUserClicked()
+            state.isExchangeCoinsClicked -> component.onBackFromExchangeOrBuyCoinClicked()
             state.isAddTaskClicked || state.isEditTaskClicked || state.isAddShopItemClicked -> component.onBackFromNewTaskFormClicked()
-            state.loggedUserState == LoggedUserStore.State.LoggedUserState.Content -> component.onBackClickedHandle()
-            else -> component.onBackFromExchangeOrBuyCoinClicked()
+            else -> {
+                activity.finishAffinity()
+            }
         }
     }
 
@@ -157,24 +146,44 @@ fun LoggedUserScreen(
         drawerContent = {
             Column(
                 modifier = Modifier
-                    .background(Color.White)
+                    .background(Color.Cyan)
                     .padding(16.dp)
+                    .width(144.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                MenuItems().items.forEach { menuItem ->
                     Text(
-                        text = menuItem,
+                        text = MenuItems.MENU_ITEM_RULES,
                         modifier = Modifier
                             .padding(vertical = 8.dp)
                             .clickable {
                                 scope.launch {
                                     drawerState.close()
-                                    component.onClickAbout()
+                                    component.onClickRules()
                                 }
                             },
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Color.Black
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = Color.Black,
                     )
-                }
+
+                        Divider(
+                            color = Color.Black,
+                            thickness = 1.dp,
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
+
+                Text(
+                    text = MenuItems.MENU_ITEM_ABOUT,
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .clickable {
+                            scope.launch {
+                                drawerState.close()
+                                component.onClickAbout()
+                            }
+                        },
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = Color.Black,
+                )
             }
         }
     ) {

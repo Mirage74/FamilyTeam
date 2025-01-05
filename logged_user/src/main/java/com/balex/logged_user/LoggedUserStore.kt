@@ -134,6 +134,8 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 
         data object ClickedChangePasswordVisibility : Intent
 
+        data object ClickedRules : Intent
+
         data object ClickedAbout : Intent
 
         data object RefreshLanguage : Intent
@@ -186,6 +188,8 @@ interface LoggedUserStore : Store<Intent, State, Label> {
     }
 
     sealed interface Label {
+
+        data object ClickedRules : Label
 
         data object ClickedAbout : Label
 
@@ -600,7 +604,12 @@ class LoggedUserStoreFactory @Inject constructor(
                     }
                 }
 
-                is Intent.ClickedAbout -> {
+
+                Intent.ClickedRules -> {
+                    publish(Label.ClickedRules)
+                }
+
+                Intent.ClickedAbout -> {
                     publish(Label.ClickedAbout)
                 }
 

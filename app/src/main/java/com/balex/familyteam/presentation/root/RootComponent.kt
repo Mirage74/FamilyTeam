@@ -7,6 +7,7 @@ import com.balex.logged_user.LoggedUserComponent
 import com.balex.familyteam.presentation.loginuser.LoginUserComponent
 import com.balex.familyteam.presentation.notlogged.NotLoggedComponent
 import com.balex.familyteam.presentation.regadmin.RegAdminComponent
+import com.balex.familyteam.presentation.rules.RulesComponent
 
 
 interface RootComponent {
@@ -23,6 +24,8 @@ interface RootComponent {
         data class LoginUser(val component: LoginUserComponent) : Child
 
         data class LoggedUser(val component: LoggedUserComponent) : Child
+
+        data class Rules(val component: RulesComponent) : Child
 
         data class About(val component: AboutComponent) : Child
 
