@@ -648,6 +648,7 @@ class LoggedUserStoreFactory @Inject constructor(
                 }
 
                 is Action.LanguageIsChanged -> {
+                    saveLanguageUseCase(action.language)
                     dispatch(Msg.LanguageIsChanged(action.language))
                 }
 

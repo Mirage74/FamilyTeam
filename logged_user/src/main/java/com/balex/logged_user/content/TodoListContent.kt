@@ -55,7 +55,7 @@ fun TodoListContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Premium till: $expiresDate"
+                        text = "${context.getString(R.string.premium_till)}: $expiresDate"
                     )
                 }
             }

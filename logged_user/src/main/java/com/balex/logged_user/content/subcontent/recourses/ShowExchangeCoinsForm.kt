@@ -193,7 +193,7 @@ fun SectionBuyCoins(onClickedBuyCoins: () -> Unit, context: Context) {
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
-            .padding(horizontal = 64.dp)
+            .padding(horizontal = 16.dp)
     ) {
         val text = context.getString(R.string.buy_coins_button_text)
         Text(text)
@@ -317,7 +317,7 @@ fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComp
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
-            .padding(horizontal = 64.dp),
+            .padding(horizontal = 16.dp),
         enabled = state.user.teamCoins > 0
     ) {
         val text = context.getString(R.string.exchange_button_text)
@@ -417,8 +417,8 @@ fun SectionBuyPremiumAccount(state: LoggedUserStore.State, component: LoggedUser
             enabled = cost <= state.user.teamCoins,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp)
-                .padding(horizontal = 64.dp),
+                .height(96.dp)
+                .padding(horizontal = 16.dp),
         ) {
             Text(text = context.getString(R.string.buy_premium_account_button_text))
         }
@@ -495,5 +495,5 @@ fun DashedHorizontalLine() {
 
 @Composable
 fun StandardHorizontalSpacer() {
-    Spacer(modifier = Modifier.height(16.dp))
+    Spacer(modifier = Modifier.height(8.dp))
 }

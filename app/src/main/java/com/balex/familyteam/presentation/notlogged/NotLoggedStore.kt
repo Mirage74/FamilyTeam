@@ -252,6 +252,7 @@ class NotLoggedStoreFactory @Inject constructor(
                 }
 
                 is Action.LanguageIsChanged -> {
+                    saveLanguageUseCase(action.language)
                     dispatch(Msg.RefreshLanguage(action.language))
                 }
 

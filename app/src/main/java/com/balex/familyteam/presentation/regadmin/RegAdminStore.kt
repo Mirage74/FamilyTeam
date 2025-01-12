@@ -370,6 +370,7 @@ class RegAdminStoreFactory @Inject constructor(
         override fun executeAction(action: Action, getState: () -> State) {
             when (action) {
                 is Action.LanguageIsChanged -> {
+                    saveLanguageUseCase(action.language)
                     dispatch(Msg.LanguageIsChanged(action.language))
                 }
 

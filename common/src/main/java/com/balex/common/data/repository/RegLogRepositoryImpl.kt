@@ -243,7 +243,7 @@ class RegLogRepositoryImpl @Inject constructor(
 
 
     override fun observeLanguage(): StateFlow<String> {
-        val job = Job()
+        //val job = Job()
         return flow {
             try {
                 val phoneLanguageFromStorage = Storage.getLanguage(context)
@@ -260,11 +260,14 @@ class RegLogRepositoryImpl @Inject constructor(
                 isCurrentLanguageNeedRefreshFlow.collect {
                     emit(language)
                 }
-            } finally {
-                job.cancel()
+            } catch (e: Exception) {
+                Log.e("observeLanguage", "Error: ${e.message}", e)
             }
+//            } finally {
+//                job.cancel()
+//            }
         }
-            .takeWhile { job.isActive }
+            //.takeWhile { job.isActive }
             .stateIn(
                 scope = coroutineScope,
                 started = SharingStarted.Lazily,
