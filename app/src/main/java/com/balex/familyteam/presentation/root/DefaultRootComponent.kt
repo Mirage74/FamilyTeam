@@ -112,6 +112,10 @@ class DefaultRootComponent @AssistedInject constructor(
 
             Config.Rules -> {
                 val component = rulesComponentFactory.create(
+                    onAbout = {
+                        navigation.pop()
+                        navigation.push(Config.About)
+                    },
                     componentContext = childComponentContext
                 )
                 Child.Rules(component)
@@ -120,6 +124,10 @@ class DefaultRootComponent @AssistedInject constructor(
 
             Config.About -> {
                 val component = aboutComponentFactory.create(
+                    onRules = {
+                        navigation.pop()
+                        navigation.push(Config.Rules)
+                    },
                     componentContext = childComponentContext
                 )
                 Child.About(component)

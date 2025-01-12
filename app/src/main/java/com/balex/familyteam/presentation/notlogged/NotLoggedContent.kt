@@ -42,7 +42,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.balex.common.DrawerContent
 import com.balex.common.R
 import com.balex.common.SwitchLanguage
 import com.balex.common.domain.entity.MenuItems
@@ -196,7 +195,7 @@ fun ShowContent(
 
         val context = com.balex.common.LocalLocalizedContext.current
         val regAdmText = context.getString(R.string.reg_adm)
-        val logUserText = context.getString(R.string.log_user)
+        val logUserText = context.getString(R.string.login_button)
         val textSize = dimensionResource(id = commonR.dimen.button_text_size).value.sp
 
         Button(

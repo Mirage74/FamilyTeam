@@ -1,6 +1,7 @@
 package com.balex.logged_user
 
 import android.app.Activity
+import android.content.Context
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -107,10 +108,10 @@ fun LoggedUserContent(
 
 
     com.balex.common.LocalizedContextProvider(languageCode = state.language.lowercase()) {
-
+        val context = LocalLocalizedContext.current
         when (state.loggedUserState) {
             LoggedUserStore.State.LoggedUserState.Content -> {
-                LoggedUserScreen(component, state, deviceToken, activity)
+                LoggedUserScreen(component, state, deviceToken, activity, context)
             }
 
             LoggedUserStore.State.LoggedUserState.Loading -> {
@@ -122,7 +123,7 @@ fun LoggedUserContent(
             }
 
             LoggedUserStore.State.LoggedUserState.ExchangeCoins -> {
-                ShowExchangeCoinsForm(state, component, activity)
+                ShowExchangeCoinsForm(state, component, activity, context)
             }
 
 
@@ -136,7 +137,8 @@ fun LoggedUserScreen(
     component: LoggedUserComponent,
     state: LoggedUserStore.State,
     deviceToken: String,
-    activity: Activity
+    activity: Activity,
+    context: Context
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -217,7 +219,7 @@ fun LoggedUserScreen(
                     }
                 }
             )
-            MainContent(component, state, deviceToken, activity)
+            MainContent(component, state, deviceToken, activity, context)
         }
     }
 }
@@ -228,12 +230,13 @@ fun MainContent(
     component: LoggedUserComponent,
     state: LoggedUserStore.State,
     deviceToken: String,
-    activity: Activity
+    activity: Activity,
+    context: Context
 ) {
     val selectedColor = androidx.compose.material.MaterialTheme.colors.secondary
     val unSelectedColor = androidx.compose.material.MaterialTheme.colors.onSecondary
     val notAvailableColor = Color.DarkGray
-    val context = LocalLocalizedContext.current
+    //val context = LocalLocalizedContext.current
     Scaffold(
         bottomBar = {
             BottomNavigation {

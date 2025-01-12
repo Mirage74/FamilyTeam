@@ -70,7 +70,8 @@ fun TodoListContent(
                     .padding(horizontal = 64.dp)
                     .weight(1f)
             ) {
-                Text("Buy Coins")
+                val text = context.getString(R.string.buy_coins_button_text)
+                Text(text)
             }
 
             Spacer(modifier = Modifier.height(16.dp))

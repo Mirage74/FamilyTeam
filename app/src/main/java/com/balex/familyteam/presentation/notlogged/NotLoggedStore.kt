@@ -169,10 +169,6 @@ class NotLoggedStoreFactory @Inject constructor(
                                     dispatch(Action.UserNotExistInPreference)
                                 }
 
-//                                User.DEFAULT_NICK_NAME -> {
-//                                    dispatch(Action.UserNotExistInPreference)
-//                                }
-
                                 else -> {
                                     if (getWrongPasswordUserUseCase().nickName == User.DEFAULT_NICK_NAME
                                         && login != User.DEFAULT_NICK_NAME

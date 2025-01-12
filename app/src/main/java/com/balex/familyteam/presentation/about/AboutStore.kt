@@ -5,10 +5,12 @@ import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
+import com.balex.common.domain.usecases.regLog.ObserveLanguageUseCase
 import com.balex.common.domain.usecases.regLog.SaveLanguageUseCase
 import com.balex.familyteam.presentation.about.AboutStore.Intent
 import com.balex.familyteam.presentation.about.AboutStore.Label
 import com.balex.familyteam.presentation.about.AboutStore.State
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 interface AboutStore : Store<Intent, State, Label> {
@@ -19,6 +21,8 @@ interface AboutStore : Store<Intent, State, Label> {
 
         data class ClickedChangeLanguage(val language: String) : Intent
 
+        data object ClickedRules : Intent
+
     }
 
     data class State(
@@ -26,11 +30,13 @@ interface AboutStore : Store<Intent, State, Label> {
     )
 
     sealed interface Label {
+        data object ClickedRules : Label
     }
 }
 
 class AboutStoreFactory @Inject constructor(
     private val saveLanguageUseCase: SaveLanguageUseCase,
+    private val observeLanguageUseCase: ObserveLanguageUseCase,
     private val storeFactory: StoreFactory
 ) {
 
@@ -45,14 +51,21 @@ class AboutStoreFactory @Inject constructor(
             reducer = ReducerImpl
         ) {}
 
-    private sealed interface Action
+    private sealed interface Action {
+        data class LanguageIsChanged(val language: String) : Action
+    }
 
     private sealed interface Msg {
         data class LanguageIsChanged(val language: String) : Msg
     }
 
-    private class BootstrapperImpl : CoroutineBootstrapper<Action>() {
+    private inner class BootstrapperImpl : CoroutineBootstrapper<Action>() {
         override fun invoke() {
+            scope.launch {
+                observeLanguageUseCase().collect {
+                    dispatch(Action.LanguageIsChanged(it))
+                }
+            }
         }
     }
 
@@ -67,10 +80,19 @@ class AboutStoreFactory @Inject constructor(
                     saveLanguageUseCase(intent.language)
                     dispatch(Msg.LanguageIsChanged(intent.language))
                 }
+
+                Intent.ClickedRules -> {
+                    publish(Label.ClickedRules)
+                }
             }
         }
 
         override fun executeAction(action: Action, getState: () -> State) {
+            when (action) {
+                is Action.LanguageIsChanged -> {
+                    dispatch(Msg.LanguageIsChanged(action.language))
+                }
+            }
         }
     }
 

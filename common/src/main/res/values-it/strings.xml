@@ -1,19 +1,34 @@
 <resources>
     <string name="app_name">Team di famiglia</string>
     <string name="about_app">Informazioni</string>
-    <string name="reg_adm" >Reg. nuova Famiglia</string>
-    <string name="log_adm">Ammin accesso come</string>
-    <string name="log_user">Utente, accesso come</string>
-
+    <string name="reg_adm" >Reg. del Team</string>
     <string name="by_email">via Email</string>
     <string name="by_phone">per Telefono</string>
     <string name="e_mail">Email</string>
     <string name="phone">Telefono, solo cifre con codice paese</string>
+    <string name="email_or_phone">Email/telefono, solo cifre con codice paese</string>
+    <string name="nick_name">Nick, solo lettere, numeri e \'_\'</string>
+    <string name="display_name">(facoltativo) Nome visualizzato</string>
+    <string name="optional">facoltativo:</string>
     <string name="password">Password</string>
     <string name="reg_button">Registro</string>
     <string name="try_again_button">Riprova</string>
-
     <string name="enter_code_from_sms">Inserisci codice a 6 cifre da SMS</string>
     <string name="button_ok">OK</string>
     <string name="button_resend_sms">Invia di nuovo codice SMS</string>
+    <string name="login_button">accedere</string>
+    <string name="please_verify_email">Per favore, verifica la tua email</string>
+    <string name="please_verify_phone">Per favore, verifica il tuo numero di telefono</string>
+    <string name="button_cancel">Annulla</string>
+    <string name="button_dismiss">Ignora</string>
+    <string name="coins">Monete</string>
+    <string name="tasks">Compiti</string>
+    <string name="reminders">Promemoria</string>
+    <string name="sell">Vendere</string>
+    <string name="buy">Comprare</string>
+    <string name="rate">Valutare</string>
+
+    <string name="rules_text">rules text</string>
+    <string name="about_text">about_text</string>
+
 </resources>

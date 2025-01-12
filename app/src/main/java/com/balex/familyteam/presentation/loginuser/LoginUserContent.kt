@@ -30,7 +30,6 @@ import com.balex.common.ANIMATION_DURATION
 import com.balex.common.TopAppBarOnlyLanguage
 import com.balex.common.rememberImeState
 import com.balex.common.theme.DarkBlue
-import com.balex.familyteam.presentation.loginuser.content.ClickLoginText
 import com.balex.familyteam.presentation.loginuser.content.EmailTextField
 import com.balex.familyteam.presentation.loginuser.content.LoginButton
 import com.balex.familyteam.presentation.loginuser.content.NickNameTextField
@@ -108,8 +107,9 @@ fun MainLoginUserContent(
                 EmailTextField(state, component, context)
                 Spacer(modifier = Modifier.height(24.dp))
                 NickNameTextField(state, component, context)
+                Spacer(modifier = Modifier.height(24.dp))
                 PasswordTextField(state, component, context)
-                ClickLoginText(context)
+                Spacer(modifier = Modifier.height(48.dp))
                 LoginButton(state, component, context)
             }
         }

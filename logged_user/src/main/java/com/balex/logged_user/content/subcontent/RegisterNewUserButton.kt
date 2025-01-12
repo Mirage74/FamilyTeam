@@ -49,7 +49,7 @@ fun RegisterNewUserButton(
             .height(dimensionResource(id = R.dimen.reg_buttons_height).value.dp)
     ) {
         Text(
-            text = context.getString(R.string.cancel_button),
+            text = context.getString(R.string.button_cancel),
             fontSize = dimensionResource(id = R.dimen.reg_admin_button_text_size).value.sp
         )
     }

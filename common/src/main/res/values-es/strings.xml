@@ -1,19 +1,34 @@
 <resources>
     <string name="app_name">Equipo de familia</string>
     <string name="about_app">Acerca de</string>
-    <string name="reg_adm" >Reg. nueva familia</string>
-    <string name="log_adm">Admin iniciar sesión como</string>
-    <string name="log_user">Usuario iniciar sesión como</string>
-
+    <string name="reg_adm" >Reg. equipo</string>
     <string name="by_email">por Email</string>
     <string name="by_phone">por Teléfono</string>
     <string name="e_mail">Email</string>
     <string name="phone">Teléfono, sólo dígitos con código de país</string>
+    <string name="email_or_phone">Email//Teléfono, sólo dígitos con código de país</string>
+    <string name="nick_name">Nick, sólo letras, números y \'_\'</string>
+    <string name="display_name">(opcional) Nombre para mostrar</string>
+    <string name="optional">opcional:</string>
     <string name="password">Contraseña</string>
     <string name="reg_button">Registro</string>
     <string name="try_again_button">Inténtalo de nuevo</string>
-
     <string name="enter_code_from_sms">Introducir código de 6 dígitos desde SMS</string>
     <string name="button_ok">OK</string>
     <string name="button_resend_sms">Reenviar código SMS</string>
+    <string name="login_button">entrar</string>
+    <string name="please_verify_email">Por favor, verifique su correo electrónico</string>
+    <string name="please_verify_phone">Por favor, verifique su número de teléfono</string>
+    <string name="button_cancel">Cancelar</string>
+    <string name="button_dismiss">Descartar</string>
+    <string name="coins">Monedas</string>
+    <string name="tasks">Tareas</string>
+    <string name="reminders">Recordatorios</string>
+    <string name="sell">Vender</string>
+    <string name="buy">Comprar</string>
+    <string name="rate">Evaluar</string>
+
+    <string name="rules_text">rules text</string>
+    <string name="about_text">about_text</string>
+
 </resources>

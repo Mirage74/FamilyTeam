@@ -1,19 +1,52 @@
 <resources>
     <string name="app_name">Семейная команда</string>
     <string name="about_app">О программе</string>
-    <string name="reg_adm" >Рег. новую семью</string>
-    <string name="log_adm">Войти, администратор</string>
-    <string name="log_user">Войти, пользователь</string>
-
-    <string name="by_email">по Email</string>
+    <string name="reg_adm">Рег. команды</string>
+    <string name="by_email">по эл.почте</string>
     <string name="by_phone">по Телефону</string>
     <string name="e_mail">Email</string>
     <string name="phone">Телефон, только цифры с кодом страны</string>
+    <string name="email_or_phone">Эл.почта/Тел, только цифры с кодом страны</string>
+    <string name="nick_name">Ник, только буквы, цифры и \'_\'</string>
+    <string name="display_name">(опционально) Отображаемое имя</string>
+    <string name="optional">опционально:</string>
     <string name="password">Пароль</string>
     <string name="reg_button">Зарегистрировать</string>
     <string name="try_again_button">Попробовать снова</string>
-
     <string name="enter_code_from_sms">Введите 6-значный код из СМС</string>
     <string name="button_ok">OK</string>
     <string name="button_resend_sms">Выслать код еще раз</string>
+    <string name="login_button">Вход</string>
+    <string name="please_verify_email">Пожалуйста, подтвердите Вашу почту</string>
+    <string name="please_verify_phone">Пожалуйста, подтвердите Ваш номер телефона</string>
+    <string name="button_cancel">Назад</string>
+    <string name="button_dismiss">Отклонить</string>
+    <string name="coins">Монеты</string>
+    <string name="tasks">Задания</string>
+    <string name="reminders">Напоминания</string>
+    <string name="sell">Продать</string>
+    <string name="buy">Купить</string>
+    <string name="rate">Курс</string>
+
+    <string name="rules_text">
+        \u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Регистрация новой команды\n\n\u00A0\u00A0\u00A0Для
+        регистрации новой команды нажмите кнопку \"Рег. новой команды\".\nДалее
+        выберите регистрацию через e-mail или телефон и заполните необходимые данные.
+        Затем подтвердите свой e-mail (придёт сообщение) либо телефон (придёт код по SMS).
+        После подтверждения Вы будете зарегистрированы с правами администратора,
+        что позволит Вам создавать или удалять новых пользователей.\n\n\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Вход
+        (логин) в свой личный кабинет\n\n\u00A0\u00A0\u00A0Для входа нажмите кнопку \"Вход\", затем введите
+        в верхнюю строку email или телефон (с кодом страны, но без знака \"+\") администратора.
+        Далее введите свой Ник и пароль, и нажмите кнопку \"Вход\".
+    </string>
+
+    <string name="about_text">
+        Название приложения:\n\"Семейная команда\"\n\nАвтор приложения:\nAliaksandr
+        Babrouski\n\nВерсия приложения: %s\n\ne-mail: balexvicx@gmail.com\n\n\u00A0\u00A0\u00A0Приложение
+        предназначено для использования в семье или других группах людей, связанных в повседневной
+        жизни и имеющих общие дела (например совместная аренда жилья или работа в одном коллективе
+        ).\n\u00A0\u00A0\u00A0Приложение позволяет пользователям создавать или удалять онлайн задачи
+        для выполнения (себе или другим членам группы), а также список покупок.
+    </string>
+
 </resources>

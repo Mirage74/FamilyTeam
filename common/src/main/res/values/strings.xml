@@ -1,10 +1,7 @@
 <resources>
     <string name="app_name">Family Team</string>
     <string name="about_app">About</string>
-    <string name="reg_adm" >Reg. new Family</string>
-    <string name="log_adm">Login as admin</string>
-    <string name="log_user">Login as user</string>
-
+    <string name="reg_adm" >Reg. new Team</string>
     <string name="by_email">by Email</string>
     <string name="by_phone">by Phone</string>
     <string name="e_mail">Email</string>
@@ -15,18 +12,15 @@
     <string name="optional">optional:</string>
     <string name="password">Password, minimum 6 characters</string>
     <string name="reg_button">Register</string>
-    <string name="login_button">Login</string>
-    <string name="cancel_button">Cancel</string>
     <string name="try_again_button">Try again</string>
-    <string name="please_verify_email">Please verify your email</string>
-    <string name="please_verify_phone">Please verify your phone</string>
-
     <string name="enter_code_from_sms">Enter 6-digit code from SMS</string>
     <string name="button_ok">OK</string>
+    <string name="button_resend_sms">Resend SMS code</string>
+    <string name="login_button">Login</string>
+    <string name="please_verify_email">Please verify your email</string>
+    <string name="please_verify_phone">Please verify your phone number</string>
     <string name="button_cancel">Cancel</string>
     <string name="button_dismiss">Dismiss</string>
-    <string name="button_resend_sms">Resend SMS code</string>
-
     <string name="coins">Coins</string>
     <string name="tasks">Tasks</string>
     <string name="reminders">Reminders</string>
@@ -34,5 +28,14 @@
     <string name="buy"> Buy </string>
     <string name="rate">Rate</string>
 
-    <string name="about_text">This is ABOUT text</string>
+
+    <string name="rules_text">
+        This is RULES text
+        Version: %s
+    </string>
+
+    <string name="about_text">
+        This is ABOUT text
+        Version: %s
+    </string>
 </resources>

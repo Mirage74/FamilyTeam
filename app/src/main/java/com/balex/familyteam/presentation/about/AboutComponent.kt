@@ -9,4 +9,6 @@ interface AboutComponent {
     fun onRefreshLanguage()
 
     fun onLanguageChanged(language: String)
+
+    fun onClickRules()
 }
