@@ -1,0 +1,37 @@
+<resources>
+    <string name="title_admin_panel">Administrationsbereich</string>
+    <string name="button_text_create_new_user">Neuen Benutzer erstellen</string>
+    <string name="button_text_edit_users_list">Benutzerliste bearbeiten</string>
+
+    <string name="bottom_text_my_tasks">Meine</string>
+    <string name="bottom_text_tasks_for_other">Andere</string>
+    <string name="bottom_text_shop_list">Laden</string>
+    <string name="bottom_text_admin">Admin</string>
+    <string name="bottom_text_logout">Abmelden</string>
+
+
+    <string name="hello_text">Hallo, %s!</string>
+    <string name="add_button_text">Neue Aufgabe hinzufügen</string>
+    <string name="add_item_button_text">Neues Element hinzufügen</string>
+    <string name="save_edited_task_button_text">Aufgabe speichern</string>
+    <string name="task_description">Aufgabendetails:</string>
+    <string name="shop_item_description">Beschreibung des Artikel im Laden:</string>
+    <string name="select_date_and_time_for_task">Datum und Uhrzeit der Aufgabe:</string>
+    <string name="select_date_and_time_for_alarm1">Erinnerung 1:</string>
+    <string name="select_date_and_time_for_alarm2">Erinnerung 2:</string>
+    <string name="select_date_and_time_for_alarm3">Erinnerung 3:</string>
+    <string name="no_available_tasks">Keine verfügbaren Aufgaben</string>
+    <string name="wrong_input_data_for_one_task">
+        Falsche Eingabedaten. Es muss sein:\n1)Aufgabe später, dann %d min\n
+        2)Erinnerung mehr als %d Minuten nach der Aufgabenzeit\n3)Mehr als %d Minuten zwischen den Erinnerungen
+    </string>
+    <string name="buy_premium_account_text">Premium-Konto kaufen:</string>
+    <string name="premium_till">Premium bis</string>
+    <string name="premium_one_month">1 Monat</string>
+    <string name="premium_one_year">1 Jahr</string>
+    <string name="premium_unlimited">Unbegrenzte Zeit (läuft nie ab)</string>
+    <string name="buy_coins_button_text">Münzen kaufen</string>
+    <string name="exchange_button_text">Tauschen</string>
+    <string name="buy_premium_account_button_text">Premium kaufen oder erneuern:</string>
+    <string name="team_coin">(Team coin, TC)</string>
+</resources>

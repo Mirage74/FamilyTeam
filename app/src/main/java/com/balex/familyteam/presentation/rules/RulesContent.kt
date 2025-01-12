@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -133,11 +135,19 @@ fun RulesScreen(component: RulesComponent, context: Context) {
 @Composable
 fun ShowRulesText(context: Context) {
     val rulesText = context.getString(R.string.rules_text)
-    Text(
-        text = rulesText,
-        textAlign = TextAlign.Justify,
+
+    val scrollState = rememberScrollState()
+
+    Column(
         modifier = Modifier
             .padding(4.dp)
             .fillMaxSize()
-    )
+            .verticalScroll(scrollState)
+    ) {
+        Text(
+            text = rulesText,
+            textAlign = TextAlign.Justify,
+            modifier = Modifier.padding(4.dp)
+        )
+    }
 }

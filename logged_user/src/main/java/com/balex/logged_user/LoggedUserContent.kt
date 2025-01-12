@@ -52,6 +52,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.balex.common.LocalLocalizedContext
 import com.balex.common.SwitchLanguage
 import com.balex.common.domain.entity.MenuItems
@@ -236,7 +237,7 @@ fun MainContent(
     val selectedColor = androidx.compose.material.MaterialTheme.colors.secondary
     val unSelectedColor = androidx.compose.material.MaterialTheme.colors.onSecondary
     val notAvailableColor = Color.DarkGray
-    //val context = LocalLocalizedContext.current
+    val bottomFontSize = dimensionResource(id = R.dimen.bottom_menu_font_size).value.sp
     Scaffold(
         bottomBar = {
             BottomNavigation {
@@ -255,7 +256,8 @@ fun MainContent(
                         Text(
                             context.getString(R.string.bottom_text_my_tasks),
                             maxLines = 1,
-                            color = if (state.activeBottomItem == PagesNames.TodoList) selectedColor else unSelectedColor
+                            color = if (state.activeBottomItem == PagesNames.TodoList) selectedColor else unSelectedColor,
+                            fontSize = bottomFontSize
                         )
                     },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
@@ -277,7 +279,8 @@ fun MainContent(
                         Text(
                             context.getString(R.string.bottom_text_tasks_for_other),
                             maxLines = 1,
-                            color = if (state.activeBottomItem == PagesNames.MyTasksForOtherUsers) selectedColor else unSelectedColor
+                            color = if (state.activeBottomItem == PagesNames.MyTasksForOtherUsers) selectedColor else unSelectedColor,
+                            fontSize = bottomFontSize
                         )
                     },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
@@ -297,7 +300,8 @@ fun MainContent(
                         Text(
                             context.getString(R.string.bottom_text_shop_list),
                             maxLines = 1,
-                            color = if (state.activeBottomItem == PagesNames.ShopList) selectedColor else unSelectedColor
+                            color = if (state.activeBottomItem == PagesNames.ShopList) selectedColor else unSelectedColor,
+                            fontSize = bottomFontSize
                         )
                     },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
@@ -328,7 +332,8 @@ fun MainContent(
                         Text(
                             context.getString(R.string.bottom_text_admin),
                             maxLines = 1,
-                            color = itemColor
+                            color = itemColor,
+                            fontSize = bottomFontSize
                         )
                     },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
@@ -352,7 +357,8 @@ fun MainContent(
                         Text(
                             context.getString(R.string.bottom_text_logout),
                             maxLines = 1,
-                            color = if (state.activeBottomItem == PagesNames.Logout) selectedColor else unSelectedColor
+                            color = if (state.activeBottomItem == PagesNames.Logout) selectedColor else unSelectedColor,
+                            fontSize = bottomFontSize
                         )
                     },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
