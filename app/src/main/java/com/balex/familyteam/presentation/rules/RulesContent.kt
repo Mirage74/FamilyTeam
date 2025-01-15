@@ -69,11 +69,12 @@ fun RulesScreen(component: RulesComponent, context: Context) {
                 modifier = Modifier
                     .background(Color.Cyan)
                     .padding(16.dp)
-                    .width(144.dp),
+                    .width(192.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                val menuItems = MenuItems.fromResources(context)
                 Text(
-                    text = MenuItems.MENU_ITEM_ABOUT,
+                    text = menuItems.getItem(MenuItems.MENU_ITEM_ABOUT),
                     modifier = Modifier
                         .padding(vertical = 8.dp)
                         .clickable {
@@ -134,7 +135,13 @@ fun RulesScreen(component: RulesComponent, context: Context) {
 
 @Composable
 fun ShowRulesText(context: Context) {
-    val rulesText = context.getString(R.string.rules_text)
+    val appContext = context.applicationContext
+    val availableTasksToAdd = appContext.resources.getInteger(R.integer.max_available_tasks_per_day_default)
+    val availableFCM = appContext.resources.getInteger(R.integer.max_available_FCM_per_day_default)
+    val availableTasksPremium = appContext.resources.getInteger(R.integer.max_available_tasks_per_day_premium)
+    val availableFCMPremium = appContext.resources.getInteger(R.integer.max_available_FCM_per_day_premium)
+
+    val rulesText = context.getString(R.string.rules_text, availableTasksToAdd, availableFCM, availableTasksPremium, availableFCMPremium)
 
     val scrollState = rememberScrollState()
 

@@ -151,11 +151,12 @@ fun LoggedUserScreen(
                 modifier = Modifier
                     .background(Color.Cyan)
                     .padding(16.dp)
-                    .width(144.dp),
+                    .width(192.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                val menuItems = MenuItems.fromResources(context)
                     Text(
-                        text = MenuItems.MENU_ITEM_RULES,
+                        text = menuItems.getItem(MenuItems.MENU_ITEM_RULES),
                         modifier = Modifier
                             .padding(vertical = 8.dp)
                             .clickable {
@@ -175,7 +176,7 @@ fun LoggedUserScreen(
                         )
 
                 Text(
-                    text = MenuItems.MENU_ITEM_ABOUT,
+                    text = menuItems.getItem(MenuItems.MENU_ITEM_ABOUT),
                     modifier = Modifier
                         .padding(vertical = 8.dp)
                         .clickable {

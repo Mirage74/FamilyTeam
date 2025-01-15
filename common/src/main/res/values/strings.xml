@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Family Team</string>
     <string name="about_app">About</string>
+    <string name="rules_app">Rules</string>
     <string name="reg_adm" >Reg. new Team</string>
     <string name="by_email">by Email</string>
     <string name="by_phone">by Phone</string>
@@ -31,7 +32,7 @@
 
     <string name="rules_text">
         This is RULES text
-        Version: %s
+        Version: %d
     </string>
 
     <string name="about_text">

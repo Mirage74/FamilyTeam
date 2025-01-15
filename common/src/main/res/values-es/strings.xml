@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Equipo de familia</string>
     <string name="about_app">Acerca de</string>
+    <string name="rules_app">Reglas</string>
     <string name="reg_adm" >Reg. equipo</string>
     <string name="by_email">por Email</string>
     <string name="by_phone">por Teléfono</string>
@@ -28,7 +29,13 @@
     <string name="buy">Comprar</string>
     <string name="rate">Evaluar</string>
 
-    <string name="rules_text">rules text</string>
-    <string name="about_text">about_text</string>
+    <string name="rules_text">
+        This is RULES text
+        Version: %d
+    </string>
+    <string name="about_text">
+        This is ABOUT text
+        Version: %s
+    </string>
 
 </resources>

@@ -53,7 +53,7 @@ fun AdminPanelContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 64.dp),
+            .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.SpaceEvenly
     ) {
 
@@ -70,7 +70,7 @@ fun AdminPanelContent(
                 onClick = { component.onAdminPageCreateNewUserClicked() },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
+                    .height(96.dp)
             ) {
                 Text(
                     text = context.getString(R.string.button_text_create_new_user)

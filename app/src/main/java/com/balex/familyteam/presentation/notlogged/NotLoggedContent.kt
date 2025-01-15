@@ -42,6 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.balex.common.LocalLocalizedContext
 import com.balex.common.R
 import com.balex.common.SwitchLanguage
 import com.balex.common.domain.entity.MenuItems
@@ -94,11 +95,13 @@ fun NotLoggedScreen(component: NotLoggedComponent) {
                 modifier = Modifier
                     .background(Color.Cyan)
                     .padding(16.dp)
-                    .width(144.dp),
+                    .width(192.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                val context = LocalLocalizedContext.current
+                val menuItems = MenuItems.fromResources(context)
                 Text(
-                    text = MenuItems.MENU_ITEM_RULES,
+                    text = menuItems.getItem(MenuItems.MENU_ITEM_RULES),
                     modifier = Modifier
                         .padding(vertical = 8.dp)
                         .clickable {
@@ -118,7 +121,7 @@ fun NotLoggedScreen(component: NotLoggedComponent) {
                 )
 
                 Text(
-                    text = MenuItems.MENU_ITEM_ABOUT,
+                    text = menuItems.getItem(MenuItems.MENU_ITEM_ABOUT),
                     modifier = Modifier
                         .padding(vertical = 8.dp)
                         .clickable {

@@ -1,13 +1,14 @@
 <resources>
     <string name="app_name">Familienteam</string>
-    <string name="about_app">Über</string>
-    <string name="reg_adm" >Reg. neues Team</string>
+    <string name="about_app">Über uns</string>
+    <string name="rules_app">Regeln</string>
+    <string name="reg_adm" >Neues Team Reg.</string>
     <string name="by_email">per Email</string>
     <string name="by_phone">per Telefon</string>
     <string name="e_mail">Email</string>
     <string name="phone">Telefon, nur Ziffern mit Ländercode</string>
     <string name="email_or_phone">E-Mail/Telefon, nur Ziffern mit Landesvorwahl</string>
-    <string name="nick_name">Nick, nur Buchstaben, Zahlen und \'_\'</string>
+    <string name="nick_name">Benutzername, nur Buchstaben, Zahlen und \'_\'</string>
     <string name="display_name">(optional) Anzeigename</string>
     <string name="optional">optional:</string>
     <string name="password">Passwort</string>
@@ -28,7 +29,13 @@
     <string name="buy">Kaufen</string>
     <string name="rate">Bewerten</string>
 
-    <string name="rules_text">rules text</string>
-    <string name="about_text">about_text</string>
+    <string name="rules_text">
+        This is RULES text
+        Version: %d
+    </string>
+    <string name="about_text">
+        This is ABOUT text
+        Version: %s
+    </string>
 
 </resources>
