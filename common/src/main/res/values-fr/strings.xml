@@ -17,7 +17,7 @@
     <string name="enter_code_from_sms">Entrez le code à 6 chiffres du SMS</string>
     <string name="button_ok">OK</string>
     <string name="button_resend_sms">Renvoyer le code SMS</string>
-    <string name="login_button">entrer</string>
+    <string name="login_button">Entrer</string>
     <string name="please_verify_email">Veuillez vérifier votre e-mail</string>
     <string name="please_verify_phone">Veuillez vérifier votre numéro de téléphone</string>
     <string name="button_cancel">Annuler</string>
@@ -30,11 +30,46 @@
     <string name="rate">Évaluer</string>
 
     <string name="rules_text">
-        This is RULES text
-        Version: %d
+        \u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Informations générales\n\n\u00A0\u00A0\u00A0Vous pouvez
+        enregistrer votre Équipe en tant qu\'administrateur et créer un nombre illimité de membres
+        d\'équipe, ou obtenir un Surnom et un mot de passe de l\'Administrateur et vous connecter à
+        l\'application en tant qu\'utilisateur (l\'administrateur dispose également de toutes les
+        fonctionnalités de l\'utilisateur). L\'utilisateur peut :\n1) Créer de nouvelles tâches pour
+        lui-même, en spécifiant l\'heure de la tâche (avec ou sans rappels push, jusqu\'à 3 par
+        tâche)\n2) Créer de nouvelles tâches pour d\'autres utilisateurs de l\'Équipe (il est
+        également possible de définir jusqu\'à 3 rappels).\n3) Maintenir une liste d\'achats
+        planifiés.\nL\'administrateur et les 2 premiers utilisateurs inscrits sans statut premium
+        peuvent créer jusqu\'à %d nouvelles tâches chaque jour et utiliser jusqu\'à %d rappels.
+        Pour les autres utilisateurs, les tâches et rappels disponibles ne se renouvellent pas
+        automatiquement chaque jour (ils doivent acheter des Pièces ou avoir un statut Premium).
+        Maintenir une liste d\'achats n\'a pas de limite de quantité et ne nécessite pas de
+        Pièces.\nSi nécessaire, tout utilisateur peut acheter des Pièces (Team Coins ou TC) et les
+        échanger contre des tâches et rappels supplémentaires.\nLes Pièces peuvent également être
+        utilisées pour acheter un statut Premium, soit limité dans le temps, soit permanent. Dans
+        ce cas, l\'utilisateur peut créer jusqu\'à %d nouvelles tâches et jusqu\'à %d nouveaux rappels
+        chaque jour.\n\n\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Enregistrement d\'une nouvelle
+        équipe\n\n\u00A0\u00A0\u00A0Pour enregistrer une nouvelle équipe, cliquez sur le bouton
+        \"Inscrire équipe\".\nEnsuite, choisissez de vous enregistrer via e-mail ou
+        téléphone et remplissez toutes les informations nécessaires. Puis confirmez votre e-mail
+        (un message sera envoyé à votre e-mail) ou votre téléphone (un code sera envoyé par SMS).
+        Après confirmation, vous serez enregistré avec des droits d\'administrateur, ce qui vous
+        permettra de créer ou de supprimer de nouveaux utilisateurs. Après avoir créé un nouvel
+        utilisateur, communiquez-lui son Surnom et son mot de passe, ainsi que vos informations
+        (e-mail ou numéro de téléphone) pour vous connecter à votre
+        compte.\n\n\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Connexion à votre compte
+        personnel\n\n\u00A0\u00A0\u00A0Pour vous connecter, cliquez sur le bouton \"Entrer\", puis
+        entrez l\'e-mail ou le téléphone (avec le code du pays, mais sans le signe \"+\") de
+        l\'administrateur dans le champ supérieur. Ensuite, entrez votre Surnom et mot de passe, puis
+        cliquez sur le bouton \"Entrer\".
     </string>
     <string name="about_text">
-        This is ABOUT text
-        Version:
+        Nom de l\'application :\n\"Équipe familiale\"\n\nAuteur de l\'application :\nAliaksandr
+        Babrouski\n\nVersion de l\'application : %s\n\ne-mail :
+        balexvicx@gmail.com\n\n\u00A0\u00A0\u00A0L\'application est destinée à être utilisée en
+        famille ou dans d\'autres groupes de personnes liées dans la vie quotidienne et ayant des
+        affaires communes (par exemple, la location conjointe de logement ou le travail dans la même
+        équipe).\n\u00A0\u00A0\u00A0L'application permet aux utilisateurs de créer ou de supprimer
+        des tâches en ligne à réaliser (pour eux-mêmes ou pour d'autres membres du groupe), ainsi
+        qu'une liste de courses.
     </string>
 </resources>

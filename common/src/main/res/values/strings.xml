@@ -31,12 +31,39 @@
 
 
     <string name="rules_text">
-        This is RULES text
-        Version: %d
+        \u00A0\u00A0\u00A0\u00A0\u00A0\u00A0General Information\n\n\u00A0\u00A0\u00A0You can
+        register your Team as an administrator and create an unlimited number of team members,
+        or obtain a Nickname and password from the Administrator and log in to the application
+        as a user (the administrator also has all user capabilities). A user can:\n1)
+        Create new tasks for themselves, specifying the task time (with push reminders or without,
+        up to 3 for each task).\n2) Create new tasks for other Team members (also with up to 3
+        reminders).\n3) Maintain a list of planned purchases.\nAdministrators and the first 2 users
+        they register without a premium status can create up to %d new tasks daily and use up
+        to %d reminders. For other users, the available tasks and reminders do not automatically
+        renew daily (they need to purchase Coins or have a Premium status). Maintaining a shopping
+        list is unlimited in quantity and does not require Coins.\nIf necessary, any user can buy
+        Coins (Team Coins or TC) and exchange them for additional Tasks and Reminders.\nCoins can
+        also be used to purchase Premium Status, either for a limited period or indefinitely. In
+        this case, the user can create up to %d new tasks and %d new reminders
+        daily.\n\n\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Registering a New Team\n\n\u00A0\u00A0\u00A0To
+        register a new team, click the button \"Reg. new Team\" button.\nThen choose to register
+        via email or phone and fill out all the required information. After that, confirm your email
+        (a message will be sent to your email address) or phone (a code will be sent via SMS).
+        Once confirmed, you will be registered with administrator rights, enabling you to create
+        or delete new users. After creating a new user, provide them with their Nickname and
+        password, as well as your credentials (email or phone number) for logging into your
+        account.\n\n\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Logging into Your Account\n\n\u00A0\u00A0\u00A0To
+        log in, click the button \"Login\", then enter the administrator’s email or phone number (with
+        country code but without the \"+\" sign) in the top field. Next, enter your Nickname and
+        password, and click the button \"Login\".
     </string>
 
     <string name="about_text">
-        This is ABOUT text
-        Version: %s
+        App name:\n\"Family Team\"\n\nApp author:\nAliaksandr Babrouski\n\nApp
+        version: %s\n\ne-mail: balexvicx@gmail.com\n\n\u00A0\u00A0\u00A0The app is intended for use
+        in a family or other groups of people connected in daily life and having common affairs (for
+        example, joint rent of housing or working in the same team).\n\u00A0\u00A0\u00A0The app
+        allows users to create or delete online tasks for execution (for themselves or other
+        group members), as well as a shopping list.
     </string>
 </resources>

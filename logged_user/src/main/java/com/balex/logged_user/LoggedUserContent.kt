@@ -155,25 +155,25 @@ fun LoggedUserScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 val menuItems = MenuItems.fromResources(context)
-                    Text(
-                        text = menuItems.getItem(MenuItems.MENU_ITEM_RULES),
-                        modifier = Modifier
-                            .padding(vertical = 8.dp)
-                            .clickable {
-                                scope.launch {
-                                    drawerState.close()
-                                    component.onClickRules()
-                                }
-                            },
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = Color.Black,
-                    )
+                Text(
+                    text = menuItems.getItem(MenuItems.MENU_ITEM_RULES),
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .clickable {
+                            scope.launch {
+                                drawerState.close()
+                                component.onClickRules()
+                            }
+                        },
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = Color.Black,
+                )
 
-                        Divider(
-                            color = Color.Black,
-                            thickness = 1.dp,
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        )
+                Divider(
+                    color = Color.Black,
+                    thickness = 1.dp,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
 
                 Text(
                     text = menuItems.getItem(MenuItems.MENU_ITEM_ABOUT),

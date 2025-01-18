@@ -17,7 +17,7 @@
     <string name="enter_code_from_sms">Inserisci codice a 6 cifre da SMS</string>
     <string name="button_ok">OK</string>
     <string name="button_resend_sms">Invia di nuovo codice SMS</string>
-    <string name="login_button">accedere</string>
+    <string name="login_button">Accedere</string>
     <string name="please_verify_email">Per favore, verifica la tua email</string>
     <string name="please_verify_phone">Per favore, verifica il tuo numero di telefono</string>
     <string name="button_cancel">Annulla</string>
@@ -30,12 +30,45 @@
     <string name="rate">Valutare</string>
 
     <string name="rules_text">
-        This is RULES text
-        Version: %d
+        \u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Informazioni generali\n\n\u00A0\u00A0\u00A0Puoi
+        registrare il tuo Team come amministratore e creare un numero illimitato di membri del team,
+        oppure ricevere un Nick e una password dall\'Amministratore e accedere all\'applicazione come
+        utente (l\'amministratore ha anche tutte le funzionalità dell\'utente). L\'utente può:\n1)
+        Creare nuovi compiti per sé stesso, specificando l\'orario del compito (con promemoria push
+        o senza, fino a 3 per compito)\n2) Creare nuovi compiti per altri membri del Team (è anche
+        possibile impostare fino a 3 promemoria).\n3) Mantenere una lista degli acquisti
+        pianificati.\nL\'amministratore e i primi 2 utenti registrati senza un account premium
+        possono creare fino a %d nuovi compiti ogni giorno e utilizzare fino a %d promemoria. Per
+        gli altri utenti, i compiti e i promemoria disponibili non si rinnovano automaticamente ogni
+        giorno (è necessario acquistare Monete o avere un account Premium). Mantenere una lista degli
+        acquisti non è limitato dalla quantità e non richiede Monete.\nSe necessario, ogni utente può
+        acquistare Monete (Team Coins o TC) e scambiarle con compiti e promemoria aggiuntivi.\nCon le
+        Monete è anche possibile acquistare lo stato Premium, sia limitato nel tempo che permanente.
+        In questo caso, l\'utente può creare fino a %d nuovi compiti e fino a %d nuovi promemoria ogni
+        giorno.\n\n\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Registrazione di un nuovo
+        team\n\n\u00A0\u00A0\u00A0Per registrare un nuovo team, clicca sul pulsante \"Reg. del
+        Team\".\nPoi scegli di registrarti tramite e-mail o telefono e compila tutte le
+        informazioni necessarie. Successivamente, conferma la tua e-mail (ti sarà inviato un messaggio
+        via email) o il telefono (ti sarà inviato un codice via SMS). Dopo la conferma, sarai
+        registrato con i diritti di amministratore, che ti permetteranno di creare o eliminare nuovi
+        utenti. Dopo aver creato un nuovo utente, comunica il suo Nick e la sua password, così come
+        le tue informazioni (e-mail o numero di telefono) per accedere al tuo
+        account.\n\n\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Accesso al tuo account
+        personale\n\n\u00A0\u00A0\u00A0Per accedere, clicca sul pulsante \"Accedere\", poi inserisci
+        l\'email o il telefono (con il prefisso del paese, ma senza il simbolo \"+\") dell\'amministratore
+        nella barra superiore. Successivamente, inserisci il tuo Nick e la tua password e clicca sul
+        pulsante \"Accedere\".
     </string>
     <string name="about_text">
-        This is ABOUT text
-        Version: %s
+        Nome dell\'applicazione:\n\"Team familiare\"\n\nAutore dell\'applicazione:\nAliaksandr
+        Babrouski\n\nVersione dell\'applicazione: %s\n\ne-mail:
+        balexvicx@gmail.com\n\n\u00A0\u00A0\u00A0L\'applicazione è destinata all\'uso in famiglia o
+        in altri gruppi di persone connessi nella vita quotidiana e con affari comuni (ad esempio,
+        affitto congiunto di una casa o lavoro nello stesso team).\n\u00A0\u00A0\u00A0L'applicazione
+        consente agli utenti di creare o eliminare attività online da eseguire (per sé stessi o per
+        altri membri del gruppo), nonché una lista della spesa.
+
+
     </string>
 
 </resources>
