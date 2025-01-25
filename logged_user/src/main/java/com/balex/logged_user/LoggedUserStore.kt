@@ -24,6 +24,7 @@ import com.balex.common.domain.usecases.admin.CreateNewUserUseCase
 import com.balex.common.domain.usecases.admin.DeleteUserUseCase
 import com.balex.common.domain.usecases.billing.InitIapConnectorUseCase
 import com.balex.common.domain.usecases.billing.PurchaseCoinsUseCase
+import com.balex.common.domain.usecases.regLog.DeleteOldTasksUseCase
 import com.balex.common.domain.usecases.regLog.GetUserUseCase
 import com.balex.common.domain.usecases.regLog.ObserveLanguageUseCase
 import com.balex.common.domain.usecases.regLog.ObserveUserUseCase
@@ -211,6 +212,7 @@ class LoggedUserStoreFactory @Inject constructor(
     private val deleteUserUseCase: DeleteUserUseCase,
     private val deleteTaskFromFirebaseUseCase: DeleteTaskFromFirebaseUseCase,
     private val removeFromShopListUseCase: RemoveFromShopListUseCase,
+    private val deleteOldTasksUseCase: DeleteOldTasksUseCase,
     private val observeUsersListUseCase: ObserveUsersListUseCase,
     private val addPrivateTaskToFirebaseUseCase: AddPrivateTaskToFirebaseUseCase,
     private val addExternalTaskToFirebaseUseCase: AddExternalTaskToFirebaseUseCase,

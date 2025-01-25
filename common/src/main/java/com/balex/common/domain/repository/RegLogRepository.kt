@@ -13,6 +13,10 @@ interface RegLogRepository {
 
     fun getRepoUser(): User
 
+    fun setNewToken(newToken: String)
+
+    fun getToken(): String
+
     fun getRepoAdmin(): Admin
 
     fun getWrongPasswordUser(): User
@@ -46,6 +50,8 @@ interface RegLogRepository {
     fun observeSmsVerificationError(): StateFlow<String>
 
     fun storageClearPreferences()
+
+    suspend fun deleteOldTasks()
 
     suspend fun refreshFCMLastTimeUpdated()
 
