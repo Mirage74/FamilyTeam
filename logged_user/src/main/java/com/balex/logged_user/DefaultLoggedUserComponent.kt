@@ -14,6 +14,7 @@ import com.balex.common.data.repository.TaskMode
 import com.balex.common.data.repository.UserRepositoryImpl
 import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.Task
+import com.balex.common.domain.usecases.regLog.DeleteOldTasksUseCase
 import com.balex.common.domain.usecases.regLog.GetLanguageUseCase
 import com.balex.common.domain.usecases.regLog.LogoutUserUseCase
 import com.balex.common.domain.usecases.regLog.RefreshFCMLastTimeUpdatedUseCase
@@ -33,6 +34,7 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     private val storeFactory: LoggedUserStoreFactory,
     private val getLanguageUseCase: GetLanguageUseCase,
     private val logoutUserUseCase: LogoutUserUseCase,
+    private val deleteOldTasksUseCase: DeleteOldTasksUseCase,
     private val storageClearPreferencesUseCase: StorageClearPreferencesUseCase,
     private val refreshFCMLastTimeUpdatedUseCase: RefreshFCMLastTimeUpdatedUseCase,
     @Assisted("sessionId") private val sessionId: String,
@@ -49,6 +51,7 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     init {
         scope.launch {
             refreshFCMLastTimeUpdatedUseCase()
+            deleteOldTasksUseCase()
         }
 
         lifecycle.doOnResume {

@@ -5,6 +5,7 @@ import android.util.Log
 import com.balex.common.R
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_ADMINS_COLLECTION
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_USERS_COLLECTION
+import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.NO_NEW_TOKEN
 import com.balex.common.domain.entity.Admin
 import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.ExternalTasks
@@ -13,7 +14,9 @@ import com.balex.common.domain.entity.Reminder
 import com.balex.common.domain.entity.Task
 import com.balex.common.domain.entity.User
 import com.balex.common.domain.repository.UserRepository
+import com.balex.common.domain.usecases.regLog.DeleteOldTasksUseCase
 import com.balex.common.domain.usecases.regLog.GetRepoAdminUseCase
+import com.balex.common.domain.usecases.regLog.GetTokenUseCase
 import com.balex.common.domain.usecases.regLog.GetUserUseCase
 import com.balex.common.extensions.numberOfReminders
 import com.balex.common.extensions.toReminder
@@ -35,6 +38,7 @@ import javax.inject.Inject
 
 class UserRepositoryImpl @Inject constructor(
     private val getUserUseCase: GetUserUseCase,
+    private val getTokenUseCase: GetTokenUseCase,
     private val getRepoAdminUseCase: GetRepoAdminUseCase,
     private val context: Context
 ) : UserRepository {
@@ -55,7 +59,6 @@ class UserRepositoryImpl @Inject constructor(
     private val usersCollection = db.collection(FIREBASE_USERS_COLLECTION)
     private val scheduleCollection = db.collection(FIREBASE_SCHEDULERS_COLLECTION)
     private val scheduleDeleteCollection = db.collection(FIREBASE_SCHEDULERS_DELETE_COLLECTION)
-
 
     private val coroutineScope = CoroutineScope(Dispatchers.Main.immediate)
 
@@ -281,11 +284,6 @@ class UserRepositoryImpl @Inject constructor(
             }
         }
 
-//        listRemindersToCancel.forEach {
-//            scheduleDeleteCollection.add(it).await()
-//
-//
-//        }
 
         try {
 
@@ -601,6 +599,10 @@ class UserRepositoryImpl @Inject constructor(
 
 
     private suspend fun getUsersListFromFirebase(): MutableList<String> {
+        val newToken = getTokenUseCase()
+        if (newToken != NO_NEW_TOKEN) {
+            saveDeviceToken(newToken)
+        }
         val admin = getRepoAdminUseCase()
         val usersList = mutableListOf<String>()
         var currentTry = 0

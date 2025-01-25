@@ -49,7 +49,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
@@ -176,12 +175,12 @@ fun ExchangeCoinsFormContent(
         StandardHorizontalSpacer()
         DashedHorizontalLine()
 
-        SectionExchangeCoins(state, component)
+        SectionExchangeCoins(state, component, context)
 
         StandardHorizontalSpacer()
         DashedHorizontalLine()
 
-        SectionBuyPremiumAccount(state, component)
+        SectionBuyPremiumAccount(state, component, context)
 
     }
 }
@@ -203,15 +202,15 @@ fun SectionBuyCoins(onClickedBuyCoins: () -> Unit, context: Context) {
 
 
 @Composable
-fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComponent) {
-    val context = LocalContext.current
+fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComponent, context: Context) {
 
     val coinName = ( context.getString(commonR.string.coins) ).trim()
     val taskName = ( context.getString(commonR.string.tasks) ).trim()
     val reminderName = ( context.getString(commonR.string.reminders) ).trim()
 
-    var selectedCoins by remember { mutableIntStateOf(state.user.teamCoins) }
-    var selectedOption by remember { mutableStateOf(taskName) }
+    var selectedCoinsQuantity by remember { mutableIntStateOf(state.user.teamCoins) }
+    //var selectedOption by remember { mutableStateOf(taskName) }
+    var selectedOption by remember(taskName) { mutableStateOf(taskName) }
     val rateResource = if (selectedOption == taskName) {
         context.resources.getInteger(commonR.integer.rate_one_coin_to_task)
     } else {
@@ -238,8 +237,8 @@ fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComp
 
         DropdownMenuWithItems(
             items = (1..state.user.teamCoins).toList().reversed(),
-            selectedValue = selectedCoins,
-            onItemSelected = { selectedCoins = it },
+            selectedValue = selectedCoinsQuantity,
+            onItemSelected = { selectedCoinsQuantity = it },
             isEnabled = state.user.teamCoins > 0
         )
 
@@ -281,7 +280,7 @@ fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComp
             modifier = Modifier.size(24.dp)
         )
 
-        val result = selectedCoins * rateResource
+        val result = selectedCoinsQuantity * rateResource
         Text(
             text = context.getString(commonR.string.buy),
             style = MaterialTheme.typography.bodyLarge
@@ -302,14 +301,14 @@ fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComp
 
     Button(
         onClick = {
-            val newCoins = state.user.teamCoins - selectedCoins
+            val newCoins = state.user.teamCoins - selectedCoinsQuantity
             val newTasks = if (selectedOption == taskName) {
-                state.user.availableTasksToAdd + selectedCoins * rateResource
+                state.user.availableTasksToAdd + selectedCoinsQuantity * rateResource
             } else {
                 state.user.availableTasksToAdd
             }
             val newReminders = if (selectedOption == reminderName) {
-                state.user.availableFCM + selectedCoins * rateResource
+                state.user.availableFCM + selectedCoinsQuantity * rateResource
             } else {
                 state.user.availableFCM
             }
@@ -327,8 +326,8 @@ fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComp
 }
 
 @Composable
-fun SectionBuyPremiumAccount(state: LoggedUserStore.State, component: LoggedUserComponent) {
-    val context = LocalContext.current
+fun SectionBuyPremiumAccount(state: LoggedUserStore.State, component: LoggedUserComponent, context: Context) {
+    //val context = LocalContext.current
     val oneMonth = BillingRepositoryImpl.Companion.PremiumStatus.ONE_MONTH
     val oneYear = BillingRepositoryImpl.Companion.PremiumStatus.ONE_YEAR
     val unlimited = BillingRepositoryImpl.Companion.PremiumStatus.UNLIMITED
