@@ -1,7 +1,10 @@
 package com.balex.logged_user.content.subcontent.recourses
 
 import android.app.Activity
+import android.content.Context
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,44 +14,154 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.AddTask
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import com.balex.common.SwitchLanguage
 import com.balex.common.data.repository.BillingRepositoryImpl
+import com.balex.common.domain.entity.MenuItems
 import com.balex.logged_user.LoggedUserComponent
 import com.balex.logged_user.LoggedUserStore
 import com.balex.logged_user.R
+import kotlinx.coroutines.launch
 import com.balex.common.R as commonR
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShowExchangeCoinsForm(
     state: LoggedUserStore.State,
     component: LoggedUserComponent,
-    activity: Activity
+    activity: Activity,
+    context: Context
+) {
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            Column(
+                modifier = Modifier
+                    .background(Color.Cyan)
+                    .padding(16.dp)
+                    .width(192.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                val menuItems = MenuItems.fromResources(context)
+                Text(
+                    text = menuItems.getItem(MenuItems.MENU_ITEM_RULES),
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .clickable {
+                            scope.launch {
+                                drawerState.close()
+                                component.onClickRules()
+                            }
+                        },
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = Color.Black,
+                )
+
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    thickness = 1.dp,
+                    color = Color.Black
+                )
+
+                Text(
+                    text = menuItems.getItem(MenuItems.MENU_ITEM_ABOUT),
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .clickable {
+                            scope.launch {
+                                drawerState.close()
+                                component.onClickAbout()
+                            }
+                        },
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = Color.Black,
+                )
+            }
+        }
+    ) {
+        Column {
+            TopAppBar(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(dimensionResource(id = commonR.dimen.top_bar_height).value.dp),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.LightGray
+                ),
+                title = {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        IconButton(
+                            onClick = { scope.launch { drawerState.open() } },
+                            modifier = Modifier
+                                .size(dimensionResource(id = commonR.dimen.top_bar_height).value.dp)
+                        ) {
+                            Icon(
+                                imageVector = ImageVector.vectorResource(id = commonR.drawable.ic_menu_hamburger),
+                                contentDescription = "Open Drawer"
+                            )
+                        }
+                        val onLanguageChanged: (String) -> Unit = { newLanguage ->
+                            component.onLanguageChanged(newLanguage)
+                        }
+                        SwitchLanguage(state.language, onLanguageChanged)
+                    }
+                }
+            )
+            ExchangeCoinsFormContent(state, component, activity, context)
+        }
+    }
+}
+
+
+@Composable
+fun ExchangeCoinsFormContent(
+    state: LoggedUserStore.State,
+    component: LoggedUserComponent,
+    activity: Activity,
+    context: Context
 ) {
     Column(
         modifier = Modifier
@@ -57,30 +170,30 @@ fun ShowExchangeCoinsForm(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
-        SectionBuyCoins { component.onBuyCoinsClicked(activity) }
+        SectionBuyCoins( { component.onBuyCoinsClicked(activity) }, context)
 
         StandardHorizontalSpacer()
         DashedHorizontalLine()
 
-        SectionExchangeCoins(state, component)
+        SectionExchangeCoins(state, component, context)
 
         StandardHorizontalSpacer()
         DashedHorizontalLine()
 
-        SectionBuyPremiumAccount(state, component)
+        SectionBuyPremiumAccount(state, component, context)
 
     }
 }
 
 @Composable
-fun SectionBuyCoins(onClickedBuyCoins: () -> Unit) {
-    val context = LocalContext.current
+fun SectionBuyCoins(onClickedBuyCoins: () -> Unit, context: Context) {
+    //val context = LocalContext.current
     Button(
         onClick = { onClickedBuyCoins() },
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
-            .padding(horizontal = 64.dp)
+            .padding(horizontal = 16.dp)
     ) {
         val text = context.getString(R.string.buy_coins_button_text)
         Text(text)
@@ -89,15 +202,15 @@ fun SectionBuyCoins(onClickedBuyCoins: () -> Unit) {
 
 
 @Composable
-fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComponent) {
-    val context = LocalContext.current
+fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComponent, context: Context) {
 
     val coinName = ( context.getString(commonR.string.coins) ).trim()
     val taskName = ( context.getString(commonR.string.tasks) ).trim()
     val reminderName = ( context.getString(commonR.string.reminders) ).trim()
 
-    var selectedCoins by remember { mutableIntStateOf(state.user.teamCoins) }
-    var selectedOption by remember { mutableStateOf(taskName) }
+    var selectedCoinsQuantity by remember { mutableIntStateOf(state.user.teamCoins) }
+    //var selectedOption by remember { mutableStateOf(taskName) }
+    var selectedOption by remember(taskName) { mutableStateOf(taskName) }
     val rateResource = if (selectedOption == taskName) {
         context.resources.getInteger(commonR.integer.rate_one_coin_to_task)
     } else {
@@ -124,8 +237,8 @@ fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComp
 
         DropdownMenuWithItems(
             items = (1..state.user.teamCoins).toList().reversed(),
-            selectedValue = selectedCoins,
-            onItemSelected = { selectedCoins = it },
+            selectedValue = selectedCoinsQuantity,
+            onItemSelected = { selectedCoinsQuantity = it },
             isEnabled = state.user.teamCoins > 0
         )
 
@@ -167,7 +280,7 @@ fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComp
             modifier = Modifier.size(24.dp)
         )
 
-        val result = selectedCoins * rateResource
+        val result = selectedCoinsQuantity * rateResource
         Text(
             text = context.getString(commonR.string.buy),
             style = MaterialTheme.typography.bodyLarge
@@ -188,14 +301,14 @@ fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComp
 
     Button(
         onClick = {
-            val newCoins = state.user.teamCoins - selectedCoins
+            val newCoins = state.user.teamCoins - selectedCoinsQuantity
             val newTasks = if (selectedOption == taskName) {
-                state.user.availableTasksToAdd + selectedCoins * rateResource
+                state.user.availableTasksToAdd + selectedCoinsQuantity * rateResource
             } else {
                 state.user.availableTasksToAdd
             }
             val newReminders = if (selectedOption == reminderName) {
-                state.user.availableFCM + selectedCoins * rateResource
+                state.user.availableFCM + selectedCoinsQuantity * rateResource
             } else {
                 state.user.availableFCM
             }
@@ -204,7 +317,7 @@ fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComp
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
-            .padding(horizontal = 64.dp),
+            .padding(horizontal = 16.dp),
         enabled = state.user.teamCoins > 0
     ) {
         val text = context.getString(R.string.exchange_button_text)
@@ -213,8 +326,8 @@ fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComp
 }
 
 @Composable
-fun SectionBuyPremiumAccount(state: LoggedUserStore.State, component: LoggedUserComponent) {
-    val context = LocalContext.current
+fun SectionBuyPremiumAccount(state: LoggedUserStore.State, component: LoggedUserComponent, context: Context) {
+    //val context = LocalContext.current
     val oneMonth = BillingRepositoryImpl.Companion.PremiumStatus.ONE_MONTH
     val oneYear = BillingRepositoryImpl.Companion.PremiumStatus.ONE_YEAR
     val unlimited = BillingRepositoryImpl.Companion.PremiumStatus.UNLIMITED
@@ -304,8 +417,8 @@ fun SectionBuyPremiumAccount(state: LoggedUserStore.State, component: LoggedUser
             enabled = cost <= state.user.teamCoins,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp)
-                .padding(horizontal = 64.dp),
+                .height(96.dp)
+                .padding(horizontal = 16.dp),
         ) {
             Text(text = context.getString(R.string.buy_premium_account_button_text))
         }
@@ -382,5 +495,5 @@ fun DashedHorizontalLine() {
 
 @Composable
 fun StandardHorizontalSpacer() {
-    Spacer(modifier = Modifier.height(16.dp))
+    Spacer(modifier = Modifier.height(8.dp))
 }

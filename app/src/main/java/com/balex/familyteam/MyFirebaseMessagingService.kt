@@ -5,8 +5,12 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import androidx.core.app.NotificationCompat
+import com.balex.common.data.datastore.Storage
+import com.balex.common.domain.entity.User
+import com.balex.common.domain.usecases.regLog.GetTokenUseCase
+import com.balex.common.domain.usecases.regLog.GetUserUseCase
+import com.balex.common.domain.usecases.regLog.SetNewTokenUseCase
 import com.balex.common.domain.usecases.user.SaveDeviceTokenUseCase
 import com.balex.familyteam.presentation.MainActivity
 import com.google.firebase.messaging.FirebaseMessagingService
@@ -20,6 +24,12 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     @Inject
     lateinit var saveDeviceTokenUseCase: SaveDeviceTokenUseCase
+
+    @Inject
+    lateinit var getUserUseCase: GetUserUseCase
+
+    @Inject
+    lateinit var setNewTokenUseCase: SetNewTokenUseCase
 
 
     override fun onCreate() {
@@ -35,8 +45,13 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     override fun onNewToken(token: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            saveDeviceTokenUseCase(token)
+        val userName = getUserUseCase().nickName
+        if (userName != User.DEFAULT_NICK_NAME && userName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
+            CoroutineScope(Dispatchers.IO).launch {
+                saveDeviceTokenUseCase(token)
+            }
+        } else {
+            setNewTokenUseCase(token)
         }
 
     }

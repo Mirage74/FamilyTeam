@@ -22,8 +22,7 @@ import com.balex.common.domain.entity.ToDoList
 import com.balex.common.domain.entity.User
 import com.balex.common.domain.usecases.admin.CreateNewUserUseCase
 import com.balex.common.domain.usecases.admin.DeleteUserUseCase
-import com.balex.common.domain.usecases.billing.InitIapConnectorInRepositoryUseCase
-import com.balex.common.domain.usecases.billing.LaunchPurchaseFlowUseCase
+import com.balex.common.domain.usecases.billing.InitIapConnectorUseCase
 import com.balex.common.domain.usecases.billing.PurchaseCoinsUseCase
 import com.balex.common.domain.usecases.regLog.GetUserUseCase
 import com.balex.common.domain.usecases.regLog.ObserveLanguageUseCase
@@ -59,6 +58,8 @@ import javax.inject.Inject
 
 interface LoggedUserStore : Store<Intent, State, Label> {
 
+    fun startBootstrapperCollectFlow()
+
     fun stopBootstrapperCollectFlow()
 
     sealed interface Intent {
@@ -77,9 +78,11 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 
         data object ClickedExchangeCoins : Intent
 
-        data class ClickedBuyPremium(val premiumStatus: BillingRepositoryImpl.Companion.PremiumStatus) : Intent
+        data class ClickedBuyPremium(val premiumStatus: BillingRepositoryImpl.Companion.PremiumStatus) :
+            Intent
 
-        data class ClickedConfirmExchange(val coins: Int, val tasks: Int, val reminders: Int) : Intent
+        data class ClickedConfirmExchange(val coins: Int, val tasks: Int, val reminders: Int) :
+            Intent
 
         data class ClickedBuyCoins(val activity: Activity) : Intent
 
@@ -130,6 +133,8 @@ interface LoggedUserStore : Store<Intent, State, Label> {
         data class PasswordFieldChanged(val currentPasswordText: String) : Intent
 
         data object ClickedChangePasswordVisibility : Intent
+
+        data object ClickedRules : Intent
 
         data object ClickedAbout : Intent
 
@@ -184,6 +189,8 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 
     sealed interface Label {
 
+        data object ClickedRules : Label
+
         data object ClickedAbout : Label
 
     }
@@ -208,8 +215,7 @@ class LoggedUserStoreFactory @Inject constructor(
     private val addPrivateTaskToFirebaseUseCase: AddPrivateTaskToFirebaseUseCase,
     private val addExternalTaskToFirebaseUseCase: AddExternalTaskToFirebaseUseCase,
     private val exchangeCoinsUseCase: ExchangeCoinsUseCase,
-    private val launchPurchaseFlowUseCase: LaunchPurchaseFlowUseCase,
-    private val initIapConnectorInRepositoryUseCase: InitIapConnectorInRepositoryUseCase,
+    private val initIapConnectorUseCase: InitIapConnectorUseCase,
     private val purchaseCoinsUseCase: PurchaseCoinsUseCase,
     private val setPremiumStatusUseCase: SetPremiumStatusUseCase,
     private val storeFactory: StoreFactory,
@@ -256,6 +262,10 @@ class LoggedUserStoreFactory @Inject constructor(
             reducer = ReducerImpl
         ) {
 
+            override fun startBootstrapperCollectFlow() {
+                sharedBootstrapper.start()
+            }
+
             override fun stopBootstrapperCollectFlow() {
                 sharedBootstrapper.stop()
                 sharedBootstrapper.dispose()
@@ -291,7 +301,8 @@ class LoggedUserStoreFactory @Inject constructor(
 
         data object ClickedExchangeCoins : Msg
 
-        data class ClickedBuyPremium(val premiumStatus: BillingRepositoryImpl.Companion.PremiumStatus) : Msg
+        data class ClickedBuyPremium(val premiumStatus: BillingRepositoryImpl.Companion.PremiumStatus) :
+            Msg
 
         data class ClickedConfirmExchange(val coins: Int, val tasks: Int, val reminders: Int) : Msg
 
@@ -346,8 +357,8 @@ class LoggedUserStoreFactory @Inject constructor(
 
     private inner class BootstrapperImpl : CoroutineBootstrapper<Action>() {
 
-        private val job = SupervisorJob()
-        private val scopeBootstrapper = CoroutineScope(Dispatchers.Main + job)
+        private var job = SupervisorJob()
+        private var scopeBootstrapper = CoroutineScope(Dispatchers.Main + job)
 
         override fun invoke() {
             start()
@@ -358,6 +369,11 @@ class LoggedUserStoreFactory @Inject constructor(
         }
 
         fun start() {
+            if (job.isCancelled) {
+                job = SupervisorJob()
+                scopeBootstrapper = CoroutineScope(Dispatchers.Main + job)
+            }
+
             refreshShopListUseCase()
             scopeBootstrapper.launch {
                 merge(
@@ -396,8 +412,7 @@ class LoggedUserStoreFactory @Inject constructor(
                 }
 
                 is Intent.InitIapConnector -> {
-                    initIapConnectorInRepositoryUseCase(intent.activity)
-                    launchPurchaseFlowUseCase(intent.activity)
+                    initIapConnectorUseCase(intent.activity)
                 }
 
                 Intent.BackFromNewTaskFormClicked -> {
@@ -431,7 +446,13 @@ class LoggedUserStoreFactory @Inject constructor(
                     scope.launch {
                         exchangeCoinsUseCase(intent.coins, intent.tasks, intent.reminders)
                     }
-                    dispatch(Msg.ClickedConfirmExchange(intent.coins, intent.tasks, intent.reminders))
+                    dispatch(
+                        Msg.ClickedConfirmExchange(
+                            intent.coins,
+                            intent.tasks,
+                            intent.reminders
+                        )
+                    )
                 }
 
                 is Intent.ClickedBuyCoins -> {
@@ -583,7 +604,12 @@ class LoggedUserStoreFactory @Inject constructor(
                     }
                 }
 
-                is Intent.ClickedAbout -> {
+
+                Intent.ClickedRules -> {
+                    publish(Label.ClickedRules)
+                }
+
+                Intent.ClickedAbout -> {
                     publish(Label.ClickedAbout)
                 }
 
@@ -622,6 +648,7 @@ class LoggedUserStoreFactory @Inject constructor(
                 }
 
                 is Action.LanguageIsChanged -> {
+                    saveLanguageUseCase(action.language)
                     dispatch(Msg.LanguageIsChanged(action.language))
                 }
 

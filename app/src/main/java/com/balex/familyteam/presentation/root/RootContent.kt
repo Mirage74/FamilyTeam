@@ -9,6 +9,7 @@ import com.balex.familyteam.presentation.loginuser.LoginUserContent
 import com.balex.familyteam.presentation.notlogged.NotLoggedContent
 import com.balex.familyteam.presentation.regadmin.RegAdminContent
 import com.balex.common.theme.FamilyTeamTheme
+import com.balex.familyteam.presentation.rules.RulesContent
 
 @Composable
 fun RootContent(component: RootComponent, activity: MainActivity, deviceToken: String) {
@@ -31,6 +32,10 @@ fun RootContent(component: RootComponent, activity: MainActivity, deviceToken: S
 
                 is RootComponent.Child.LoggedUser -> {
                     LoggedUserContent(component = instance.component, deviceToken = deviceToken, activity = activity)
+                }
+
+                is RootComponent.Child.Rules -> {
+                    RulesContent(component = instance.component)
                 }
 
                 is RootComponent.Child.About -> {

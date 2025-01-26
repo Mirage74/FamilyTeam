@@ -35,15 +35,6 @@ class BillingRepositoryImpl @Inject constructor(
         exchangeCoinsUseCase(user.teamCoins + credits, user.availableTasksToAdd, user.availableFCM)
     }
 
-    override fun initIapConnectorInRepository(activity: Activity) {
-        Log.d("initIapConnectorInRepository", "initIapConnectorInRepository")
-        iapConnector = IapConnector(
-            context = activity,
-            consumableKeys = listOf(TEAM_COIN),
-            key = licenceKey,
-            enableLogging = true
-        )
-    }
 
     override fun purchaseCoins(activity: Activity) {
         iapConnector.purchase(activity, TEAM_COIN)
@@ -59,11 +50,17 @@ class BillingRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun launchPurchaseFlow(activity: Activity) {
+    override fun initIapConnector(activity: Activity) {
 
         logAppVersion(context)
+        //Log.d("launchPurchaseFlow", "Initializing IAP Connector")
 
-        Log.d("launchPurchaseFlow", "Initializing IAP Connector")
+        iapConnector = IapConnector(
+            context = activity,
+            consumableKeys = listOf(TEAM_COIN),
+            key = licenceKey,
+            enableLogging = true
+        )
 
         iapConnector.addPurchaseListener(object : PurchaseServiceListener {
 
@@ -100,7 +97,6 @@ class BillingRepositoryImpl @Inject constructor(
                 )
             }
         })
-        //iapConnector.purchase(activity, TEAM_COIN)
     }
 
     companion object {

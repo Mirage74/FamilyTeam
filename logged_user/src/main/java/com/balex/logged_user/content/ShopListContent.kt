@@ -44,7 +44,7 @@ fun ShopListContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(8.dp),
+            .padding(16.dp),
         verticalArrangement = arrangement
     ) {
         if (!state.isAddShopItemClicked) {
@@ -55,8 +55,7 @@ fun ShopListContent(
                 onClick = { component.onClickAddShopItem() },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(150.dp)
-                    .padding(horizontal = 64.dp)
+                    .height(96.dp)
                     .weight(1f)
             ) {
                 Text(

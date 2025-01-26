@@ -15,8 +15,8 @@ android {
         applicationId = "com.balex.familyteam"
         minSdk = 30
         targetSdk = 35
-        versionCode = 20
-        versionName = "3.0"
+        versionCode = 32
+        versionName = "3.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

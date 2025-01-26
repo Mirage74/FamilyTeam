@@ -362,6 +362,7 @@ class LoginUserStoreFactory @Inject constructor(
                 }
 
                 is Action.AdminAndUserExistButWrongPassword -> {
+                    saveLanguageUseCase(action.user.language)
                     dispatch(Msg.SetLoginWithoutWrongPassword(action.user))
                 }
 

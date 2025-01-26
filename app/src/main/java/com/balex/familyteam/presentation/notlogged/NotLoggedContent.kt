@@ -1,5 +1,7 @@
 package com.balex.familyteam.presentation.notlogged
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,12 +11,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.TabRowDefaults.Divider
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -37,7 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.balex.common.DrawerContent
+import com.balex.common.LocalLocalizedContext
 import com.balex.common.R
 import com.balex.common.SwitchLanguage
 import com.balex.common.domain.entity.MenuItems
@@ -52,24 +57,27 @@ fun NotLoggedContent(component: NotLoggedComponent) {
 
     val state by component.model.collectAsState(Dispatchers.Main.immediate)
 
-    when (state.logChooseState) {
+    com.balex.common.LocalizedContextProvider(languageCode = state.language.lowercase()) {
 
-        NotLoggedStore.State.LogChooseState.NoSavedUserFound -> {
-            NotLoggedScreen(component)
-        }
+        when (state.logChooseState) {
 
-        NotLoggedStore.State.LogChooseState.Initial -> {
-            Box(
-                modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = DarkBlue)
+            NotLoggedStore.State.LogChooseState.NoSavedUserFound -> {
+                NotLoggedScreen(component)
             }
-        }
 
-        NotLoggedStore.State.LogChooseState.ErrorLoadingUserData -> {
-            ErrorScreen(state)
-        }
+            NotLoggedStore.State.LogChooseState.Initial -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = DarkBlue)
+                }
+            }
 
+            NotLoggedStore.State.LogChooseState.ErrorLoadingUserData -> {
+                ErrorScreen(state)
+            }
+
+        }
     }
 }
 
@@ -83,16 +91,49 @@ fun NotLoggedScreen(component: NotLoggedComponent) {
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            DrawerContent(
-                items = MenuItems().items,
-                onItemClick = {
-                    scope.launch {
-                        drawerState.close()
-                        component.onClickAbout()
-                    }
+            Column(
+                modifier = Modifier
+                    .background(Color.Cyan)
+                    .padding(16.dp)
+                    .width(192.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                val context = LocalLocalizedContext.current
+                val menuItems = MenuItems.fromResources(context)
+                Text(
+                    text = menuItems.getItem(MenuItems.MENU_ITEM_RULES),
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .clickable {
+                            scope.launch {
+                                drawerState.close()
+                                component.onClickRules()
+                            }
+                        },
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = Color.Black,
+                )
 
-                }
-            )
+                Divider(
+                    color = Color.Black,
+                    thickness = 1.dp,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+
+                Text(
+                    text = menuItems.getItem(MenuItems.MENU_ITEM_ABOUT),
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .clickable {
+                            scope.launch {
+                                drawerState.close()
+                                component.onClickAbout()
+                            }
+                        },
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = Color.Black,
+                )
+            }
         }
     ) {
 
@@ -132,9 +173,9 @@ fun NotLoggedScreen(component: NotLoggedComponent) {
                         }
                     }
                 )
-                com.balex.common.LocalizedContextProvider(languageCode = state.language.lowercase()) {
-                    ShowContent(true, component)
-                }
+
+                ShowContent(true, component)
+
             }
 
 
@@ -157,7 +198,7 @@ fun ShowContent(
 
         val context = com.balex.common.LocalLocalizedContext.current
         val regAdmText = context.getString(R.string.reg_adm)
-        val logUserText = context.getString(R.string.log_user)
+        val logUserText = context.getString(R.string.login_button)
         val textSize = dimensionResource(id = commonR.dimen.button_text_size).value.sp
 
         Button(
@@ -209,4 +250,3 @@ fun ErrorScreen(state: NotLoggedStore.State) {
         )
     }
 }
-

@@ -1,8 +1,8 @@
 package com.balex.logged_user
 
 import android.app.Activity
+import android.content.Context
 import android.util.Log
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,8 +15,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material.TabRowDefaults.Divider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.Logout
@@ -50,6 +52,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.balex.common.LocalLocalizedContext
 import com.balex.common.SwitchLanguage
 import com.balex.common.domain.entity.MenuItems
@@ -79,7 +82,7 @@ fun LoggedUserContent(
     var isFirstRun by remember { mutableStateOf(true) }
 
     LaunchedEffect(deviceToken) {
-        if (isFirstRun  || state.sessionId != previousSessionId ) {
+        if (isFirstRun || state.sessionId != previousSessionId) {
             Log.d("LoggedUserContent", "deviceToken: $deviceToken")
             if (deviceToken.isNotEmpty()) {
                 component.sendIntent(LoggedUserStore.Intent.SaveDeviceToken(deviceToken))
@@ -94,20 +97,22 @@ fun LoggedUserContent(
 
 
     BackHandler {
-        if (state.isAddTaskClicked || state.isEditTaskClicked || state.isAddShopItemClicked) {
-            component.onBackFromNewTaskFormClicked()
-        } else if (state.loggedUserState == LoggedUserStore.State.LoggedUserState.Content) {
-            component.onBackClickedHandle()
-        } else {
-            component.onBackFromExchangeOrBuyCoinClicked()
+        when {
+            state.isCreateNewUserClicked -> component.onAdminPageCancelCreateNewUserClicked()
+            state.isExchangeCoinsClicked -> component.onBackFromExchangeOrBuyCoinClicked()
+            state.isAddTaskClicked || state.isEditTaskClicked || state.isAddShopItemClicked -> component.onBackFromNewTaskFormClicked()
+            else -> {
+                activity.finishAffinity()
+            }
         }
     }
 
-    com.balex.common.LocalizedContextProvider(languageCode = state.language.lowercase()) {
 
+    com.balex.common.LocalizedContextProvider(languageCode = state.language.lowercase()) {
+        val context = LocalLocalizedContext.current
         when (state.loggedUserState) {
             LoggedUserStore.State.LoggedUserState.Content -> {
-                LoggedUserScreen(component, state, deviceToken, activity )
+                LoggedUserScreen(component, state, deviceToken, activity, context)
             }
 
             LoggedUserStore.State.LoggedUserState.Loading -> {
@@ -119,7 +124,7 @@ fun LoggedUserContent(
             }
 
             LoggedUserStore.State.LoggedUserState.ExchangeCoins -> {
-                ShowExchangeCoinsForm(state, component, activity)
+                ShowExchangeCoinsForm(state, component, activity, context)
             }
 
 
@@ -133,7 +138,8 @@ fun LoggedUserScreen(
     component: LoggedUserComponent,
     state: LoggedUserStore.State,
     deviceToken: String,
-    activity: Activity
+    activity: Activity,
+    context: Context
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -143,24 +149,45 @@ fun LoggedUserScreen(
         drawerContent = {
             Column(
                 modifier = Modifier
-                    .background(Color.White)
+                    .background(Color.Cyan)
                     .padding(16.dp)
+                    .width(192.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                MenuItems().items.forEach { menuItem ->
-                    Text(
-                        text = menuItem,
-                        modifier = Modifier
-                            .padding(vertical = 8.dp)
-                            .clickable {
-                                scope.launch {
-                                    drawerState.close()
-                                    component.onClickAbout()
-                                }
-                            },
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Color.Black
-                    )
-                }
+                val menuItems = MenuItems.fromResources(context)
+                Text(
+                    text = menuItems.getItem(MenuItems.MENU_ITEM_RULES),
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .clickable {
+                            scope.launch {
+                                drawerState.close()
+                                component.onClickRules()
+                            }
+                        },
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = Color.Black,
+                )
+
+                Divider(
+                    color = Color.Black,
+                    thickness = 1.dp,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+
+                Text(
+                    text = menuItems.getItem(MenuItems.MENU_ITEM_ABOUT),
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .clickable {
+                            scope.launch {
+                                drawerState.close()
+                                component.onClickAbout()
+                            }
+                        },
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = Color.Black,
+                )
             }
         }
     ) {
@@ -194,7 +221,7 @@ fun LoggedUserScreen(
                     }
                 }
             )
-            MainContent(component, state, deviceToken, activity)
+            MainContent(component, state, deviceToken, activity, context)
         }
     }
 }
@@ -205,12 +232,13 @@ fun MainContent(
     component: LoggedUserComponent,
     state: LoggedUserStore.State,
     deviceToken: String,
-    activity: Activity
+    activity: Activity,
+    context: Context
 ) {
     val selectedColor = androidx.compose.material.MaterialTheme.colors.secondary
     val unSelectedColor = androidx.compose.material.MaterialTheme.colors.onSecondary
     val notAvailableColor = Color.DarkGray
-    val context = LocalLocalizedContext.current
+    val bottomFontSize = dimensionResource(id = R.dimen.bottom_menu_font_size).value.sp
     Scaffold(
         bottomBar = {
             BottomNavigation {
@@ -229,7 +257,8 @@ fun MainContent(
                         Text(
                             context.getString(R.string.bottom_text_my_tasks),
                             maxLines = 1,
-                            color = if (state.activeBottomItem == PagesNames.TodoList) selectedColor else unSelectedColor
+                            color = if (state.activeBottomItem == PagesNames.TodoList) selectedColor else unSelectedColor,
+                            fontSize = bottomFontSize
                         )
                     },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
@@ -251,7 +280,8 @@ fun MainContent(
                         Text(
                             context.getString(R.string.bottom_text_tasks_for_other),
                             maxLines = 1,
-                            color = if (state.activeBottomItem == PagesNames.MyTasksForOtherUsers) selectedColor else unSelectedColor
+                            color = if (state.activeBottomItem == PagesNames.MyTasksForOtherUsers) selectedColor else unSelectedColor,
+                            fontSize = bottomFontSize
                         )
                     },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
@@ -271,7 +301,8 @@ fun MainContent(
                         Text(
                             context.getString(R.string.bottom_text_shop_list),
                             maxLines = 1,
-                            color = if (state.activeBottomItem == PagesNames.ShopList) selectedColor else unSelectedColor
+                            color = if (state.activeBottomItem == PagesNames.ShopList) selectedColor else unSelectedColor,
+                            fontSize = bottomFontSize
                         )
                     },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
@@ -302,7 +333,8 @@ fun MainContent(
                         Text(
                             context.getString(R.string.bottom_text_admin),
                             maxLines = 1,
-                            color = itemColor
+                            color = itemColor,
+                            fontSize = bottomFontSize
                         )
                     },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,
@@ -326,7 +358,8 @@ fun MainContent(
                         Text(
                             context.getString(R.string.bottom_text_logout),
                             maxLines = 1,
-                            color = if (state.activeBottomItem == PagesNames.Logout) selectedColor else unSelectedColor
+                            color = if (state.activeBottomItem == PagesNames.Logout) selectedColor else unSelectedColor,
+                            fontSize = bottomFontSize
                         )
                     },
                     selectedContentColor = androidx.compose.material.MaterialTheme.colors.onPrimary,

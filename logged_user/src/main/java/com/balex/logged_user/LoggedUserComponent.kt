@@ -19,8 +19,6 @@ interface LoggedUserComponent {
 
     fun onBackFromNewTaskFormClicked()
 
-    fun onBackClickedHandle()
-
     fun onBackFromExchangeOrBuyCoinClicked()
 
     fun onClickAddNewTask()
@@ -66,6 +64,8 @@ interface LoggedUserComponent {
     fun onPasswordFieldChanged(currentPasswordText: String)
 
     fun onClickChangePasswordVisibility()
+
+    fun onClickRules()
 
     fun onClickAbout()
 

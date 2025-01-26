@@ -20,6 +20,7 @@ import com.balex.common.domain.usecases.regLog.StorageClearPreferencesUseCase
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore.Intent
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore.Label
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore.State
+import com.balex.logged_user.LoggedUserStore
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -33,6 +34,8 @@ interface NotLoggedStore : Store<Intent, State, Label> {
         data object ClickedRegisterAdmin : Intent
 
         data object ClickedLoginUser : Intent
+
+        data object ClickedRules : Intent
 
         data object ClickedAbout : Intent
 
@@ -65,6 +68,8 @@ interface NotLoggedStore : Store<Intent, State, Label> {
         data object ClickedRegisterAdmin : Label
 
         data object ClickedLoginUser : Label
+
+        data object ClickedRules : Label
 
         data object ClickedAbout : Label
 
@@ -164,10 +169,6 @@ class NotLoggedStoreFactory @Inject constructor(
                                     dispatch(Action.UserNotExistInPreference)
                                 }
 
-//                                User.DEFAULT_NICK_NAME -> {
-//                                    dispatch(Action.UserNotExistInPreference)
-//                                }
-
                                 else -> {
                                     if (getWrongPasswordUserUseCase().nickName == User.DEFAULT_NICK_NAME
                                         && login != User.DEFAULT_NICK_NAME
@@ -211,6 +212,10 @@ class NotLoggedStoreFactory @Inject constructor(
                     publish(Label.ClickedLoginUser)
                 }
 
+                Intent.ClickedRules -> {
+                    publish(Label.ClickedRules)
+                }
+
                 Intent.ClickedAbout -> {
                     publish(Label.ClickedAbout)
                 }
@@ -247,6 +252,7 @@ class NotLoggedStoreFactory @Inject constructor(
                 }
 
                 is Action.LanguageIsChanged -> {
+                    saveLanguageUseCase(action.language)
                     dispatch(Msg.RefreshLanguage(action.language))
                 }
 

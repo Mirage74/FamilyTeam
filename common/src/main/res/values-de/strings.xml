@@ -1,19 +1,74 @@
 <resources>
     <string name="app_name">Familienteam</string>
-    <string name="about_app">Über</string>
-    <string name="reg_adm" >Reg. neue Familie </string>
-    <string name="log_adm">Admin einloggen</string>
-    <string name="log_user">Benutzer einloggen</string>
-
+    <string name="about_app">Über uns</string>
+    <string name="rules_app">Regeln</string>
+    <string name="reg_adm" >Neues Team Reg.</string>
     <string name="by_email">per Email</string>
     <string name="by_phone">per Telefon</string>
     <string name="e_mail">Email</string>
     <string name="phone">Telefon, nur Ziffern mit Ländercode</string>
+    <string name="email_or_phone">E-Mail/Telefon, nur Ziffern mit Landesvorwahl</string>
+    <string name="nick_name">Benutzername, nur Buchstaben, Zahlen und \'_\'</string>
+    <string name="display_name">(optional) Anzeigename</string>
+    <string name="optional">optional:</string>
     <string name="password">Passwort</string>
     <string name="reg_button">Registrieren</string>
     <string name="try_again_button">Erneut versuchen</string>
-
     <string name="enter_code_from_sms">6-stelligen Code aus SMS eingeben</string>
     <string name="button_ok">OK</string>
     <string name="button_resend_sms">SMS-Code erneut senden</string>
+    <string name="login_button">Anmelden</string>
+    <string name="please_verify_email">Bitte verifizieren Sie Ihre E-Mail</string>
+    <string name="please_verify_phone">Bitte verifizieren Sie Ihre Telefonnummer</string>
+    <string name="button_cancel">Abbrechen</string>
+    <string name="button_dismiss">Ablehnen</string>
+    <string name="coins">Münzen</string>
+    <string name="tasks">Aufgaben</string>
+    <string name="reminders">Erinnerungen</string>
+    <string name="sell">Verkaufen</string>
+    <string name="buy">Kaufen</string>
+    <string name="rate">Bewerten</string>
+
+    <string name="rules_text">
+        \u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Allgemeine Informationen\n\n\u00A0\u00A0\u00A0Sie können
+        Ihr Team als Administrator registrieren und eine unbegrenzte Anzahl von Teammitgliedern
+        erstellen oder einen Nicknamen und ein Passwort vom Administrator erhalten und sich als
+        Benutzer in der App anmelden (der Administrator hat ebenfalls alle Benutzerfunktionen).
+        Der Benutzer kann:\n1) Neue Aufgaben für sich selbst erstellen und die Zeit der Aufgabe
+        angeben (mit oder ohne Push-Erinnerungen, bis zu 3 pro Aufgabe)\n2) Neue Aufgaben für andere
+        Teammitglieder erstellen (auch hier können bis zu 3 Erinnerungen eingestellt werden).\n3)
+        Eine Liste der geplanten Einkäufe führen.\nDer Administrator und die ersten 2 von ihm
+        registrierten Benutzer ohne Premium-Status können jeden Tag bis zu %d neue Aufgaben erstellen
+        und bis zu %d Erinnerungen verwenden. Für andere Benutzer werden die verfügbaren Aufgaben und
+        Erinnerungen nicht automatisch jeden Tag erneuert (sie müssen Münzen kaufen oder einen
+        Premium-Status haben). Die Führung der Einkaufsliste ist unbegrenzt und erfordert keine
+        Münzen.\nBei Bedarf kann jeder Benutzer Münzen (Team Coins oder TC) kaufen und diese gegen
+        zusätzliche Aufgaben und Erinnerungen eintauschen.\nMit Münzen kann auch der Premium-Status
+        gekauft werden, sowohl zeitlich begrenzt als auch unbegrenzt. In diesem Fall kann der
+        Benutzer jeden Tag bis zu %d neue Aufgaben und bis zu %d neue Erinnerungen
+        erstellen.\n\n\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Registrierung eines neuen
+        Teams\n\n\u00A0\u00A0\u00A0Um ein neues Team zu registrieren, klicken Sie auf den Button
+        \"Neues Team Reg.\".\nWählen Sie dann die Registrierung per E-Mail oder Telefon und
+        füllen Sie alle erforderlichen Daten aus. Bestätigen Sie anschließend Ihre E-Mail-Adresse
+        (eine Nachricht wird an Ihre E-Mail gesendet) oder Ihr Telefon (ein Code wird per SMS
+        gesendet). Nach der Bestätigung sind Sie mit Administratorrechten registriert, die es Ihnen
+        ermöglichen, neue Benutzer zu erstellen oder zu löschen. Nach der Erstellung eines neuen
+        Benutzers teilen Sie ihm seinen Nicknamen und sein Passwort sowie Ihre Daten (E-Mail oder
+        Telefonnummer) für den Zugang zu Ihrem Konto
+        mit.\n\n\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Anmeldung in Ihr persönliches
+        Konto\n\n\u00A0\u00A0\u00A0Um sich anzumelden, klicken Sie auf den Button \"Anmelden\", geben
+        Sie dann die E-Mail oder Telefonnummer (mit Ländervorwahl, aber ohne das Zeichen \"+\") des
+        Administrators in das obere Feld ein. Geben Sie anschließend Ihren Nicknamen und Ihr
+        Passwort ein und klicken Sie auf den Button \"Anmelden\".
+    </string>
+    <string name="about_text">
+        App-Name:\n\"Familienteam\"\n\nApp-Entwickler:\nAliaksandr Babrouski\n\nApp-
+        Version: %s\n\ne-mail: balexvicx@gmail.com\n\n\u00A0\u00A0\u00A0Die App ist für die
+        Verwendung in Familien oder anderen Gruppen von Menschen gedacht, die im Alltag miteinander
+        verbunden sind und gemeinsame Aufgaben haben (zum Beispiel gemeinsamer Wohnungswechsel oder
+        Zusammenarbeit in einem Team).\n\u00A0\u00A0\u00A0Die App ermöglicht es den Benutzern,
+        Online-Aufgaben zu erstellen oder zu löschen, um diese zu erledigen (für sich selbst oder
+        für andere Mitglieder der Gruppe), sowie eine Einkaufsliste zu führen.
+    </string>
+
 </resources>

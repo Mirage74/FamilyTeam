@@ -27,6 +27,7 @@ class DefaultNotLoggedComponent @AssistedInject constructor(
     @Assisted("onRegAdminClicked") private val onRegAdminClicked: () -> Unit,
     @Assisted("onLoginUserClicked") private val onLoginUserClicked: (User) -> Unit,
     @Assisted("onUserIsLogged") private val onUserIsLogged: () -> Unit,
+    @Assisted("onRules") private val onRules: () -> Unit,
     @Assisted("onAbout") private val onAbout: () -> Unit,
     @Assisted("componentContext") componentContext: ComponentContext
 ) : NotLoggedComponent, ComponentContext by componentContext {
@@ -70,6 +71,10 @@ class DefaultNotLoggedComponent @AssistedInject constructor(
                         onUserIsLogged()
                     }
 
+                    NotLoggedStore.Label.ClickedRules -> {
+                        onRules()
+                    }
+
                     NotLoggedStore.Label.ClickedAbout -> {
                         onAbout()
                     }
@@ -101,6 +106,10 @@ class DefaultNotLoggedComponent @AssistedInject constructor(
         store.accept(NotLoggedStore.Intent.ClickedLoginUser)
     }
 
+    override fun onClickRules() {
+        store.accept(NotLoggedStore.Intent.ClickedRules)
+    }
+
     override fun onClickAbout() {
         store.accept(NotLoggedStore.Intent.ClickedAbout)
     }
@@ -116,6 +125,7 @@ class DefaultNotLoggedComponent @AssistedInject constructor(
             @Assisted("onRegAdminClicked") onRegAdminClicked: () -> Unit,
             @Assisted("onLoginUserClicked") onLoginUserClicked: (User) -> Unit,
             @Assisted("onUserIsLogged") onUserIsLogged: () -> Unit,
+            @Assisted("onRules") onRules: () -> Unit,
             @Assisted("onAbout") onAbout: () -> Unit,
             @Assisted("componentContext") componentContext: ComponentContext
         ): DefaultNotLoggedComponent

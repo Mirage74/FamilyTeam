@@ -53,38 +53,31 @@ fun AdminPanelContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 64.dp),
+            .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.SpaceEvenly
     ) {
 
         val context = LocalLocalizedContext.current
 
         Text(
-            modifier = Modifier.align(Alignment.CenterHorizontally),
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally),
             text = context.getString(R.string.title_admin_panel),
+            fontSize = 24.sp
         )
         if (!state.isCreateNewUserClicked) {
             Button(
                 onClick = { component.onAdminPageCreateNewUserClicked() },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(150.dp)
+                    .height(96.dp)
             ) {
                 Text(
                     text = context.getString(R.string.button_text_create_new_user)
                 )
             }
 
-            Button(
-                onClick = { },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp)
-            ) {
-                Text(
-                    text = context.getString(R.string.button_text_edit_users_list)
-                )
-            }
+
             ShowUsersList(state, paddingValues, component)
         }
 

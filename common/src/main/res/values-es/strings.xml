@@ -1,19 +1,70 @@
 <resources>
     <string name="app_name">Equipo de familia</string>
     <string name="about_app">Acerca de</string>
-    <string name="reg_adm" >Reg. nueva familia</string>
-    <string name="log_adm">Admin iniciar sesión como</string>
-    <string name="log_user">Usuario iniciar sesión como</string>
-
+    <string name="rules_app">Reglas</string>
+    <string name="reg_adm" >Reg. equipo</string>
     <string name="by_email">por Email</string>
     <string name="by_phone">por Teléfono</string>
     <string name="e_mail">Email</string>
     <string name="phone">Teléfono, sólo dígitos con código de país</string>
+    <string name="email_or_phone">Email//Teléfono, sólo dígitos con código de país</string>
+    <string name="nick_name">Nick, sólo letras, números y \'_\'</string>
+    <string name="display_name">(opcional) Nombre para mostrar</string>
+    <string name="optional">opcional:</string>
     <string name="password">Contraseña</string>
     <string name="reg_button">Registro</string>
     <string name="try_again_button">Inténtalo de nuevo</string>
-
     <string name="enter_code_from_sms">Introducir código de 6 dígitos desde SMS</string>
     <string name="button_ok">OK</string>
     <string name="button_resend_sms">Reenviar código SMS</string>
+    <string name="login_button">Entrar</string>
+    <string name="please_verify_email">Por favor, verifique su correo electrónico</string>
+    <string name="please_verify_phone">Por favor, verifique su número de teléfono</string>
+    <string name="button_cancel">Cancelar</string>
+    <string name="button_dismiss">Descartar</string>
+    <string name="coins">Monedas</string>
+    <string name="tasks">Tareas</string>
+    <string name="reminders">Recordatorios</string>
+    <string name="sell">Vender</string>
+    <string name="buy">Comprar</string>
+    <string name="rate">Evaluar</string>
+
+    <string name="rules_text">
+        \u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Información general\n\n\u00A0\u00A0\u00A0Puede registrar
+        su Equipo como administrador y crear un número ilimitado de miembros del equipo, o recibir
+        un Nick y una contraseña del Administrador y acceder a la aplicación como usuario (el
+        administrador también tiene todas las capacidades de un usuario). El usuario puede:\n1) Crear
+        nuevas tareas para sí mismo, especificando el tiempo de la tarea (con recordatorios push o
+        sin ellos, hasta 3 por tarea)\n2) Crear nuevas tareas para otros usuarios del Equipo (también
+        se pueden establecer hasta 3 recordatorios).\n3) Mantener una lista de compras
+        planificadas.\nEl administrador y los primeros 2 usuarios registrados sin un estatus premium
+        pueden crear hasta %d nuevas tareas cada día y utilizar hasta %d recordatorios. Para otros
+        usuarios, las tareas y los recordatorios disponibles no se renuevan automáticamente cada día
+        (deben comprar Monedas o tener estatus Premium). Mantener una lista de compras no tiene
+        límite de cantidad y no requiere Monedas.\nSi es necesario, cualquier usuario puede comprar
+        Monedas (Team Coins o TC) y cambiarlas por tareas adicionales y recordatorios.\nCon las
+        Monedas también se puede comprar estatus Premium, ya sea limitado en el tiempo o no. En este
+        caso, el usuario puede crear hasta %d nuevas tareas y hasta %d nuevos recordatorios cada
+        día.\n\n\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Registro de nuevo equipo\n\n\u00A0\u00A0\u00A0Para
+        registrar un nuevo equipo, haga clic en el botón \"Reg. equipo\".\nLuego, elija
+        registrarse a través de e-mail o teléfono y complete todos los datos necesarios. Luego,
+        confirme su e-mail (se enviará un mensaje al correo) o teléfono (se enviará un código por
+        SMS). Después de la confirmación, estará registrado con derechos de administrador, lo que
+        le permitirá crear o eliminar nuevos usuarios. Después de crear un nuevo usuario, comuníquele
+        su Nick y contraseña, así como sus datos (e-mail o número de teléfono) para ingresar a su
+        cuenta.\n\n\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Ingreso (login) en su cuenta
+        personal\n\n\u00A0\u00A0\u00A0Para ingresar, haga clic en el botón \"Entrar\", luego ingrese
+        el e-mail o teléfono (con el código de país, pero sin el signo \"+\") del administrador en la
+        línea superior. Luego ingrese su Nick y contraseña, y haga clic en el botón \"Entrar\".
+    </string>
+    <string name="about_text">
+        Nombre de la aplicación:\n\"Equipo familiar\"\n\nAutor de la aplicación:\nAliaksandr
+        Babrouski\n\nVersión de la aplicación: %s\n\ne-mail: balexvicx@gmail.com\n\n\u00A0\u00A0\u00A0La
+        aplicación está destinada para su uso en familia u otros grupos de personas conectadas en la
+        vida diaria y que tienen asuntos comunes (por ejemplo, alquiler conjunto de vivienda o
+        trabajo en el mismo equipo).\n\u00A0\u00A0\u00A0La aplicación permite a los usuarios crear
+        o eliminar tareas en línea para realizar (para ellos mismos o para otros miembros del grupo),
+        así como una lista de compras.
+    </string>
+
 </resources>

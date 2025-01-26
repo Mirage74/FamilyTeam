@@ -17,12 +17,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.balex.common.LocalLocalizedContext
+import com.balex.common.data.repository.TaskMode
 import com.balex.common.extensions.allMyTasks
 import com.balex.logged_user.LoggedUserComponent
 import com.balex.logged_user.LoggedUserStore
 import com.balex.logged_user.R
 import com.balex.logged_user.content.subcontent.GreetingRow
 import com.balex.logged_user.content.subcontent.ShowTasksList
+import com.balex.logged_user.content.subcontent.inputtask.InputOrEditTaskForm
 import com.balex.logged_user.content.subcontent.inputtask.convertMillisToDate
 import com.balex.logged_user.content.subcontent.recourses.ShowAvailableResources
 
@@ -53,7 +55,7 @@ fun TodoListContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Premium till: $expiresDate"
+                        text = "${context.getString(R.string.premium_till)}: $expiresDate"
                     )
                 }
             }
@@ -68,7 +70,8 @@ fun TodoListContent(
                     .padding(horizontal = 64.dp)
                     .weight(1f)
             ) {
-                Text("Buy Coins")
+                val text = context.getString(R.string.buy_coins_button_text)
+                Text(text)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -97,6 +100,13 @@ fun TodoListContent(
                     .weight(4f)
                     .padding(paddingValues)
             )
+        } else {
+            if (state.isAddTaskClicked) {
+                InputOrEditTaskForm(component, state, true, TaskMode.ADD, deviceToken,  context)
+            } else {
+                InputOrEditTaskForm(component, state, true, TaskMode.EDIT, deviceToken, context)
+            }
+
         }
     }
 }

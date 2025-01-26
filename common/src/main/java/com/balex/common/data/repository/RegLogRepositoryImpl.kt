@@ -27,7 +27,6 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
@@ -36,7 +35,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -50,11 +48,14 @@ class RegLogRepositoryImpl @Inject constructor(
 
 ) : RegLogRepository {
 
+
     private val appContext: Context = context.applicationContext
 
     private val listenerRegistrations = mutableListOf<ListenerRegistration>()
 
     private var admin = Admin()
+
+    private var token = NO_NEW_TOKEN
 
     private var globalRepoUser = User()
         set(value) {
@@ -106,56 +107,6 @@ class RegLogRepositoryImpl @Inject constructor(
     private val scheduleCollection = db.collection(FIREBASE_SCHEDULERS_COLLECTION)
     private val scheduleDeleteCollection = db.collection(FIREBASE_SCHEDULERS_DELETE_COLLECTION)
 
-//    override fun observeUser(): StateFlow<User> {
-//        val job = Job()
-//        return flow {
-//            try {
-//
-//            val userFakeEmailFromStorage = Storage.getUser(context)
-//            val phoneLanguageFromStorage = Storage.getLanguage(context)
-//
-//            val phoneLang =
-//                if (phoneLanguageFromStorage != Storage.NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES) {
-//                    language = phoneLanguageFromStorage
-//                    isCurrentLanguageNeedRefreshFlow.emit(Unit)
-//                    phoneLanguageFromStorage
-//                } else {
-//                    language = getCurrentLanguage(context)
-//                    language
-//                }
-//
-//            if (userFakeEmailFromStorage == Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
-//                val emptyUserNotSaved =
-//                    User(
-//                        nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES,
-//                        language = phoneLang
-//                    )
-//                globalRepoUser = emptyUserNotSaved
-//                //isCurrentUserNeedRefreshFlow.emit(Unit)
-//
-//            } else {
-//                signToFirebaseWithEmailAndPasswordFromPreferences(
-//                    userFakeEmailFromStorage,
-//                    Storage.getUsersPassword(context),
-//                    phoneLang
-//                )
-//            }
-//            emit(globalRepoUser)
-//            addUserListenerInFirebase()
-//            isCurrentUserNeedRefreshFlow.collect {
-//                emit(globalRepoUser)
-//            }
-//            } finally {
-//                job.cancel()
-//            }
-//        }
-//            .takeWhile { job.isActive}
-//            .stateIn(
-//                scope = coroutineScope,
-//                started = SharingStarted.Lazily,
-//                initialValue = globalRepoUser
-//            )
-//    }
 
     override fun observeUser(): StateFlow<User> {
         return flow {
@@ -163,14 +114,15 @@ class RegLogRepositoryImpl @Inject constructor(
                 val userFakeEmailFromStorage = Storage.getUser(context)
                 val phoneLanguageFromStorage = Storage.getLanguage(context)
 
-                val phoneLang = if (phoneLanguageFromStorage != Storage.NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES) {
-                    language = phoneLanguageFromStorage
-                    isCurrentLanguageNeedRefreshFlow.emit(Unit)
-                    phoneLanguageFromStorage
-                } else {
-                    language = getCurrentLanguage(context)
-                    language
-                }
+                val phoneLang =
+                    if (phoneLanguageFromStorage != Storage.NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES) {
+                        language = phoneLanguageFromStorage
+                        isCurrentLanguageNeedRefreshFlow.emit(Unit)
+                        phoneLanguageFromStorage
+                    } else {
+                        language = getCurrentLanguage(context)
+                        language
+                    }
 
                 if (userFakeEmailFromStorage == Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
                     val emptyUserNotSaved = User(
@@ -228,8 +180,11 @@ class RegLogRepositoryImpl @Inject constructor(
                 }
                 snapshot?.let {
                     val userListener = it.toObject(User::class.java)
-                    if (userListener != null && userListener.nickName == globalRepoUser.nickName) {
+                    if (userListener != null && userListener.nickName == globalRepoUser.nickName && globalRepoUser != userListener) {
                         globalRepoUser = userListener
+//                        coroutineScope.launch {
+//                            isCurrentUserNeedRefreshFlow.emit(Unit)
+//                        }
                     }
                 }
             }
@@ -238,9 +193,8 @@ class RegLogRepositoryImpl @Inject constructor(
     }
 
 
-
     override fun observeLanguage(): StateFlow<String> {
-        val job = Job()
+        //val job = Job()
         return flow {
             try {
                 val phoneLanguageFromStorage = Storage.getLanguage(context)
@@ -257,11 +211,14 @@ class RegLogRepositoryImpl @Inject constructor(
                 isCurrentLanguageNeedRefreshFlow.collect {
                     emit(language)
                 }
-            } finally {
-                job.cancel()
+            } catch (e: Exception) {
+                Log.e("observeLanguage", "Error: ${e.message}", e)
             }
+//            } finally {
+//                job.cancel()
+//            }
         }
-            .takeWhile { job.isActive }
+            //.takeWhile { job.isActive }
             .stateIn(
                 scope = coroutineScope,
                 started = SharingStarted.Lazily,
@@ -300,6 +257,14 @@ class RegLogRepositoryImpl @Inject constructor(
 
     override fun getRepoUser(): User {
         return globalRepoUser
+    }
+
+    override fun setNewToken(newToken: String) {
+        token = newToken
+    }
+
+    override fun getToken(): String {
+        return token
     }
 
     override fun getRepoAdmin(): Admin {
@@ -455,7 +420,7 @@ class RegLogRepositoryImpl @Inject constructor(
     }
 
     override suspend fun refreshFCMLastTimeUpdated() {
-        deleteOldTasks()
+        //deleteOldTasks()
         val currentTimestamp = System.currentTimeMillis()
         var isPremiumAccount = globalRepoUser.hasPremiumAccount
 
@@ -1190,48 +1155,52 @@ class RegLogRepositoryImpl @Inject constructor(
     }
 
 
-    private suspend fun deleteOldTasks() {
-        val currentTimestamp = System.currentTimeMillis()
-        deleteOldRemindersFromSchedule(currentTimestamp)
-        deleteOldRemindersFromScheduleToDelete(currentTimestamp)
-        deleteOldDocumentsFromRemindersQueueCollection(currentTimestamp)
+    override suspend fun deleteOldTasks() {
+        if (globalRepoUser.nickName != User.DEFAULT_NICK_NAME &&
+            globalRepoUser.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
+        ) {
+            val currentTimestamp = System.currentTimeMillis()
+            deleteOldRemindersFromSchedule(currentTimestamp)
+            deleteOldRemindersFromScheduleToDelete(currentTimestamp)
+            deleteOldDocumentsFromRemindersQueueCollection(currentTimestamp)
 
-        val userForModify = globalRepoUser
-        val taskMaxExpireTimeInMillis =
-            context.resources.getInteger(R.integer.max_expired_task_save_in_days) * MILLIS_IN_DAY
-        val privateTasks = userForModify.listToDo.thingsToDoPrivate.privateTasks.filter { task ->
-            task.cutoffTime - currentTimestamp > taskMaxExpireTimeInMillis
-        }
-        val sharedTasks =
-            userForModify.listToDo.thingsToDoShared.externalTasks.filter { externalTask ->
-                externalTask.task.cutoffTime - currentTimestamp > taskMaxExpireTimeInMillis
+            val userForModify = globalRepoUser
+            val taskMaxExpireTimeInMillis =
+                context.resources.getInteger(R.integer.max_expired_task_save_in_days) * MILLIS_IN_DAY
+            val privateTasks =
+                userForModify.listToDo.thingsToDoPrivate.privateTasks.filter { task ->
+                    task.cutoffTime - currentTimestamp > taskMaxExpireTimeInMillis
+                }
+            val sharedTasks =
+                userForModify.listToDo.thingsToDoShared.externalTasks.filter { externalTask ->
+                    externalTask.task.cutoffTime - currentTimestamp > taskMaxExpireTimeInMillis
+                }
+            val tasksForOtherUsers =
+                userForModify.listToDo.thingsToDoForOtherUsers.externalTasks.filter { externalTask ->
+                    externalTask.task.cutoffTime - currentTimestamp > taskMaxExpireTimeInMillis
+                }
+
+            val toDoOld = userForModify.listToDo
+            val updatedTodoList = toDoOld.copy(
+                thingsToDoPrivate = PrivateTasks(privateTasks = privateTasks),
+                thingsToDoShared = ExternalTasks(externalTasks = sharedTasks),
+                thingsToDoForOtherUsers = ExternalTasks(externalTasks = tasksForOtherUsers)
+            )
+
+            val userForUpdate = userForModify.copy(
+                listToDo = updatedTodoList
+            )
+            val userCollection =
+                usersCollection.document(userForModify.adminEmailOrPhone)
+                    .collection(userForModify.nickName.lowercase())
+                    .document(userForModify.nickName.lowercase())
+
+            try {
+                userCollection.set(userForUpdate).await()
+            } catch (e: Exception) {
+                Log.d("deleteOldTasks error", e.toString())
             }
-        val tasksForOtherUsers =
-            userForModify.listToDo.thingsToDoForOtherUsers.externalTasks.filter { externalTask ->
-                externalTask.task.cutoffTime - currentTimestamp > taskMaxExpireTimeInMillis
-            }
-
-        val toDoOld = userForModify.listToDo
-        val updatedTodoList = toDoOld.copy(
-            thingsToDoPrivate = PrivateTasks(privateTasks = privateTasks),
-            thingsToDoShared = ExternalTasks(externalTasks = sharedTasks),
-            thingsToDoForOtherUsers = ExternalTasks(externalTasks = tasksForOtherUsers)
-        )
-
-        val userForUpdate = userForModify.copy(
-            listToDo = updatedTodoList
-        )
-        val userCollection =
-            usersCollection.document(userForModify.adminEmailOrPhone)
-                .collection(userForModify.nickName.lowercase())
-                .document(userForModify.nickName.lowercase())
-
-        try {
-            userCollection.set(userForUpdate).await()
-        } catch (e: Exception) {
-            Log.d("deleteOldTasks error", e.toString())
         }
-
 
     }
 
@@ -1243,6 +1212,7 @@ class RegLogRepositoryImpl @Inject constructor(
         const val FIREBASE_USERS_COLLECTION = "users"
         const val FIREBASE_REMINDERS_COLLECTION = "reminders-in-queue"
 
+        const val NO_NEW_TOKEN = "No new token"
 
         const val FIREBASE_ADMINS_AND_USERS_COLLECTION = "adminsAndUsers"
 

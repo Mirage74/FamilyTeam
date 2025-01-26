@@ -14,11 +14,11 @@ import com.balex.common.data.repository.TaskMode
 import com.balex.common.data.repository.UserRepositoryImpl
 import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.Task
+import com.balex.common.domain.usecases.regLog.DeleteOldTasksUseCase
 import com.balex.common.domain.usecases.regLog.GetLanguageUseCase
 import com.balex.common.domain.usecases.regLog.LogoutUserUseCase
 import com.balex.common.domain.usecases.regLog.RefreshFCMLastTimeUpdatedUseCase
 import com.balex.common.domain.usecases.regLog.StorageClearPreferencesUseCase
-import com.balex.common.domain.usecases.user.EmitUsersNicknamesListNeedRefreshUseCase
 import com.balex.common.extensions.componentScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -34,12 +34,12 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     private val storeFactory: LoggedUserStoreFactory,
     private val getLanguageUseCase: GetLanguageUseCase,
     private val logoutUserUseCase: LogoutUserUseCase,
+    private val deleteOldTasksUseCase: DeleteOldTasksUseCase,
     private val storageClearPreferencesUseCase: StorageClearPreferencesUseCase,
     private val refreshFCMLastTimeUpdatedUseCase: RefreshFCMLastTimeUpdatedUseCase,
-    private val emitUsersNicknamesListNeedRefreshUseCase: EmitUsersNicknamesListNeedRefreshUseCase,
     @Assisted("sessionId") private val sessionId: String,
+    @Assisted("onRules") private val onRules: () -> Unit,
     @Assisted("onAbout") private val onAbout: () -> Unit,
-    @Assisted("onBackClicked") private val onBackClicked: () -> Unit,
     @Assisted("onLogout") private val onLogout: () -> Unit,
     @Assisted("componentContext") componentContext: ComponentContext
 ) : LoggedUserComponent, ComponentContext by componentContext {
@@ -51,10 +51,12 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     init {
         scope.launch {
             refreshFCMLastTimeUpdatedUseCase()
+            deleteOldTasksUseCase()
         }
 
         lifecycle.doOnResume {
-            onRefreshLanguage()
+            //onRefreshLanguage()
+            store.startBootstrapperCollectFlow()
             startCollectingLabels()
         }
         lifecycle.doOnPause {
@@ -74,6 +76,11 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         scope.launch {
             store.labels.collect {
                 when (it) {
+
+                    LoggedUserStore.Label.ClickedRules -> {
+                        onRules()
+                    }
+
                     LoggedUserStore.Label.ClickedAbout -> {
                         onAbout()
                     }
@@ -101,9 +108,6 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         store.accept(LoggedUserStore.Intent.BackFromNewTaskFormClicked)
     }
 
-    override fun onBackClickedHandle() {
-        onBackClicked()
-    }
 
     override fun onBackFromExchangeOrBuyCoinClicked() {
         store.accept(LoggedUserStore.Intent.BackFromExchangeOrBuyCoinClicked)
@@ -225,6 +229,10 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         store.accept(LoggedUserStore.Intent.ClickedChangePasswordVisibility)
     }
 
+    override fun onClickRules() {
+        store.accept(LoggedUserStore.Intent.ClickedRules)
+    }
+
     override fun onClickAbout() {
         store.accept(LoggedUserStore.Intent.ClickedAbout)
     }
@@ -248,7 +256,7 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
 
         fun create(
             @Assisted("sessionId") sessionId: String,
-            @Assisted("onBackClicked") onBackClicked: () -> Unit,
+            @Assisted("onRules") onRules: () -> Unit,
             @Assisted("onAbout") onAbout: () -> Unit,
             @Assisted("onLogout") onLogout: () -> Unit,
             @Assisted("componentContext") componentContext: ComponentContext
