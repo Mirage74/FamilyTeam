@@ -1,6 +1,7 @@
 package com.balex.logged_user
 
 import android.app.Activity
+import android.util.Log
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.arkivanov.essenty.lifecycle.doOnPause
@@ -23,11 +24,13 @@ import com.balex.common.extensions.componentScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class DefaultLoggedUserComponent @AssistedInject constructor(
@@ -238,10 +241,16 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     }
 
     override suspend fun onClickLogout() {
-        storageClearPreferencesUseCase()
+        Log.d("LogoutInfo", "1 Clearing preferences")
+        withContext(Dispatchers.IO) {
+            storageClearPreferencesUseCase()
+        }
+        Log.d("LogoutInfo", "2 Preferences cleared, logging out")
         logoutUserUseCase()
+        Log.d("LogoutInfo", "3 Logout complete, navigating")
         onLogout()
     }
+
 
     override fun onRefreshLanguage() {
         store.accept(LoggedUserStore.Intent.RefreshLanguage)

@@ -17,12 +17,14 @@ import com.balex.common.domain.entity.User
 import com.balex.common.domain.repository.RegLogRepository
 import com.balex.common.extensions.formatStringFirstLetterUppercase
 import com.balex.common.extensions.formatStringPhoneDelLeadNullAndAddPlus
+import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
@@ -301,11 +303,13 @@ class RegLogRepositoryImpl @Inject constructor(
 
         if (collectionName == FIREBASE_ADMINS_COLLECTION || collectionName == FIREBASE_ADMINS_AND_USERS_COLLECTION) {
             try {
-                val document = adminsCollection.document(emailOrPhoneNumber.trim())
-                val documentSnapshot = document.get().await()
+                withContext(Dispatchers.IO) {
+                    val document = adminsCollection.document(emailOrPhoneNumber.trim())
+                    val documentSnapshot = document.get().await()
 
-                if (documentSnapshot.exists()) {
-                    document.delete().await()
+                    if (documentSnapshot.exists()) {
+                        document.delete().await()
+                    }
                 }
             } catch (e: Exception) {
                 Log.d("removeRecordFromCollection, adminsCollection ", "Error: ${e.message}")
@@ -315,8 +319,9 @@ class RegLogRepositoryImpl @Inject constructor(
         if (collectionName == FIREBASE_USERS_COLLECTION || collectionName == FIREBASE_ADMINS_AND_USERS_COLLECTION) {
             try {
                 val document = usersCollection.document(emailOrPhoneNumber.trim())
-
-                document.delete().await()
+                withContext(Dispatchers.IO) {
+                    document.delete().await()
+                }
             } catch (e: Exception) {
                 Log.d("removeRecordFromCollection, usersCollection", "Error: ${e.message}")
             }
@@ -331,7 +336,9 @@ class RegLogRepositoryImpl @Inject constructor(
         )
         return try {
             val adminDocument = adminsCollection.document(adminWithList.emailOrPhoneNumber)
-            adminDocument.set(adminWithList).await()
+            withContext(Dispatchers.IO) {
+                adminDocument.set(adminWithList).await()
+            }
             Result.success(Unit)
         } catch (e: Exception) {
             setUserWithError(ERROR_ADD_ADMIN_TO_FIREBASE)
@@ -370,7 +377,9 @@ class RegLogRepositoryImpl @Inject constructor(
                 usersCollection.document(newUser.adminEmailOrPhone)
                     .collection(newUser.nickName.lowercase())
                     .document(newUser.nickName.lowercase())
-            userCollection.set(newUser).await()
+            withContext(Dispatchers.IO) {
+                userCollection.set(newUser).await()
+            }
             Storage.saveUser(
                 context,
                 createFakeUserEmail(newUser.nickName, newUser.adminEmailOrPhone)
@@ -474,7 +483,9 @@ class RegLogRepositoryImpl @Inject constructor(
             )
 
             try {
-                userCollection.set(userForUpdate).await()
+                withContext(Dispatchers.IO) {
+                    userCollection.set(userForUpdate).await()
+                }
 
             } catch (e: Exception) {
                 Log.d("refreshFCMLastTimeUpdated error", e.toString())
@@ -510,15 +521,17 @@ class RegLogRepositoryImpl @Inject constructor(
                         if (FirebaseAuth.getInstance().currentUser != null) {
                             FirebaseAuth.getInstance().signOut()
                         }
+                        withContext(Dispatchers.IO) {
+                            val authRes =
+                                auth.signInWithEmailAndPassword(fakeEmail, password).await()
 
-                        val authRes =
-                            auth.signInWithEmailAndPassword(fakeEmail, password).await()
-                        val firebaseAuthUser = authRes.user
-                        if (firebaseAuthUser != null) {
-                            globalRepoUser = userFromCollection
-                            //isCurrentUserNeedRefreshFlow.emit(Unit)
-                        } else {
-                            setUserWithError("signToFirebaseWithEmailAndPasswordFromPreferences: ERROR AUTH USER: $fakeEmail")
+                            val firebaseAuthUser = authRes.user
+                            if (firebaseAuthUser != null) {
+                                globalRepoUser = userFromCollection
+                                //isCurrentUserNeedRefreshFlow.emit(Unit)
+                            } else {
+                                setUserWithError("signToFirebaseWithEmailAndPasswordFromPreferences: ERROR AUTH USER: $fakeEmail")
+                            }
                         }
                     } else {
                         globalRepoUser = userFromCollection.copy(password = User.WRONG_PASSWORD)
@@ -578,9 +591,11 @@ class RegLogRepositoryImpl @Inject constructor(
             if (FirebaseAuth.getInstance().currentUser != null) {
                 FirebaseAuth.getInstance().signOut()
             }
-
-            val authRes = auth.signInWithEmailAndPassword(adminEmail, adminPassword).await()
-            val firebaseAuthUser = authRes.user
+            val firebaseAuthUser: FirebaseUser?
+            withContext(Dispatchers.IO) {
+                val authRes = auth.signInWithEmailAndPassword(adminEmail, adminPassword).await()
+                firebaseAuthUser = authRes.user
+            }
 
             if (firebaseAuthUser != null) {
                 val adminFromCollection = findAdminInCollectionByDocumentName(adminEmail)
@@ -687,13 +702,15 @@ class RegLogRepositoryImpl @Inject constructor(
                     adminEmailOrPhone = extractUserInfoFromFakeEmail(userToSignIn.fakeEmail).adminEmailOrPhone
                 )
 
-                val authRes =
-                    auth.signInWithEmailAndPassword(
-                        userToSignIn.fakeEmail,
-                        userToSignIn.password
-                    )
-                        .await()
-                val firebaseUser = authRes.user
+                val firebaseUser: FirebaseUser?
+                withContext(Dispatchers.IO) {
+                    val authRes =
+                        auth.signInWithEmailAndPassword(
+                            userToSignIn.fakeEmail,
+                            userToSignIn.password
+                        ).await()
+                    firebaseUser = authRes.user
+                }
                 if (firebaseUser != null) {
                     val userFromCollection = findUserInCollection(userToSignIn)
 
@@ -771,8 +788,11 @@ class RegLogRepositoryImpl @Inject constructor(
             }
 
             try {
-                val authResult = withContext(Dispatchers.IO) {
-                    auth.createUserWithEmailAndPassword(email, password).await()
+                val authResult: AuthResult
+                withContext(Dispatchers.IO) {
+                    authResult = withContext(Dispatchers.IO) {
+                        auth.createUserWithEmailAndPassword(email, password).await()
+                    }
                 }
 
                 val authUser = authResult.user
@@ -805,12 +825,16 @@ class RegLogRepositoryImpl @Inject constructor(
         displayName: String,
         password: String
     ) {
-        authUser.sendEmailVerification().await()
+        withContext(Dispatchers.IO) {
+            authUser.sendEmailVerification().await()
+        }
 
         withTimeoutOrNull(TIMEOUT_VERIFICATION_MAIL) {
             while (!authUser.isEmailVerified) {
                 delay(TIMEOUT_VERIFICATION_CHECK)
-                authUser.reload().await()
+                withContext(Dispatchers.IO) {
+                    authUser.reload().await()
+                }
                 if (authUser.isEmailVerified) {
                     regUserWithFakeEmailToAuthAndToUsersCollection(
                         email,
@@ -841,7 +865,9 @@ class RegLogRepositoryImpl @Inject constructor(
         }
 
         try {
-            auth.createUserWithEmailAndPassword(fakeEmail, password).await()
+            withContext(Dispatchers.IO) {
+                auth.createUserWithEmailAndPassword(fakeEmail, password).await()
+            }
 
             addAdminAndUserToFirebase(
                 registrationOption,
@@ -918,14 +944,17 @@ class RegLogRepositoryImpl @Inject constructor(
 
     private suspend fun findUserInCollection(userToFind: User): User? {
         return try {
-            val document =
-                usersCollection.document(userToFind.adminEmailOrPhone)
-                    .collection(userToFind.nickName.lowercase())
-                    .document(userToFind.nickName.lowercase())
-                    .get()
-                    .await()
+            val userData: User?
+            withContext(Dispatchers.IO) {
+                val document =
+                    usersCollection.document(userToFind.adminEmailOrPhone)
+                        .collection(userToFind.nickName.lowercase())
+                        .document(userToFind.nickName.lowercase())
+                        .get()
+                        .await()
 
-            val userData = document?.toObject(User::class.java)
+                userData = document?.toObject(User::class.java)
+            }
 
             return userData
 
@@ -940,11 +969,14 @@ class RegLogRepositoryImpl @Inject constructor(
     override suspend fun findAdminInCollectionByDocumentName(documentName: String): Admin? {
         val updatedDocumentName = documentName.formatStringPhoneDelLeadNullAndAddPlus()
         return try {
-            val document = adminsCollection.document(updatedDocumentName)
-                .get()
-                .await()
+            val adminData: Admin?
+            withContext(Dispatchers.IO) {
+                val document = adminsCollection.document(updatedDocumentName)
+                    .get()
+                    .await()
 
-            val adminData = document?.toObject(Admin::class.java)
+                adminData = document?.toObject(Admin::class.java)
+            }
             return adminData
 
         } catch (e: Exception) {
@@ -1100,15 +1132,20 @@ class RegLogRepositoryImpl @Inject constructor(
     private suspend fun deleteOldRemindersFromSchedule(currentTimestamp: Long) {
         //Log.d("currentTimestamp", "currentTimestamp: ${currentTimestamp}")
         try {
-            val querySnapshot = scheduleCollection
-                .whereLessThan("alarmTime", currentTimestamp)
-                .get()
-                .await()
+            val querySnapshot: QuerySnapshot
+            withContext(Dispatchers.IO) {
+                querySnapshot = scheduleCollection
+                    .whereLessThan("alarmTime", currentTimestamp)
+                    .get()
+                    .await()
+            }
 
             //Log.d("currentTimestamp", "querySnapshot size: ${querySnapshot.size()}")
             for (document in querySnapshot.documents) {
                 currentCoroutineContext().ensureActive()
-                scheduleCollection.document(document.id).delete().await()
+                withContext(Dispatchers.IO) {
+                    scheduleCollection.document(document.id).delete().await()
+                }
             }
         } catch (e: CancellationException) {
             println("Coroutine was cancelled: ${e.message}")
@@ -1119,14 +1156,19 @@ class RegLogRepositoryImpl @Inject constructor(
 
     private suspend fun deleteOldRemindersFromScheduleToDelete(currentTimestamp: Long) {
         try {
-            val querySnapshot = scheduleDeleteCollection
-                .whereLessThan("id", currentTimestamp)
-                .get()
-                .await()
+            val querySnapshot: QuerySnapshot
+            withContext(Dispatchers.IO) {
+                querySnapshot = scheduleDeleteCollection
+                    .whereLessThan("id", currentTimestamp)
+                    .get()
+                    .await()
+            }
 
             for (document in querySnapshot.documents) {
                 currentCoroutineContext().ensureActive()
-                scheduleCollection.document(document.id).delete().await()
+                withContext(Dispatchers.IO) {
+                    scheduleCollection.document(document.id).delete().await()
+                }
             }
         } catch (e: CancellationException) {
             println("Coroutine was cancelled: ${e.message}")
@@ -1138,14 +1180,19 @@ class RegLogRepositoryImpl @Inject constructor(
     private suspend fun deleteOldDocumentsFromRemindersQueueCollection(currentTimestamp: Long) {
         try {
             //Log.d("currentTimestamp", "currentTimestamp: $currentTimestamp")
-            val querySnapshot = remindersCollection
-                .whereLessThan("alarmTime", currentTimestamp)
-                .get()
-                .await()
+            val querySnapshot: QuerySnapshot
+            withContext(Dispatchers.IO) {
+                querySnapshot = remindersCollection
+                    .whereLessThan("alarmTime", currentTimestamp)
+                    .get()
+                    .await()
+            }
 
             for (document in querySnapshot.documents) {
                 currentCoroutineContext().ensureActive()
-                scheduleCollection.document(document.id).delete().await()
+                withContext(Dispatchers.IO) {
+                    scheduleCollection.document(document.id).delete().await()
+                }
             }
         } catch (e: CancellationException) {
             println("Coroutine was cancelled: ${e.message}")
@@ -1156,15 +1203,20 @@ class RegLogRepositoryImpl @Inject constructor(
 
 
     override suspend fun deleteOldTasks() {
-        if (globalRepoUser.nickName != User.DEFAULT_NICK_NAME &&
-            globalRepoUser.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
+        val userForModify = globalRepoUser.copy()
+        Log.d("deleteOldTasks", "globalRepoUser.nickName before: ${globalRepoUser.nickName}")
+        if (userForModify.nickName != User.DEFAULT_NICK_NAME &&
+            userForModify.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
         ) {
+            Log.d("deleteOldTasks", "globalRepoUser.nickName after: ${globalRepoUser.nickName}")
             val currentTimestamp = System.currentTimeMillis()
-            deleteOldRemindersFromSchedule(currentTimestamp)
-            deleteOldRemindersFromScheduleToDelete(currentTimestamp)
-            deleteOldDocumentsFromRemindersQueueCollection(currentTimestamp)
+            withContext(Dispatchers.IO) {
+                deleteOldRemindersFromSchedule(currentTimestamp)
+                deleteOldRemindersFromScheduleToDelete(currentTimestamp)
+                deleteOldDocumentsFromRemindersQueueCollection(currentTimestamp)
+            }
 
-            val userForModify = globalRepoUser
+
             val taskMaxExpireTimeInMillis =
                 context.resources.getInteger(R.integer.max_expired_task_save_in_days) * MILLIS_IN_DAY
             val privateTasks =
@@ -1190,13 +1242,17 @@ class RegLogRepositoryImpl @Inject constructor(
             val userForUpdate = userForModify.copy(
                 listToDo = updatedTodoList
             )
+
+            Log.d("deleteOldTasks", "userForModify $userForModify")
             val userCollection =
                 usersCollection.document(userForModify.adminEmailOrPhone)
                     .collection(userForModify.nickName.lowercase())
                     .document(userForModify.nickName.lowercase())
 
             try {
-                userCollection.set(userForUpdate).await()
+                withContext(Dispatchers.IO) {
+                    userCollection.set(userForUpdate).await()
+                }
             } catch (e: Exception) {
                 Log.d("deleteOldTasks error", e.toString())
             }

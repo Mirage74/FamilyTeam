@@ -18,7 +18,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 
@@ -69,19 +71,25 @@ class AdminRepositoryImpl @Inject constructor(
 
 
             try {
-
-
-                val documentAdminSnapshot = adminCollection.get().await()
-                val adminData = documentAdminSnapshot?.toObject(Admin::class.java)
+                val adminData: Admin?
+                withContext(Dispatchers.IO) {
+                    val documentAdminSnapshot = adminCollection.get().await()
+                    adminData = documentAdminSnapshot?.toObject(Admin::class.java)
+                }
                 if (adminData != null) {
                     val newUsersNickNamesList = adminData.usersNickNamesList
                         .toMutableList()
                         .apply { if (!contains(newUser.nickName)) add(newUser.nickName) }
                         .sortedBy { it }
                     val newUserWithId = newUser.copy(id = newUsersNickNamesList.size)
-                    auth.createUserWithEmailAndPassword(newUserWithId.fakeEmail, newUserWithId.password).await()
-                    userCollection.set(newUserWithId).await()
-                    adminCollection.update("usersNickNamesList", newUsersNickNamesList).await()
+                    withContext(Dispatchers.IO) {
+                        auth.createUserWithEmailAndPassword(
+                            newUserWithId.fakeEmail,
+                            newUserWithId.password
+                        ).await()
+                        userCollection.set(newUserWithId).await()
+                        adminCollection.update("usersNickNamesList", newUsersNickNamesList).await()
+                    }
                     emitUsersNicknamesListNeedRefreshUseCase()
                 }
             } catch (e: Exception) {
@@ -106,16 +114,21 @@ class AdminRepositoryImpl @Inject constructor(
 
 
             try {
-                userCollection.delete().await()
+                val adminData: Admin?
+                withContext(Dispatchers.IO) {
+                    userCollection.delete().await()
+                    val documentAdminSnapshot = adminCollection.get().await()
+                    adminData = documentAdminSnapshot?.toObject(Admin::class.java)
+                }
 
-                val documentAdminSnapshot = adminCollection.get().await()
-                val adminData = documentAdminSnapshot?.toObject(Admin::class.java)
                 if (adminData != null) {
                     val newUsersNickNamesList = adminData.usersNickNamesList
                         .filter { it != userName }
                         .sortedBy { it }
                         .toMutableList()
-                    adminCollection.update("usersNickNamesList", newUsersNickNamesList).await()
+                    withContext(Dispatchers.IO) {
+                        adminCollection.update("usersNickNamesList", newUsersNickNamesList).await()
+                    }
                     emitUsersNicknamesListNeedRefreshUseCase()
                 }
             } catch (e: Exception) {
@@ -127,7 +140,9 @@ class AdminRepositoryImpl @Inject constructor(
                 fakeEmail = createFakeUserEmailUseCase(userName, admin.emailOrPhoneNumber)
             )
             try {
-                deletedSubUsersCollection.add(deletedUser).await()
+                withContext(Dispatchers.IO) {
+                    deletedSubUsersCollection.add(deletedUser).await()
+                }
             } catch (e: Exception) {
                 Log.d("AdminRepositoryImpl", "deleteUser add to collection, Error: ${e.message}")
             }

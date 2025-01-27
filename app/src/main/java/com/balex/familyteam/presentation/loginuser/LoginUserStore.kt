@@ -393,7 +393,7 @@ class LoginUserStoreFactory @Inject constructor(
                     copy(
                         isNickNameEnabled = false,
                         loginUserState = State.LoginUserState.Content
-                        )
+                    )
                 }
 
                 is Msg.UpdateNickNameField -> {
