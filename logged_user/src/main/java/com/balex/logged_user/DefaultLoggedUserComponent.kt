@@ -247,7 +247,7 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         }
         Log.d("LogoutInfo", "2 Preferences cleared, logging out")
         logoutUserUseCase()
-        Log.d("LogoutInfo", "3 Logout complete, navigating")
+        Log.d("LogoutInfo", "3 Logout complete, navigating1")
         onLogout()
     }
 
