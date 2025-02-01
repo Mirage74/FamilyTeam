@@ -3,6 +3,7 @@ package com.balex.common.data.repository
 import android.content.Context
 import android.util.Log
 import com.balex.common.R
+import com.balex.common.data.datastore.Storage
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_ADMINS_COLLECTION
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_USERS_COLLECTION
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.NO_NEW_TOKEN
@@ -94,6 +95,9 @@ class UserRepositoryImpl @Inject constructor(
 
     private fun addUsersListListenerInFirebase() {
         val currentUser = getUserUseCase()
+        if (currentUser.adminEmailOrPhone != User.DEFAULT_FAKE_EMAIL && currentUser.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
+
+
         val adminCollection = adminsCollection.document(currentUser.adminEmailOrPhone)
 
         adminCollection.addSnapshotListener { snapshot, error ->
@@ -107,7 +111,7 @@ class UserRepositoryImpl @Inject constructor(
                 }
             }
         }
-
+        }
     }
 
 
@@ -204,6 +208,25 @@ class UserRepositoryImpl @Inject constructor(
                 }
             }
         }
+    }
+
+    private suspend fun getUserToken(userName: String): String {
+        var userToken = NO_TOKEN
+        val user = getUserUseCase()
+        withContext(Dispatchers.IO) {
+            val userCollection =
+                usersCollection.document(user.adminEmailOrPhone)
+                    .collection(userName.lowercase())
+                    .document(userName.lowercase())
+            val userSnapshot = userCollection.get().await()
+            if (userSnapshot.exists()) {
+                val tokenFromFirebase = userSnapshot.get("token").toString()
+                if (!tokenFromFirebase.isBlank()) {
+                    userToken = tokenFromFirebase
+                }
+            }
+        }
+        return userToken
     }
 
 
@@ -390,8 +413,7 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun addOrModifyExternalTaskToFirebase(
         externalTask: ExternalTask,
-        taskMode: TaskMode,
-        token: String
+        taskMode: TaskMode
     ) {
         val currentUser = getUserUseCase()
 
@@ -443,7 +465,11 @@ class UserRepositoryImpl @Inject constructor(
                     .document(externalTask.taskOwner.lowercase())
 
             if (taskMode == TaskMode.ADD) {
-                addRemindersToSchedule(externalTask.task, token)
+                val token = getUserToken(externalTask.taskOwner)
+                if (token != NO_TOKEN) {
+                    addRemindersToSchedule(externalTask.task, token)
+                }
+
             }
 
             try {
@@ -764,6 +790,8 @@ class UserRepositoryImpl @Inject constructor(
         const val DELAY_TRY_GET_USERS_LIST = 1000L
         const val MAX_TRY_GET_USERS_LIST = 10
         const val ERROR_GET_USERS_LIST_FROM_FIREBASE = "Error getting users list from firebase"
+
+        const val NO_TOKEN = "no token"
 
 
         const val MILLIS_IN_MONTH = 31 * 24 * 60 * 60 * 1000L

@@ -8,5 +8,5 @@ import javax.inject.Inject
 class AddExternalTaskToFirebaseUseCase @Inject constructor(
     private val repository: UserRepository
 ) {
-    suspend operator fun invoke(externalTask: ExternalTask, taskMode: TaskMode, token: String) = repository.addOrModifyExternalTaskToFirebase(externalTask, taskMode, token)
+    suspend operator fun invoke(externalTask: ExternalTask, taskMode: TaskMode) = repository.addOrModifyExternalTaskToFirebase(externalTask, taskMode)
 }

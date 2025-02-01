@@ -1,6 +1,6 @@
 [versions]
 
-agp = "8.7.3"
+agp = "8.8.0"
 billingVersion = "7.1.1"
 firebaseBom = "33.8.0"
 firebaseDatabase = "21.0.0"

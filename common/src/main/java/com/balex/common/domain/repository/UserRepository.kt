@@ -13,9 +13,16 @@ interface UserRepository {
 
     suspend fun addOrModifyPrivateTaskToFirebase(task: Task, taskMode: TaskMode, token: String)
 
-    suspend fun addOrModifyExternalTaskToFirebase(externalTask: ExternalTask, taskMode: TaskMode, token: String)
+    suspend fun addOrModifyExternalTaskToFirebase(
+        externalTask: ExternalTask,
+        taskMode: TaskMode
+    )
 
-    suspend fun deleteTaskFromFirebase(externalTask: ExternalTask, taskType: UserRepositoryImpl.Companion.TaskType, token: String)
+    suspend fun deleteTaskFromFirebase(
+        externalTask: ExternalTask,
+        taskType: UserRepositoryImpl.Companion.TaskType,
+        token: String
+    )
 
     suspend fun exchangeCoins(coins: Int, tasks: Int, reminders: Int)
 

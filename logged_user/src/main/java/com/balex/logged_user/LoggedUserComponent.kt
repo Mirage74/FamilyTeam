@@ -45,7 +45,7 @@ interface LoggedUserComponent {
 
     fun onClickedAddShopItemToDatabase(shopItem: ShopItemDBModel)
 
-    fun onClickAddNewTaskOrEditForOtherUserToFirebase(externalTask: ExternalTask, taskMode: TaskMode, token: String)
+    fun onClickAddNewTaskOrEditForOtherUserToFirebase(externalTask: ExternalTask, taskMode: TaskMode)
 
     fun onNavigateToBottomItem(page: PagesNames)
 

@@ -183,14 +183,12 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
 
     override fun onClickAddNewTaskOrEditForOtherUserToFirebase(
         externalTask: ExternalTask,
-        taskMode: TaskMode,
-        token: String
+        taskMode: TaskMode
     ) {
         store.accept(
             LoggedUserStore.Intent.ClickedAddExternalTaskOrEditToFirebase(
                 externalTask,
-                taskMode,
-                token
+                taskMode
             )
         )
     }
@@ -241,13 +239,8 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     }
 
     override suspend fun onClickLogout() {
-        Log.d("LogoutInfo", "1 Clearing preferences")
-        withContext(Dispatchers.IO) {
-            storageClearPreferencesUseCase()
-        }
-        Log.d("LogoutInfo", "2 Preferences cleared, logging out")
         logoutUserUseCase()
-        Log.d("LogoutInfo", "3 Logout complete, navigating")
+        storageClearPreferencesUseCase()
         onLogout()
     }
 

@@ -2,6 +2,7 @@ package com.balex.common.data.datastore
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 
@@ -47,6 +48,7 @@ object Storage {
 //            USER_KEY,
 //            NO_USER_SAVED_IN_SHARED_PREFERENCES
 //        ).toString().trim()
+        Log.d("getUser", "user: $user")
         return user.toString()
     }
 
@@ -83,6 +85,7 @@ object Storage {
     }
 
     fun clearPreferences(context: Context) {
+        Log.d("getUser", "clearPreferences called")
         getEncryptedSharedPreferences(context).edit().apply {
             putString(USER_KEY, NO_USER_SAVED_IN_SHARED_PREFERENCES)
             putString(USER_PASSWORD_KEY, NO_USER_PASSWORD_SAVED_IN_SHARED_PREFERENCES)

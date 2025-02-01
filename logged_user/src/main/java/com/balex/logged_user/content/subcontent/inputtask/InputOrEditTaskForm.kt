@@ -309,8 +309,7 @@ fun InputOrEditTaskForm(
                             )
                             component.onClickAddNewTaskOrEditForOtherUserToFirebase(
                                 externalTask.copy(),
-                                taskMode,
-                                deviceToken
+                                taskMode
                             )
                         }
                     }

@@ -41,6 +41,8 @@ data class User(
     @Exclude
     val existErrorInData: Boolean = false,
     @Exclude
+    val pressedLogoutButton: Boolean = false,
+    @Exclude
     val errorMessage: String = NO_ERROR_MESSAGE
 ) {
 
