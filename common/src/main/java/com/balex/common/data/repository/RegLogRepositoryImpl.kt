@@ -61,8 +61,16 @@ class RegLogRepositoryImpl @Inject constructor(
 
     private var globalRepoUser = User()
         set(value) {
-            field = value
-            Log.d("getUser", "globalRepoUser new value: $value")
+            val newValue = if (field.token.isBlank()) {
+                value
+            } else {
+                value.copy(token = field.token)
+            }
+            field = newValue
+            Log.d("Firestore token", "globalRepoUser new value token: ${value.token}")
+            if (value.token.isBlank() && field.token.isNotBlank()) {
+                Log.d("Firestore token", "globalRepoUser new value token is blank")
+            }
             coroutineScope.launch {
                 isCurrentUserNeedRefreshFlow.emit(Unit)
                 if (!isUserListenerRegistered && value.adminEmailOrPhone != User.DEFAULT_FAKE_EMAIL && value.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
@@ -138,14 +146,19 @@ class RegLogRepositoryImpl @Inject constructor(
                     emit(globalRepoUser)
                 } else {
                     if (!globalRepoUser.pressedLogoutButton) {
+
                         Log.d(
                             "getUser",
-                            "signToFirebase, userFakeEmailFromStorage, : $userFakeEmailFromStorage"
+                            "signToFirebase, userFakeEmailFromStorage, globalUser.token : $userFakeEmailFromStorage ${globalRepoUser.token}"
                         )
                         signToFirebaseWithEmailAndPasswordFromPreferences(
                             userFakeEmailFromStorage,
                             Storage.getUsersPassword(context),
                             phoneLang
+                        )
+                        Log.d(
+                            "getUser",
+                            "signToFirebase, userFakeEmailFromStorage, globalUser.token AFTER : $userFakeEmailFromStorage ${globalRepoUser.token}"
                         )
                     }
                 }
@@ -194,7 +207,7 @@ class RegLogRepositoryImpl @Inject constructor(
                     if (userListener != null && userListener.nickName == globalRepoUser.nickName && globalRepoUser != userListener) {
 
                         globalRepoUser = userListener
-                        Log.d("getUser", "userListener : $userListener")
+                        Log.d("Firestore token", "userListener : $userListener")
 //                        coroutineScope.launch {
 //                            isCurrentUserNeedRefreshFlow.emit(Unit)
 //                        }
@@ -273,7 +286,10 @@ class RegLogRepositoryImpl @Inject constructor(
     }
 
     override fun setNewToken(newToken: String) {
+        Log.d("Firestore token", "setNewToken newToken $newToken")
         token = newToken
+        val newUser = globalRepoUser.copy(token = newToken)
+        globalRepoUser = newUser
     }
 
     override fun getToken(): String {
@@ -397,7 +413,7 @@ class RegLogRepositoryImpl @Inject constructor(
             )
             Storage.saveUsersPassword(context, newUser.password)
             Storage.saveLanguage(context, language)
-            Log.d("getUser", "addUserToCollection,  newUser: $newUser")
+            Log.d("Firestore token", "addUserToCollection,  newUser: $newUser")
             globalRepoUser = newUser
             //isCurrentUserNeedRefreshFlow.emit(Unit)
             Result.success(Unit)
@@ -544,7 +560,7 @@ class RegLogRepositoryImpl @Inject constructor(
                             val firebaseAuthUser = authRes.user
                             if (!globalRepoUser.pressedLogoutButton) {
                                 if (firebaseAuthUser != null) {
-                                    Log.d("getUser", "userFromCollection : $userFromCollection")
+                                    Log.d("Firestore token", "userFromCollection : $userFromCollection")
                                     globalRepoUser = userFromCollection
                                     //isCurrentUserNeedRefreshFlow.emit(Unit)
                                 } else {
@@ -734,7 +750,7 @@ class RegLogRepositoryImpl @Inject constructor(
                 }
                 if (firebaseUser != null && !globalRepoUser.pressedLogoutButton) {
                     val userFromCollection = findUserInCollection(userToSignIn)
-                    Log.d("getUser", "signToFirebase 4,  userFromCollection: $userFromCollection")
+                    Log.d("Firestore token", "signToFirebase 4,  userFromCollection: $userFromCollection")
                     globalRepoUser =
                         if (userFromCollection != null && userFromCollection.nickName != User.DEFAULT_NICK_NAME) {
                             userFromCollection
@@ -1267,15 +1283,23 @@ class RegLogRepositoryImpl @Inject constructor(
                 thingsToDoForOtherUsers = ExternalTasks(externalTasks = tasksForOtherUsers)
             )
 
-            val userForUpdate = userForModify.copy(
-                listToDo = updatedTodoList
-            )
+
 
             Log.d("deleteOldTasks", "userForModify $userForModify")
             val userCollection =
                 usersCollection.document(userForModify.adminEmailOrPhone)
                     .collection(userForModify.nickName.lowercase())
                     .document(userForModify.nickName.lowercase())
+
+            val freshToken = if (token != NO_NEW_TOKEN) {
+                token
+            } else {
+                globalRepoUser.token
+            }
+            val userForUpdate = userForModify.copy(
+                listToDo = updatedTodoList,
+                token = freshToken
+            )
 
             try {
                 withContext(Dispatchers.IO) {

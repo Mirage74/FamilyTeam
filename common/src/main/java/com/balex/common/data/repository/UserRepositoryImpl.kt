@@ -18,20 +18,19 @@ import com.balex.common.domain.repository.UserRepository
 import com.balex.common.domain.usecases.regLog.GetRepoAdminUseCase
 import com.balex.common.domain.usecases.regLog.GetTokenUseCase
 import com.balex.common.domain.usecases.regLog.GetUserUseCase
+import com.balex.common.domain.usecases.regLog.SetNewTokenUseCase
 import com.balex.common.extensions.numberOfReminders
 import com.balex.common.extensions.toReminder
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -40,6 +39,7 @@ import javax.inject.Inject
 class UserRepositoryImpl @Inject constructor(
     private val getUserUseCase: GetUserUseCase,
     private val getTokenUseCase: GetTokenUseCase,
+    private val setNewTokenUseCase: SetNewTokenUseCase,
     private val getRepoAdminUseCase: GetRepoAdminUseCase,
     private val context: Context
 ) : UserRepository {
@@ -64,11 +64,13 @@ class UserRepositoryImpl @Inject constructor(
     private val coroutineScope = CoroutineScope(Dispatchers.Main.immediate)
 
     override fun observeUsersList(): StateFlow<List<String>> {
-        val job = Job()
+        Log.d("Firestore token", "observeUsersList begin")
+        //val job = Job()
         return flow {
-            try {
+            //try {
+            Log.d("Firestore token", "observeUsersList middle")
                 usersNicknamesList = getUsersListFromFirebase()
-                if (usersNicknamesList.isNotEmpty()) {
+                //if (usersNicknamesList.isNotEmpty()) {
                     emit(usersNicknamesList)
                     if (!isAdminUsersNickNamesListListenerRegistered) {
                         addUsersListListenerInFirebase()
@@ -76,16 +78,20 @@ class UserRepositoryImpl @Inject constructor(
                     }
 
                     isCurrentUsersListNeedRefreshFlow.collect {
-                        emit(usersNicknamesList)
-                    }
-                }
+                        if (!usersNicknamesList.isEmpty()) {
+                            emit(usersNicknamesList)
+                        }
 
-            } finally {
-                job.cancel()
-            }
+                    }
+                //}
+
+            //}
+//            finally {
+//                job.cancel()
+//            }
         }
 
-            .takeWhile { job.isActive }
+            //.takeWhile { job.isActive }
             .stateIn(
                 scope = coroutineScope,
                 started = SharingStarted.Lazily,
@@ -199,10 +205,20 @@ class UserRepositoryImpl @Inject constructor(
             if (userSnapshot.exists()) {
                 val oldToken = userSnapshot.get("token").toString()
                 if (oldToken.isBlank()) {
-                    userCollection.update("token", token).await()
+                    try {
+                        setNewTokenUseCase(token)
+                        userCollection.update("token", token).await()
+                        Log.d("Firestore token", "Token успешно обновлён $token")
+                    } catch (e: Exception) {
+                        Log.e("Firestore token", "Ошибка обновления токена", e)
+                    }
+                    val g = 5
+
                 } else {
                     if (oldToken != token) {
+                        setNewTokenUseCase(token)
                         userCollection.update("token", token).await()
+                        Log.d("Firestore token", "oldToken != token $token")
                         cancelOldRemindersAndCreateNew(oldToken, token)
                     }
                 }
@@ -650,6 +666,7 @@ class UserRepositoryImpl @Inject constructor(
 
     private suspend fun getUsersListFromFirebase(): MutableList<String> {
         val newToken = getTokenUseCase()
+        Log.d("Firestore token", "getUsersListFromFirebase newToken $newToken")
         if (newToken != NO_NEW_TOKEN) {
             saveDeviceToken(newToken)
         }
