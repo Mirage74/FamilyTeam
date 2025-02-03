@@ -61,7 +61,9 @@ class RegLogRepositoryImpl @Inject constructor(
 
     private var globalRepoUser = User()
         set(value) {
-            val newValue = if (field.token.isBlank()) {
+            val newValue = if (token != NO_NEW_TOKEN) {
+                value.copy(token = token)
+            } else if (field.token.isBlank()) {
                 value
             } else {
                 value.copy(token = field.token)
@@ -456,6 +458,7 @@ class RegLogRepositoryImpl @Inject constructor(
         }
     }
 
+
     override suspend fun refreshFCMLastTimeUpdated() {
         //deleteOldTasks()
         if (globalRepoUser.nickName != User.DEFAULT_FAKE_EMAIL &&
@@ -505,12 +508,17 @@ class RegLogRepositoryImpl @Inject constructor(
                     maxFCMPerDay = globalRepoUser.availableFCM
                 }
 
-
+                val newPremiumExpirationDate = if (isPremiumAccount) {
+                    globalRepoUser.premiumAccountExpirationDate
+                } else {
+                    0
+                }
                 val userForUpdate = globalRepoUser.copy(
                     hasPremiumAccount = isPremiumAccount,
                     availableTasksToAdd = maxTaskPerDay,
                     availableFCM = maxFCMPerDay,
-                    lastTimeAvailableFCMWasUpdated = currentTimestamp
+                    lastTimeAvailableFCMWasUpdated = currentTimestamp,
+                    premiumAccountExpirationDate = newPremiumExpirationDate
                 )
 
                 try {
@@ -560,7 +568,10 @@ class RegLogRepositoryImpl @Inject constructor(
                             val firebaseAuthUser = authRes.user
                             if (!globalRepoUser.pressedLogoutButton) {
                                 if (firebaseAuthUser != null) {
-                                    Log.d("Firestore token", "userFromCollection : $userFromCollection")
+                                    Log.d(
+                                        "Firestore token",
+                                        "userFromCollection : $userFromCollection"
+                                    )
                                     globalRepoUser = userFromCollection
                                     //isCurrentUserNeedRefreshFlow.emit(Unit)
                                 } else {
@@ -750,7 +761,10 @@ class RegLogRepositoryImpl @Inject constructor(
                 }
                 if (firebaseUser != null && !globalRepoUser.pressedLogoutButton) {
                     val userFromCollection = findUserInCollection(userToSignIn)
-                    Log.d("Firestore token", "signToFirebase 4,  userFromCollection: $userFromCollection")
+                    Log.d(
+                        "Firestore token",
+                        "signToFirebase 4,  userFromCollection: $userFromCollection"
+                    )
                     globalRepoUser =
                         if (userFromCollection != null && userFromCollection.nickName != User.DEFAULT_NICK_NAME) {
                             userFromCollection
