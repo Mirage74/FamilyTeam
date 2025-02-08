@@ -1,7 +1,7 @@
 package com.balex.familyteam.presentation.root
 
 import androidx.compose.runtime.Composable
-import com.arkivanov.decompose.extensions.compose.jetpack.stack.Children
+import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.balex.familyteam.presentation.MainActivity
 import com.balex.familyteam.presentation.about.AboutContent
 import com.balex.logged_user.LoggedUserContent

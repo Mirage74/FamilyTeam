@@ -107,13 +107,13 @@ class LoginUserStoreFactory @Inject constructor(
     val appContext: Context = context.applicationContext
 
     fun create(
-        userDefault: String,
+        adminEmailOrPhoneDefault: String,
         language: String
     ): LoginUserStore =
         object : LoginUserStore, Store<Intent, State, Label> by storeFactory.create(
             name = "LoginUserStore",
             initialState = State(
-                adminEmailOrPhone = userDefault,
+                adminEmailOrPhone = adminEmailOrPhoneDefault,
 
                 nickName = "",
                 isNickNameEnabled = false,
@@ -225,7 +225,7 @@ class LoginUserStoreFactory @Inject constructor(
     }
 
     private inner class ExecutorImpl : CoroutineExecutor<Intent, Action, State, Msg, Label>() {
-        override fun executeIntent(intent: Intent, getState: () -> State) {
+        override fun executeIntent(intent: Intent) {
             when (intent) {
 
                 is Intent.LoginAdminFieldChanged -> {
@@ -288,10 +288,10 @@ class LoginUserStoreFactory @Inject constructor(
 
                 Intent.ClickedLoginButton -> {
                     scope.launch {
-                        val adminEmailOrPhone = getState().adminEmailOrPhone.trim()
-                        val nickName = getState().nickName.trim()
-                        val password = getState().password
-                        val language = getState().language
+                        val adminEmailOrPhone = state().adminEmailOrPhone.trim()
+                        val nickName = state().nickName.trim()
+                        val password = state().password
+                        val language = state().language
                         dispatch(Msg.ClickedLoginButton(adminEmailOrPhone, nickName))
 
                         val loggedUser = checkUserInCollectionAndLoginIfExistUseCase(
@@ -340,7 +340,7 @@ class LoginUserStoreFactory @Inject constructor(
             }
         }
 
-        override fun executeAction(action: Action, getState: () -> State) {
+        override fun executeAction(action: Action) {
             when (action) {
 
                 is Action.UserIsChanged -> {

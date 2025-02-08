@@ -41,7 +41,7 @@ android {
         buildConfig = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.14"
+        kotlinCompilerExtensionVersion = "1.5.15"
     }
 }
 
@@ -60,7 +60,6 @@ dependencies {
 
 
     implementation(libs.decompose.core)
-    implementation(libs.decompose.jetpack)
 
     implementation(libs.mvikotlin.main)
     implementation(libs.mvikotlin.core)

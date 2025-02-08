@@ -370,7 +370,7 @@ class LoggedUserStoreFactory @Inject constructor(
         fun start() {
             if (job.isCancelled) {
                 job = SupervisorJob()
-                scopeBootstrapper = CoroutineScope(Dispatchers.Main + job)
+                scopeBootstrapper =  CoroutineScope(Dispatchers.Main + job)
             }
 
             refreshShopListUseCase()
@@ -388,7 +388,7 @@ class LoggedUserStoreFactory @Inject constructor(
     }
 
     private inner class ExecutorImpl : CoroutineExecutor<Intent, Action, State, Msg, Label>() {
-        override fun executeIntent(intent: Intent, getState: () -> State) {
+        override fun executeIntent(intent: Intent) {
             when (intent) {
                 is Intent.SaveDeviceToken -> {
                     if (intent.token.isNotEmpty()) {
@@ -533,9 +533,9 @@ class LoggedUserStoreFactory @Inject constructor(
                     scope.launch {
                         createNewUserUseCase(
                             User(
-                                nickName = getState().nickName,
-                                displayName = getState().displayName,
-                                password = getState().password
+                                nickName = state().nickName,
+                                displayName = state().displayName,
+                                password = state().password
                             )
                         )
                     }
@@ -612,7 +612,7 @@ class LoggedUserStoreFactory @Inject constructor(
                 }
 
                 Intent.RefreshLanguage -> {
-                    dispatch(Msg.LanguageIsChanged(getState().language))
+                    dispatch(Msg.LanguageIsChanged(state().language))
                 }
 
                 is Intent.ClickedChangeLanguage -> {
@@ -623,7 +623,7 @@ class LoggedUserStoreFactory @Inject constructor(
             }
         }
 
-        override fun executeAction(action: Action, getState: () -> State) {
+        override fun executeAction(action: Action) {
             when (action) {
 
                 is Action.UserIsChanged -> {

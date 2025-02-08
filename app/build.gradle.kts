@@ -34,17 +34,17 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_19
+        targetCompatibility = JavaVersion.VERSION_19
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "19"
     }
     buildFeatures {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.14"
+        kotlinCompilerExtensionVersion = "1.5.15"
     }
     packaging {
         resources {
@@ -77,7 +77,8 @@ dependencies {
     implementation(libs.mvikotlin.logging)
 
     implementation(libs.decompose.core)
-    implementation(libs.decompose.jetpack)
+    implementation("com.arkivanov.decompose:extensions-compose:3.2.2")
+
 
     implementation(libs.dagger.core)
     ksp(libs.dagger.compiler)

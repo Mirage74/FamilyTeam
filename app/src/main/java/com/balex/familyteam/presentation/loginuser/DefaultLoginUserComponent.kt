@@ -1,5 +1,6 @@
 package com.balex.familyteam.presentation.loginuser
 
+import android.util.Log
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.arkivanov.essenty.lifecycle.doOnPause
@@ -27,6 +28,7 @@ class DefaultLoginUserComponent @AssistedInject constructor(
     @Assisted("onUserLogged") private val onUserLogged: () -> Unit,
     @Assisted("componentContext") componentContext: ComponentContext
 ) : LoginUserComponent, ComponentContext by componentContext {
+
 
     private val store = instanceKeeper.getStore { storeFactory.create(user.adminEmailOrPhone, getLanguageUseCase()) }
     private val scope = componentScope()

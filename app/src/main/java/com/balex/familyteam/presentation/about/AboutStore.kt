@@ -70,10 +70,10 @@ class AboutStoreFactory @Inject constructor(
     }
 
     private inner class ExecutorImpl : CoroutineExecutor<Intent, Action, State, Msg, Label>() {
-        override fun executeIntent(intent: Intent, getState: () -> State) {
+        override fun executeIntent(intent: Intent) {
             when (intent) {
                 Intent.RefreshLanguage -> {
-                    dispatch(Msg.LanguageIsChanged(getState().language))
+                    dispatch(Msg.LanguageIsChanged(state().language))
                 }
 
                 is Intent.ClickedChangeLanguage -> {
@@ -87,7 +87,7 @@ class AboutStoreFactory @Inject constructor(
             }
         }
 
-        override fun executeAction(action: Action, getState: () -> State) {
+        override fun executeAction(action: Action) {
             when (action) {
                 is Action.LanguageIsChanged -> {
                     saveLanguageUseCase(action.language)

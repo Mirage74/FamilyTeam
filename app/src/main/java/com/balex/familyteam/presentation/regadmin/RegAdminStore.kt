@@ -241,7 +241,7 @@ class RegAdminStoreFactory @Inject constructor(
     }
 
     private inner class ExecutorImpl : CoroutineExecutor<Intent, Action, State, Msg, Label>() {
-        override fun executeIntent(intent: Intent, getState: () -> State) {
+        override fun executeIntent(intent: Intent) {
             when (intent) {
                 Intent.ClickedBack -> {
                     publish(Label.ClickedBack)
@@ -257,12 +257,12 @@ class RegAdminStoreFactory @Inject constructor(
 
                 Intent.ClickedRegister -> {
                     scope.launch {
-                        if (getState().selectedOption == RegistrationOption.EMAIL) {
+                        if (state().selectedOption == RegistrationOption.EMAIL) {
                             registerAndVerifyByEmailUseCase(
-                                getState().emailOrPhone,
-                                getState().nickName,
-                                getState().displayName,
-                                getState().password
+                                state().emailOrPhone,
+                                state().nickName,
+                                state().displayName,
+                                state().password
                             )
                         }
                     }
@@ -275,7 +275,7 @@ class RegAdminStoreFactory @Inject constructor(
 
                 is Intent.LoginFieldChanged -> {
 
-                    if (getState().selectedOption == RegistrationOption.EMAIL) {
+                    if (state().selectedOption == RegistrationOption.EMAIL) {
                         dispatch(Msg.UpdateLoginFieldText(intent.currentLoginText))
                         if (Regex(REGEX_PATTERN_EMAIL)
                                 .matches(intent.currentLoginText)
@@ -367,7 +367,7 @@ class RegAdminStoreFactory @Inject constructor(
             }
         }
 
-        override fun executeAction(action: Action, getState: () -> State) {
+        override fun executeAction(action: Action) {
             when (action) {
                 is Action.LanguageIsChanged -> {
                     saveLanguageUseCase(action.language)
@@ -385,7 +385,7 @@ class RegAdminStoreFactory @Inject constructor(
                 }
 
                 is Action.AdminExistWrongPassword -> {
-                    if (getState().isRegisterButtonWasPressed) {
+                    if (state().isRegisterButtonWasPressed) {
                         publish(Label.LoginPageWrongPassword(action.user))
                     }
 
