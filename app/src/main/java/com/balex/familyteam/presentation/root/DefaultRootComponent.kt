@@ -48,7 +48,7 @@ class DefaultRootComponent @AssistedInject constructor(
 
     override val stack: Value<ChildStack<*, Child>> = _stack
 
-
+    @OptIn(com.arkivanov.decompose.DelicateDecomposeApi::class)
     private fun child(
         config: Config, childComponentContext: ComponentContext
     ): Child {
