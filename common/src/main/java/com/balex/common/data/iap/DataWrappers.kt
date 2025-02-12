@@ -2,6 +2,7 @@ package com.balex.common.data.iap
 
 import com.android.billingclient.api.AccountIdentifiers
 
+@Suppress("unused")
 class DataWrappers {
 
     data class ProductDetails(

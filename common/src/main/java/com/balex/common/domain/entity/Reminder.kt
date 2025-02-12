@@ -3,6 +3,7 @@ package com.balex.common.domain.entity
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
 
+@Suppress("unused")
 @Serializable
 data class Reminder(
     @SerializedName("id")

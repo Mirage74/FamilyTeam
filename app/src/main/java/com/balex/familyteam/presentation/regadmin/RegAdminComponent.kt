@@ -9,8 +9,6 @@ interface RegAdminComponent {
 
     val model: StateFlow<RegAdminStore.State>
 
-    fun onClickBack()
-
     fun onClickRegister()
 
     fun onClickEmailOrPhoneButton()
@@ -28,10 +26,6 @@ interface RegAdminComponent {
     fun onPasswordFieldChanged(currentPasswordText: String)
 
     fun onSmsNumberFieldChanged(currentSmsText: String)
-
-    fun onClickAbout()
-
-    fun onRefreshLanguage()
 
     fun onLanguageChanged(language: String)
 

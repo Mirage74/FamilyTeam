@@ -17,11 +17,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.balex.common.R
 import com.balex.common.domain.entity.RegistrationOption
-import com.balex.familyteam.presentation.regadmin.RegAdminComponent
 import com.balex.familyteam.presentation.regadmin.RegAdminStore
 
 @Composable
-fun VerifyEmailOrPhoneText(state: RegAdminStore.State, component: RegAdminComponent, context: Context) {
+fun VerifyEmailOrPhoneText(state: RegAdminStore.State, context: Context) {
     Box(
         modifier = Modifier
             .fillMaxSize(),

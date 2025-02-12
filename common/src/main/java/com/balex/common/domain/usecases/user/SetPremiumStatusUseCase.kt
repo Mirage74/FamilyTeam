@@ -4,6 +4,7 @@ import com.balex.common.data.repository.BillingRepositoryImpl
 import com.balex.common.domain.repository.UserRepository
 import javax.inject.Inject
 
+@Suppress("unused")
 class SetPremiumStatusUseCase @Inject constructor(
     private val repository: UserRepository
 ) {

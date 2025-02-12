@@ -11,6 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+@Suppress("unused")
 class BillingService(
     private val context: Context,
     private val nonConsumableKeys: List<String>,
@@ -170,6 +171,7 @@ class BillingService(
     /**
      * Called by the Billing Library when new purchases are detected.
      */
+    @Suppress("unused")
     override fun onPurchasesUpdated(billingResult: BillingResult, purchases: List<Purchase>?) {
         val responseCode = billingResult.responseCode
         val debugMessage = billingResult.debugMessage

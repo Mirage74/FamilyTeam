@@ -4,6 +4,7 @@ import android.app.Activity
 import com.balex.common.domain.repository.BillingRepository
 import javax.inject.Inject
 
+@Suppress("unused")
 class PurchaseCoinsUseCase @Inject constructor(
     private val repository: BillingRepository
 ) {

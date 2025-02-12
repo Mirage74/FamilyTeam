@@ -1,6 +1,5 @@
 package com.balex.familyteam.presentation.loginuser
 
-import android.util.Log
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.arkivanov.essenty.lifecycle.doOnPause
@@ -24,8 +23,8 @@ class DefaultLoginUserComponent @AssistedInject constructor(
     private val storeFactory: LoginUserStoreFactory,
     private val getLanguageUseCase: GetLanguageUseCase,
     @Assisted("user") private val user: User,
-    @Assisted("onAbout") private val onAbout: () -> Unit,
     @Assisted("onUserLogged") private val onUserLogged: () -> Unit,
+    @Suppress("unused")
     @Assisted("componentContext") componentContext: ComponentContext
 ) : LoginUserComponent, ComponentContext by componentContext {
 
@@ -35,7 +34,6 @@ class DefaultLoginUserComponent @AssistedInject constructor(
 
     init {
         lifecycle.doOnResume {
-            onRefreshLanguage()
             startCollectingLabels()
         }
         lifecycle.doOnPause {
@@ -52,11 +50,6 @@ class DefaultLoginUserComponent @AssistedInject constructor(
         scope.launch {
             store.labels.collect {
                 when (it) {
-
-                    LoginUserStore.Label.ClickedAbout -> {
-                        onAbout()
-                    }
-
                     LoginUserStore.Label.UserIsLogged -> {
                         onUserLogged()
                     }
@@ -69,6 +62,7 @@ class DefaultLoginUserComponent @AssistedInject constructor(
         scope.coroutineContext.cancelChildren()
     }
 
+    @Suppress("unused")
     @OptIn(ExperimentalCoroutinesApi::class)
     override val model: StateFlow<LoginUserStore.State> = store.stateFlow
 
@@ -92,14 +86,6 @@ class DefaultLoginUserComponent @AssistedInject constructor(
         store.accept(LoginUserStore.Intent.ClickedChangePasswordVisibility)
     }
 
-    override fun onClickAbout() {
-        store.accept(LoginUserStore.Intent.ClickedAbout)
-    }
-
-    override fun onRefreshLanguage() {
-        store.accept(LoginUserStore.Intent.RefreshLanguage)
-    }
-
     override fun onLanguageChanged(language: String) {
         store.accept(LoginUserStore.Intent.ClickedChangeLanguage(language))
     }
@@ -109,8 +95,7 @@ class DefaultLoginUserComponent @AssistedInject constructor(
 
         fun create(
             @Assisted("user") user: User,
-            @Assisted("onAbout") onAbout: () -> Unit,
-            @Assisted("onUserLogged") onUserLogged: () -> Unit,
+             @Assisted("onUserLogged") onUserLogged: () -> Unit,
             @Assisted("componentContext") componentContext: ComponentContext
         ): DefaultLoginUserComponent
     }

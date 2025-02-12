@@ -3,6 +3,7 @@ package com.balex.common.domain.usecases.admin
 import com.balex.common.domain.repository.AdminRepository
 import javax.inject.Inject
 
+@Suppress("unused")
 class DeleteUserUseCase @Inject constructor(
     private val repository: AdminRepository
 ) {

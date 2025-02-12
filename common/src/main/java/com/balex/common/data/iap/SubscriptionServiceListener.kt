@@ -1,8 +1,6 @@
 package com.balex.common.data.iap
 
-import com.balex.common.data.iap.BillingServiceListener
-import com.balex.common.data.iap.DataWrappers
-
+@Suppress("unused")
 interface SubscriptionServiceListener : BillingServiceListener {
     /**
      * Callback will be triggered upon owned subscription restore

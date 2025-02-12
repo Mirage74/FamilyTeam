@@ -29,6 +29,7 @@ class DefaultNotLoggedComponent @AssistedInject constructor(
     @Assisted("onUserIsLogged") private val onUserIsLogged: () -> Unit,
     @Assisted("onRules") private val onRules: () -> Unit,
     @Assisted("onAbout") private val onAbout: () -> Unit,
+    @Suppress("unused")
     @Assisted("componentContext") componentContext: ComponentContext
 ) : NotLoggedComponent, ComponentContext by componentContext {
 
@@ -91,6 +92,7 @@ class DefaultNotLoggedComponent @AssistedInject constructor(
         scope.coroutineContext.cancelChildren()
     }
 
+    @Suppress("unused")
     @OptIn(ExperimentalCoroutinesApi::class)
     override val model: StateFlow<NotLoggedStore.State> = store.stateFlow
 

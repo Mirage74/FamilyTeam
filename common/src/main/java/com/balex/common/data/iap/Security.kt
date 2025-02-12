@@ -17,6 +17,7 @@ import java.security.spec.X509EncodedKeySpec
  * Security-related methods. For a secure implementation, all of this code should be implemented on
  * a server that communicates with the application on the device.
  */
+@Suppress("unused")
 object Security {
     private const val TAG = "IABUtil/Security"
     private const val KEY_FACTORY_ALGORITHM = "RSA"

@@ -22,6 +22,7 @@ interface ApplicationComponent {
 
     fun inject(firebaseMessagingService: com.balex.familyteam.MyFirebaseMessagingService)
 
+    @Suppress("unused")
     fun provideDefaultRegAdminComponentFactory(): DefaultRegAdminComponent.Factory
 
     @Component.Factory

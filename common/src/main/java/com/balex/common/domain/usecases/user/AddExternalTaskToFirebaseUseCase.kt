@@ -5,6 +5,7 @@ import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.repository.UserRepository
 import javax.inject.Inject
 
+@Suppress("unused")
 class AddExternalTaskToFirebaseUseCase @Inject constructor(
     private val repository: UserRepository
 ) {

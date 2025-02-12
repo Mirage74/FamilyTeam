@@ -1,18 +1,15 @@
 package com.balex.common.data.iap
 
-interface BillingServiceListener {
-    /**
-     * Callback will be triggered upon obtaining information about product prices
-     *
-     * @param iapKeyPrices - a map with available products
-     */
-    fun onPricesUpdated(iapKeyPrices: Map<String, List<DataWrappers.ProductDetails>>)
+import android.util.Log
 
-    /**
-     * Callback will be triggered when a purchase was failed.
-     *
-     * @param purchaseInfo - specifier of purchase info if exists
-     * @param billingResponseCode - response code returned from the billing library if exists
-     */
-    fun onPurchaseFailed(purchaseInfo: DataWrappers.PurchaseInfo?, billingResponseCode: Int?)
+interface BillingServiceListener {
+
+    fun onPricesUpdated(iapKeyPrices: Map<String, List<DataWrappers.ProductDetails>>) {
+        Log.d("BillingServiceListener", "onPricesUpdated, iapKeyPrices: $iapKeyPrices")
+    }
+
+
+    fun onPurchaseFailed(purchaseInfo: DataWrappers.PurchaseInfo?, billingResponseCode: Int?) {
+        Log.d("BillingServiceListener", "onPurchaseFailed, purchaseInfo: $purchaseInfo billingResponseCode: $billingResponseCode")
+    }
 }

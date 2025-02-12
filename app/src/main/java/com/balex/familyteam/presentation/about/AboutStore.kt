@@ -17,14 +17,13 @@ interface AboutStore : Store<Intent, State, Label> {
 
     sealed interface Intent {
 
-        data object RefreshLanguage : Intent
-
         data class ClickedChangeLanguage(val language: String) : Intent
 
         data object ClickedRules : Intent
 
     }
 
+    @Suppress("unused")
     data class State(
         val language: String
     )
@@ -40,6 +39,7 @@ class AboutStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory
 ) {
 
+    @Suppress("unused")
     fun create(language: String): AboutStore =
         object : AboutStore, Store<Intent, State, Label> by storeFactory.create(
             name = "AboutStore",
@@ -51,14 +51,17 @@ class AboutStoreFactory @Inject constructor(
             reducer = ReducerImpl
         ) {}
 
+    @Suppress("unused")
     private sealed interface Action {
         data class LanguageIsChanged(val language: String) : Action
     }
 
     private sealed interface Msg {
+        @Suppress("unused")
         data class LanguageIsChanged(val language: String) : Msg
     }
 
+    @Suppress("unused")
     private inner class BootstrapperImpl : CoroutineBootstrapper<Action>() {
         override fun invoke() {
             scope.launch {
@@ -69,12 +72,10 @@ class AboutStoreFactory @Inject constructor(
         }
     }
 
+    @Suppress("unused")
     private inner class ExecutorImpl : CoroutineExecutor<Intent, Action, State, Msg, Label>() {
         override fun executeIntent(intent: Intent) {
             when (intent) {
-                Intent.RefreshLanguage -> {
-                    dispatch(Msg.LanguageIsChanged(state().language))
-                }
 
                 is Intent.ClickedChangeLanguage -> {
                     saveLanguageUseCase(intent.language)
@@ -97,6 +98,7 @@ class AboutStoreFactory @Inject constructor(
         }
     }
 
+    @Suppress("unused")
     private object ReducerImpl : Reducer<State, Msg> {
         override fun State.reduce(msg: Msg): State =
             when (msg) {

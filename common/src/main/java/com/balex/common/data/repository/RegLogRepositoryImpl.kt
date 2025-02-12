@@ -82,6 +82,7 @@ class RegLogRepositoryImpl @Inject constructor(
             }
         }
 
+    @Suppress("unused")
     private var isWrongPassword = User()
         set(value) {
             field = value
@@ -92,7 +93,7 @@ class RegLogRepositoryImpl @Inject constructor(
 
     private var language = Language.DEFAULT_LANGUAGE.symbol
 
-
+    @Suppress("unused")
     private var isUserMailOrPhoneVerified = false
     private var isUserListenerRegistered = false
 
@@ -326,8 +327,7 @@ class RegLogRepositoryImpl @Inject constructor(
 
     override suspend fun removeRecordFromCollection(
         collectionName: String,
-        emailOrPhoneNumber: String,
-        nickName: String
+        emailOrPhoneNumber: String
     ) {
 
         if (collectionName == FIREBASE_ADMINS_COLLECTION || collectionName == FIREBASE_ADMINS_AND_USERS_COLLECTION) {
@@ -1068,8 +1068,7 @@ class RegLogRepositoryImpl @Inject constructor(
                 if (sigInResultAdmin == StatusEmailSignIn.ADMIN_NOT_FOUND) {
                     removeRecordFromCollection(
                         FIREBASE_ADMINS_AND_USERS_COLLECTION,
-                        email,
-                        nickName
+                        email
                     )
                     return true
                 }

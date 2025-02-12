@@ -5,35 +5,17 @@ import android.os.Handler
 import android.os.Looper
 import androidx.annotation.CallSuper
 
+@Suppress("unused")
 abstract class IBillingService {
 
     private val purchaseServiceListeners: MutableList<PurchaseServiceListener> = mutableListOf()
     private val subscriptionServiceListeners: MutableList<SubscriptionServiceListener> = mutableListOf()
     private val billingClientConnectedListeners: MutableList<BillingClientConnectionListener> = mutableListOf()
 
-    fun addBillingClientConnectionListener(billingClientConnectionListener: BillingClientConnectionListener) {
-        billingClientConnectedListeners.add(billingClientConnectionListener)
-    }
-
-    fun removeBillingClientConnectionListener(billingClientConnectionListener: BillingClientConnectionListener) {
-        billingClientConnectedListeners.remove(billingClientConnectionListener)
-    }
-
     fun addPurchaseListener(purchaseServiceListener: PurchaseServiceListener) {
         purchaseServiceListeners.add(purchaseServiceListener)
     }
 
-    fun removePurchaseListener(purchaseServiceListener: PurchaseServiceListener) {
-        purchaseServiceListeners.remove(purchaseServiceListener)
-    }
-
-    fun addSubscriptionListener(subscriptionServiceListener: SubscriptionServiceListener) {
-        subscriptionServiceListeners.add(subscriptionServiceListener)
-    }
-
-    fun removeSubscriptionListener(subscriptionServiceListener: SubscriptionServiceListener) {
-        subscriptionServiceListeners.remove(subscriptionServiceListener)
-    }
 
     /**
      * @param purchaseInfo Product specifier
@@ -131,6 +113,27 @@ abstract class IBillingService {
         purchaseServiceListeners.clear()
         billingClientConnectedListeners.clear()
     }
+
+//    fun addBillingClientConnectionListener(billingClientConnectionListener: BillingClientConnectionListener) {
+//        billingClientConnectedListeners.add(billingClientConnectionListener)
+//    }
+//
+//    fun removeBillingClientConnectionListener(billingClientConnectionListener: BillingClientConnectionListener) {
+//        billingClientConnectedListeners.remove(billingClientConnectionListener)
+//    }
+//
+//    fun removePurchaseListener(purchaseServiceListener: PurchaseServiceListener) {
+//        purchaseServiceListeners.remove(purchaseServiceListener)
+//    }
+//
+//    fun addSubscriptionListener(subscriptionServiceListener: SubscriptionServiceListener) {
+//        subscriptionServiceListeners.add(subscriptionServiceListener)
+//    }
+//
+//    fun removeSubscriptionListener(subscriptionServiceListener: SubscriptionServiceListener) {
+//        subscriptionServiceListeners.remove(subscriptionServiceListener)
+//    }
+
 }
 
 fun findUiHandler(): Handler {

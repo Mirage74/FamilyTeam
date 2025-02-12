@@ -5,12 +5,12 @@ import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.repository.UserRepository
 import javax.inject.Inject
 
+@Suppress("unused")
 class DeleteTaskFromFirebaseUseCase @Inject constructor(
     private val repository: UserRepository
 ) {
     suspend operator fun invoke(
         externalTask: ExternalTask,
-        taskType: UserRepositoryImpl.Companion.TaskType,
-        token: String
-    ) = repository.deleteTaskFromFirebase(externalTask, taskType, token)
+        taskType: UserRepositoryImpl.Companion.TaskType
+    ) = repository.deleteTaskFromFirebase(externalTask, taskType)
 }

@@ -23,11 +23,12 @@ import kotlinx.coroutines.launch
 class DefaultRegAdminComponent @AssistedInject constructor(
     private val storeFactory: RegAdminStoreFactory,
     private val getLanguageUseCase: GetLanguageUseCase,
+    @Suppress("unused")
     override val phoneFirebaseRepository: PhoneFirebaseRepository,
     @Assisted("onAbout") private val onAbout: () -> Unit,
     @Assisted("onAdminExistButWrongPassword") private val onAdminExistButWrongPassword: (User) -> Unit,
-    @Assisted("onBackClicked") private val onBackClicked: () -> Unit,
     @Assisted("onAdminRegisteredAndVerified") private val onAdminRegisteredAndVerified: () -> Unit,
+    @Suppress("unused")
     @Assisted("componentContext") componentContext: ComponentContext
 ) : RegAdminComponent, ComponentContext by componentContext {
 
@@ -37,7 +38,6 @@ class DefaultRegAdminComponent @AssistedInject constructor(
 
     init {
         lifecycle.doOnResume {
-            onRefreshLanguage()
             startCollectingLabels()
         }
         lifecycle.doOnPause {
@@ -63,9 +63,6 @@ class DefaultRegAdminComponent @AssistedInject constructor(
                         onAdminRegisteredAndVerified()
                     }
 
-                    RegAdminStore.Label.ClickedBack -> {
-                        onBackClicked()
-                    }
 
                     is RegAdminStore.Label.LoginPageWrongPassword -> {
                         //resetUserToDefaultUseCase()
@@ -80,13 +77,9 @@ class DefaultRegAdminComponent @AssistedInject constructor(
         scope.coroutineContext.cancelChildren()
     }
 
+    @Suppress("unused")
     @OptIn(ExperimentalCoroutinesApi::class)
     override val model: StateFlow<RegAdminStore.State> = store.stateFlow
-
-
-    override fun onClickBack() {
-        store.accept(RegAdminStore.Intent.ClickedBack)
-    }
 
 
     override fun onClickRegister() {
@@ -126,14 +119,6 @@ class DefaultRegAdminComponent @AssistedInject constructor(
         store.accept(RegAdminStore.Intent.SmsNumberFieldChanged(currentSmsText))
     }
 
-    override fun onClickAbout() {
-        store.accept(RegAdminStore.Intent.ClickedAbout)
-    }
-
-    override fun onRefreshLanguage() {
-        store.accept(RegAdminStore.Intent.RefreshLanguage)
-    }
-
     override fun onLanguageChanged(language: String) {
         store.accept(RegAdminStore.Intent.ClickedChangeLanguage(language))
     }
@@ -144,7 +129,6 @@ class DefaultRegAdminComponent @AssistedInject constructor(
         fun create(
             @Assisted("onAbout") onAbout: () -> Unit,
             @Assisted("onAdminExistButWrongPassword") onAdminExistButWrongPassword: (User) -> Unit,
-            @Assisted("onBackClicked") onBackClicked: () -> Unit,
             @Assisted("onAdminRegisteredAndVerified") onAdminRegisteredAndVerified: () -> Unit,
             @Assisted("componentContext") componentContext: ComponentContext
         ): DefaultRegAdminComponent

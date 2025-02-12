@@ -4,6 +4,7 @@ import com.balex.common.domain.entity.User
 import com.balex.common.domain.repository.RegLogRepository
 import javax.inject.Inject
 
+@Suppress("unused")
 class SetWrongPasswordUserUseCase @Inject constructor(
     private val repository: RegLogRepository
 ) {

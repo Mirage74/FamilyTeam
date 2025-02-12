@@ -45,7 +45,7 @@ class DefaultRootComponent @AssistedInject constructor(
         childFactory = ::child
     )
 
-
+    @Suppress("unused")
     override val stack: Value<ChildStack<*, Child>> = _stack
 
     @OptIn(com.arkivanov.decompose.DelicateDecomposeApi::class)
@@ -84,12 +84,6 @@ class DefaultRootComponent @AssistedInject constructor(
                     }, onAdminExistButWrongPassword = { userLogin ->
                         navigation.replaceAll(Config.NotLogged)
                         navigation.push(Config.LoginUser(userLogin))
-//                        navigation.popWhile {
-//                            it == Config.NotLogged
-//                        }
-                    },
-                    onBackClicked = {
-                        navigation.pop()
                     },
                     componentContext = childComponentContext
                 )
@@ -99,9 +93,6 @@ class DefaultRootComponent @AssistedInject constructor(
             is Config.LoginUser -> {
                 val component = loginUserComponent.create(
                     user = config.user,
-                    onAbout = {
-                        navigation.push(Config.About)
-                    },
                     onUserLogged = {
                         navigation.replaceAll(Config.LoggedUser(UUID.randomUUID().toString()))
                     },
@@ -169,6 +160,7 @@ class DefaultRootComponent @AssistedInject constructor(
         @Serializable
         data class LoginUser(val user: User) : Config
 
+        @Suppress("unused")
         @Serializable
         data class LoggedUser(val id: String) : Config
 

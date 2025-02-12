@@ -44,6 +44,7 @@ interface NotLoggedStore : Store<Intent, State, Label> {
 
     }
 
+    @Suppress("unused")
     data class State(
         val language: String,
         val errorMessage: String,
@@ -90,6 +91,7 @@ class NotLoggedStoreFactory @Inject constructor(
     private val getLanguageUseCase: GetLanguageUseCase
 ) {
 
+    @Suppress("unused")
     fun create(language: String): NotLoggedStore =
         object : NotLoggedStore, Store<Intent, State, Label> by storeFactory.create(
             name = "NotLoggedStore",
@@ -123,6 +125,7 @@ class NotLoggedStoreFactory @Inject constructor(
 
     }
 
+    @Suppress("unused")
     private sealed interface Msg {
 
         data class RefreshLanguage(val language: String) : Msg

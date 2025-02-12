@@ -14,6 +14,7 @@ interface NotLoggedComponent {
 
     fun onClickAbout()
 
+    @Suppress("unused")
     fun onRefreshLanguage()
 
     fun onLanguageChanged(language: String)

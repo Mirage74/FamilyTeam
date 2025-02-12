@@ -16,9 +16,5 @@ interface LoginUserComponent {
 
     fun onClickChangePasswordVisibility()
 
-    fun onClickAbout()
-
-    fun onRefreshLanguage()
-
     fun onLanguageChanged(language: String)
 }

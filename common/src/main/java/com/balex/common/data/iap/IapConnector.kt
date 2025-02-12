@@ -14,7 +14,8 @@ import kotlinx.coroutines.DelicateCoroutinesApi
  * @param key Key to verify purchase messages. Leave it empty if you want to skip verification.
  * @param enableLogging Log operations/errors to the logcat for debugging purposes.
  */
-@OptIn(DelicateCoroutinesApi::class)
+
+@Suppress("unused")
 class IapConnector @JvmOverloads constructor(
     context: Context,
     nonConsumableKeys: List<String> = emptyList(),
@@ -33,49 +34,50 @@ class IapConnector @JvmOverloads constructor(
         getBillingService().enableDebugLogging(enableLogging)
     }
 
-    fun addBillingClientConnectionListener(billingClientConnectionListener: BillingClientConnectionListener) {
-        getBillingService().addBillingClientConnectionListener(billingClientConnectionListener)
-    }
-
-    fun removeBillingClientConnectionListener(billingClientConnectionListener: BillingClientConnectionListener) {
-        getBillingService().removeBillingClientConnectionListener(billingClientConnectionListener)
+    private fun getBillingService(): IBillingService {
+        return mBillingService ?: let {
+            throw RuntimeException("Call IapConnector to initialize billing service")
+        }
     }
 
     fun addPurchaseListener(purchaseServiceListener: PurchaseServiceListener) {
         getBillingService().addPurchaseListener(purchaseServiceListener)
     }
 
-    fun removePurchaseListener(purchaseServiceListener: PurchaseServiceListener) {
-        getBillingService().removePurchaseListener(purchaseServiceListener)
-    }
-
-    fun addSubscriptionListener(subscriptionServiceListener: SubscriptionServiceListener) {
-        getBillingService().addSubscriptionListener(subscriptionServiceListener)
-    }
-
-    fun removeSubscriptionListener(subscriptionServiceListener: SubscriptionServiceListener) {
-        getBillingService().removeSubscriptionListener(subscriptionServiceListener)
-    }
-
     fun purchase(activity: Activity, sku: String, obfuscatedAccountId: String? = null, obfuscatedProfileId: String? = null) {
         getBillingService().buy(activity, sku, obfuscatedAccountId, obfuscatedProfileId)
     }
 
-    fun subscribe(activity: Activity, sku: String, obfuscatedAccountId: String? = null, obfuscatedProfileId: String? = null) {
-        getBillingService().subscribe(activity, sku, obfuscatedAccountId, obfuscatedProfileId)
-    }
+//    fun addBillingClientConnectionListener(billingClientConnectionListener: BillingClientConnectionListener) {
+//        getBillingService().addBillingClientConnectionListener(billingClientConnectionListener)
+//    }
+//
+//    fun removeBillingClientConnectionListener(billingClientConnectionListener: BillingClientConnectionListener) {
+//        getBillingService().removeBillingClientConnectionListener(billingClientConnectionListener)
+//    }
+//
+//    fun removePurchaseListener(purchaseServiceListener: PurchaseServiceListener) {
+//        getBillingService().removePurchaseListener(purchaseServiceListener)
+//    }
+//
+//    fun addSubscriptionListener(subscriptionServiceListener: SubscriptionServiceListener) {
+//        getBillingService().addSubscriptionListener(subscriptionServiceListener)
+//    }
+//
+//    fun removeSubscriptionListener(subscriptionServiceListener: SubscriptionServiceListener) {
+//        getBillingService().removeSubscriptionListener(subscriptionServiceListener)
+//    }
+//
+//    fun subscribe(activity: Activity, sku: String, obfuscatedAccountId: String? = null, obfuscatedProfileId: String? = null) {
+//        getBillingService().subscribe(activity, sku, obfuscatedAccountId, obfuscatedProfileId)
+//    }
+//
+//    fun unsubscribe(activity: Activity, sku: String) {
+//        getBillingService().unsubscribe(activity, sku)
+//    }
+//
+//    fun destroy() {
+//        getBillingService().close()
+//    }
 
-    fun unsubscribe(activity: Activity, sku: String) {
-        getBillingService().unsubscribe(activity, sku)
-    }
-
-    fun destroy() {
-        getBillingService().close()
-    }
-
-    private fun getBillingService(): IBillingService {
-        return mBillingService ?: let {
-            throw RuntimeException("Call IapConnector to initialize billing service")
-        }
-    }
 }

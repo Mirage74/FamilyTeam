@@ -127,7 +127,7 @@ fun ContentScreen(
                     CodeSmsTextField(state, component, context)
                 }
 
-                VerifyEmailOrPhoneText(state, component, context)
+                VerifyEmailOrPhoneText(state, context)
 
                 if (state.isRegisterButtonWasPressed && state.selectedOption == RegistrationOption.PHONE) {
                     Spacer(modifier = Modifier.height(24.dp))

@@ -86,8 +86,6 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 
         data class ClickedBuyCoins(val activity: Activity) : Intent
 
-        data object ClickedBeginPaymentTransaction : Intent
-
         data class ClickedEditTask(
             val externalTask: ExternalTask,
             val taskType: UserRepositoryImpl.Companion.TaskType
@@ -143,6 +141,7 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 
     }
 
+    @Suppress("unused")
     data class State(
         val sessionId: String,
         val user: User,
@@ -150,7 +149,6 @@ interface LoggedUserStore : Store<Intent, State, Label> {
         val usersNicknamesList: List<String>,
         val shopItemsList: ShopItems,
         val isExchangeCoinsClicked: Boolean,
-        val isPaymentDataEnteredAndBuyCoinsClicked: Boolean,
         val isAddTaskClicked: Boolean,
         val isEditTaskClicked: Boolean,
         val isAddShopItemClicked: Boolean,
@@ -223,6 +221,7 @@ class LoggedUserStoreFactory @Inject constructor(
 
     val appContext: Context = context.applicationContext
 
+    @Suppress("unused")
     fun create(language: String, sessionId: String): LoggedUserStore {
         val sharedBootstrapper = BootstrapperImpl()
         return object : LoggedUserStore, Store<Intent, State, Label> by storeFactory.create(
@@ -236,7 +235,6 @@ class LoggedUserStoreFactory @Inject constructor(
                 ShopItems(),
                 isAddShopItemClicked = false,
                 isExchangeCoinsClicked = false,
-                isPaymentDataEnteredAndBuyCoinsClicked = false,
                 isAddTaskClicked = false,
                 isEditTaskClicked = false,
                 taskForEdit = ExternalTask(),
@@ -272,6 +270,7 @@ class LoggedUserStoreFactory @Inject constructor(
         }
     }
 
+    @Suppress("unused")
     private sealed interface Action {
 
         data class UserIsChanged(val user: User) : Action
@@ -286,6 +285,7 @@ class LoggedUserStoreFactory @Inject constructor(
 
     }
 
+    @Suppress("unused")
     private sealed interface Msg {
 
         data class IsTokenSavedSuccessfully(val savingResult: Boolean) : Msg
@@ -306,8 +306,6 @@ class LoggedUserStoreFactory @Inject constructor(
         data class ClickedConfirmExchange(val coins: Int, val tasks: Int, val reminders: Int) : Msg
 
         data class ClickedBuyCoins(val activity: Activity) : Msg
-
-        data object ClickedBeginPaymentTransaction : Msg
 
         data object ButtonAddShopItemToDatabaseClicked : Msg
 
@@ -459,10 +457,6 @@ class LoggedUserStoreFactory @Inject constructor(
                     dispatch(Msg.ClickedBuyCoins(intent.activity))
                 }
 
-                Intent.ClickedBeginPaymentTransaction -> {
-                    dispatch(Msg.ClickedBeginPaymentTransaction)
-                }
-
                 is Intent.ClickedEditTask -> {
                     dispatch(Msg.ClickedEditTask(intent.externalTask, intent.taskType))
                 }
@@ -471,8 +465,7 @@ class LoggedUserStoreFactory @Inject constructor(
                     scope.launch {
                         deleteTaskFromFirebaseUseCase(
                             intent.externalTask,
-                            intent.taskType,
-                            intent.token
+                            intent.taskType
                         )
                     }
                 }
@@ -695,7 +688,6 @@ class LoggedUserStoreFactory @Inject constructor(
                 Msg.BackFromExchangeOrBuyCoinClicked -> {
                     copy(
                         isExchangeCoinsClicked = false,
-                        isPaymentDataEnteredAndBuyCoinsClicked = false,
                         loggedUserState = State.LoggedUserState.Content
                     )
                 }
@@ -736,12 +728,6 @@ class LoggedUserStoreFactory @Inject constructor(
                 is Msg.ClickedBuyCoins -> {
                     copy(
                         loggedUserState = State.LoggedUserState.Content
-                    )
-                }
-
-                Msg.ClickedBeginPaymentTransaction -> {
-                    copy(
-                        isPaymentDataEnteredAndBuyCoinsClicked = true
                     )
                 }
 

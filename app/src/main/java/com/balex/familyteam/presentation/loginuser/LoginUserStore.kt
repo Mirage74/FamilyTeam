@@ -43,13 +43,12 @@ interface LoginUserStore : Store<Intent, State, Label> {
 
         data class PasswordFieldChanged(val currentPasswordText: String) : Intent
 
-        data object ClickedAbout : Intent
-
         data object RefreshLanguage : Intent
 
         data class ClickedChangeLanguage(val language: String) : Intent
     }
 
+    @Suppress("unused")
     data class State(
 
         val adminEmailOrPhone: String,
@@ -85,8 +84,6 @@ interface LoginUserStore : Store<Intent, State, Label> {
 
     sealed interface Label {
 
-        data object ClickedAbout : Label
-
         data object UserIsLogged : Label
 
     }
@@ -106,6 +103,7 @@ class LoginUserStoreFactory @Inject constructor(
 
     val appContext: Context = context.applicationContext
 
+    @Suppress("unused")
     fun create(
         adminEmailOrPhoneDefault: String,
         language: String
@@ -149,6 +147,7 @@ class LoginUserStoreFactory @Inject constructor(
 
     }
 
+    @Suppress("unused")
     private sealed interface Msg {
 
         data class ClickedLoginButton(val adminEmailOrPhone: String, val nickName: String) : Msg
@@ -322,10 +321,6 @@ class LoginUserStoreFactory @Inject constructor(
                             }
                         }
                     }
-                }
-
-                Intent.ClickedAbout -> {
-                    publish(Label.ClickedAbout)
                 }
 
                 Intent.RefreshLanguage -> {

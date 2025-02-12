@@ -4,6 +4,7 @@ import com.balex.common.data.local.model.ShopItemDBModel
 import com.balex.common.domain.repository.ShopListRepository
 import javax.inject.Inject
 
+@Suppress("unused")
 class AddToShopListUseCase @Inject constructor(
     private val repository: ShopListRepository
 ) {

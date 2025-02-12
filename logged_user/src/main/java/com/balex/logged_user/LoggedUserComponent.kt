@@ -33,11 +33,13 @@ interface LoggedUserComponent {
 
     fun onBuyCoinsClicked(activity: Activity)
 
-    fun onBeginPaymentTransactionClicked()
-
     fun onClickEditTask(externalTask: ExternalTask, taskType: UserRepositoryImpl.Companion.TaskType)
 
-    fun onClickDeleteTask(externalTask: ExternalTask, taskType: UserRepositoryImpl.Companion.TaskType, token: String)
+    fun onClickDeleteTask(
+        externalTask: ExternalTask,
+        taskType: UserRepositoryImpl.Companion.TaskType,
+        token: String
+    )
 
     fun onClickDeleteShopItem(itemId: Long)
 
@@ -45,7 +47,10 @@ interface LoggedUserComponent {
 
     fun onClickedAddShopItemToDatabase(shopItem: ShopItemDBModel)
 
-    fun onClickAddNewTaskOrEditForOtherUserToFirebase(externalTask: ExternalTask, taskMode: TaskMode)
+    fun onClickAddNewTaskOrEditForOtherUserToFirebase(
+        externalTask: ExternalTask,
+        taskMode: TaskMode
+    )
 
     fun onNavigateToBottomItem(page: PagesNames)
 
@@ -70,8 +75,6 @@ interface LoggedUserComponent {
     fun onClickAbout()
 
     suspend fun onClickLogout()
-
-    fun onRefreshLanguage()
 
     fun onLanguageChanged(language: String)
 

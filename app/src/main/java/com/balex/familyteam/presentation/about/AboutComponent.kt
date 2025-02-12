@@ -6,8 +6,6 @@ interface AboutComponent {
 
     val model: StateFlow<AboutStore.State>
 
-    fun onRefreshLanguage()
-
     fun onLanguageChanged(language: String)
 
     fun onClickRules()

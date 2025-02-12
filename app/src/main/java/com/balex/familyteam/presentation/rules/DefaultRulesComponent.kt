@@ -17,6 +17,7 @@ class DefaultRulesComponent @AssistedInject constructor(
     private val storeFactory: RulesStoreFactory,
     private val getLanguageUseCase: GetLanguageUseCase,
     @Assisted("onAbout") private val onAbout: () -> Unit,
+    @Suppress("unused")
     @Assisted("componentContext") componentContext: ComponentContext
 
 ) : RulesComponent, ComponentContext by componentContext {
@@ -37,12 +38,9 @@ class DefaultRulesComponent @AssistedInject constructor(
         }
     }
 
+    @Suppress("unused")
     @OptIn(ExperimentalCoroutinesApi::class)
     override val model: StateFlow<RulesStore.State> = store.stateFlow
-
-    override fun onRefreshLanguage() {
-        store.accept(RulesStore.Intent.RefreshLanguage)
-    }
 
     override fun onLanguageChanged(language: String) {
         store.accept(RulesStore.Intent.ClickedChangeLanguage(language))

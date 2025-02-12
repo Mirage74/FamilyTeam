@@ -41,6 +41,7 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     @Assisted("onRules") private val onRules: () -> Unit,
     @Assisted("onAbout") private val onAbout: () -> Unit,
     @Assisted("onLogout") private val onLogout: () -> Unit,
+    @Suppress("unused")
     @Assisted("componentContext") componentContext: ComponentContext
 ) : LoggedUserComponent, ComponentContext by componentContext {
 
@@ -94,6 +95,7 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         scope.coroutineContext.cancelChildren()
     }
 
+    @Suppress("unused")
     @OptIn(ExperimentalCoroutinesApi::class)
     override val model: StateFlow<LoggedUserStore.State> = store.stateFlow
 
@@ -138,9 +140,6 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         store.accept(LoggedUserStore.Intent.ClickedBuyCoins(activity))
     }
 
-    override fun onBeginPaymentTransactionClicked() {
-        store.accept(LoggedUserStore.Intent.ClickedBeginPaymentTransaction)
-    }
 
     override fun onClickEditTask(
         externalTask: ExternalTask,
@@ -243,17 +242,12 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     }
 
 
-    override fun onRefreshLanguage() {
-        store.accept(LoggedUserStore.Intent.RefreshLanguage)
-    }
-
     override fun onLanguageChanged(language: String) {
         store.accept(LoggedUserStore.Intent.ClickedChangeLanguage(language))
     }
 
     @AssistedFactory
     interface Factory {
-
         fun create(
             @Assisted("sessionId") sessionId: String,
             @Assisted("onRules") onRules: () -> Unit,

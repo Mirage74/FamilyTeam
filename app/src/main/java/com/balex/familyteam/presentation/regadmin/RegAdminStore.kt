@@ -30,8 +30,6 @@ interface RegAdminStore : Store<Intent, State, Label> {
 
     sealed interface Intent {
 
-        data object ClickedBack : Intent
-
         data object ClickedRegister : Intent
 
         data object ClickedEmailOrPhoneButton : Intent
@@ -58,6 +56,7 @@ interface RegAdminStore : Store<Intent, State, Label> {
 
     }
 
+    @Suppress("unused")
     data class State(
         val language: String,
         val selectedOption: RegistrationOption,
@@ -94,8 +93,6 @@ interface RegAdminStore : Store<Intent, State, Label> {
 
         data object AdminIsRegisteredAndVerified : Label
 
-        data object ClickedBack : Label
-
         data class LoginPageWrongPassword(val user: User) : Label
 
     }
@@ -113,6 +110,7 @@ class RegAdminStoreFactory @Inject constructor(
 ) {
     val appContext: Context = context.applicationContext
 
+    @Suppress("unused")
     fun create(language: String): RegAdminStore =
         object : RegAdminStore, Store<Intent, State, Label> by storeFactory.create(
             name = "RegAdminStore",
@@ -156,6 +154,7 @@ class RegAdminStoreFactory @Inject constructor(
 
     }
 
+    @Suppress("unused")
     private sealed interface Msg {
 
         data class UserInfoIsChanged(val user: User) : Msg
@@ -243,10 +242,6 @@ class RegAdminStoreFactory @Inject constructor(
     private inner class ExecutorImpl : CoroutineExecutor<Intent, Action, State, Msg, Label>() {
         override fun executeIntent(intent: Intent) {
             when (intent) {
-                Intent.ClickedBack -> {
-                    publish(Label.ClickedBack)
-                }
-
                 Intent.ClickedChangePasswordVisibility -> {
                     dispatch(Msg.ChangePasswordVisibility)
                 }

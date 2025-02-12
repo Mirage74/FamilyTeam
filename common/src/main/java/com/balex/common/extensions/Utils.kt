@@ -27,15 +27,7 @@ fun ComponentContext.componentScope() = CoroutineScope(
 }
 
 
-fun Calendar.formattedFullDate(): String {
-    val format = SimpleDateFormat("EEEE | d MMM y", Locale.getDefault())
-    return format.format(time)
-}
 
-fun Calendar.formattedShortDayOfWeek(): String {
-    val format = SimpleDateFormat("EEE", Locale.getDefault())
-    return format.format(time)
-}
 
 fun String.formatStringFirstLetterUppercase(): String {
     return this.lowercase()
@@ -50,27 +42,6 @@ fun String.formatStringPhoneDelLeadNullAndAddPlus(): String {
 
 }
 
-
-fun User.calendarLastTimeAvailableFCMWasUpdated(): Calendar {
-    return Calendar.getInstance().apply {
-        time = Date(this@calendarLastTimeAvailableFCMWasUpdated.lastTimeAvailableFCMWasUpdated)
-    }
-}
-
-val Long.dayInMillis: Long
-    get() {
-        val calendar = Calendar.getInstance().apply {
-            timeInMillis = this@dayInMillis
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-        return calendar.timeInMillis
-    }
-
-val Long.timeOfDayInMillis: Long
-    get() = this % (24 * 60 * 60 * 1000)
 
 fun Task.checkData(): Boolean {
     var isCompareAlarm1AndAlarm2Correct = true
@@ -183,9 +154,35 @@ fun ToDoList.allMyTasks(myNickName: String): ExternalTasks {
             )
         }.sortedBy { it.task.cutoffTime })
 
-//        externalTasks = this.thingsToDoShared.externalTasks.union(
-//            this.thingsToDoPrivate.toExternalTasks(
-//                myNickName
-//            ).externalTasks
-//        ).toList().sortedBy { it.task.cutoffTime })
 }
+
+//val Long.dayInMillis: Long
+//    get() {
+//        val calendar = Calendar.getInstance().apply {
+//            timeInMillis = this@dayInMillis
+//            set(Calendar.HOUR_OF_DAY, 0)
+//            set(Calendar.MINUTE, 0)
+//            set(Calendar.SECOND, 0)
+//            set(Calendar.MILLISECOND, 0)
+//        }
+//        return calendar.timeInMillis
+//    }
+//
+//val Long.timeOfDayInMillis: Long
+//    get() = this % (24 * 60 * 60 * 1000)
+//
+//fun Calendar.formattedFullDate(): String {
+//    val format = SimpleDateFormat("EEEE | d MMM y", Locale.getDefault())
+//    return format.format(time)
+//}
+//
+//fun Calendar.formattedShortDayOfWeek(): String {
+//    val format = SimpleDateFormat("EEE", Locale.getDefault())
+//    return format.format(time)
+//}
+//
+//fun User.calendarLastTimeAvailableFCMWasUpdated(): Calendar {
+//    return Calendar.getInstance().apply {
+//        time = Date(this@calendarLastTimeAvailableFCMWasUpdated.lastTimeAvailableFCMWasUpdated)
+//    }
+//}

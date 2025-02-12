@@ -74,6 +74,7 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
             val auth = Firebase.auth
 
             try {
+                @Suppress("unused")
                 val verificationId = suspendCancellableCoroutine { continuation ->
                     val options = PhoneAuthOptions.newBuilder(auth)
                         .setPhoneNumber(phoneNumber)
@@ -137,7 +138,7 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
         nickName: String,
         displayName: String,
         password: String,
-        activity: com.balex.familyteam.presentation.MainActivity
+        activity: MainActivity
     ) {
         val token = resendTokenForSmsVerification
             ?: throw RuntimeException("resendTokenForSmsVerification is null")
@@ -213,7 +214,6 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
 
         if (isNewTeamCheckInCollections(
                 phoneNumber,
-                nickName,
                 password
             ) == NO_ADMIN_IN_COLLECTION_FOUND_BY_PHONE
         ) {
@@ -288,19 +288,18 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
 
     private suspend fun isNewTeamCheckInCollections(
         phone: String,
-        nickName: String,
         password: String
     ): String {
         val admin = findAdminInCollectionByDocumentNameUseCase(phone)
 
         if (admin == null) {
-            removeRecordFromCollection(FIREBASE_USERS_COLLECTION, phone, nickName)
+            removeRecordFromCollection(FIREBASE_USERS_COLLECTION, phone)
             return NO_ADMIN_IN_COLLECTION_FOUND_BY_PHONE
         } else {
             val adminAsUser = findUserAsAdminInCollection(admin)
 
             if (adminAsUser == null) {
-                removeRecordFromCollection(FIREBASE_ADMINS_COLLECTION, phone, nickName)
+                removeRecordFromCollection(FIREBASE_ADMINS_COLLECTION, phone)
                 return NO_ADMIN_IN_COLLECTION_FOUND_BY_PHONE
             } else {
                 if (adminAsUser.password != password) {

@@ -20,8 +20,7 @@ interface UserRepository {
 
     suspend fun deleteTaskFromFirebase(
         externalTask: ExternalTask,
-        taskType: UserRepositoryImpl.Companion.TaskType,
-        token: String
+        taskType: UserRepositoryImpl.Companion.TaskType
     )
 
     suspend fun exchangeCoins(coins: Int, tasks: Int, reminders: Int)

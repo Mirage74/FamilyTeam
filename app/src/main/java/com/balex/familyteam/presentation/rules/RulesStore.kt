@@ -25,6 +25,7 @@ interface RulesStore : Store<Intent, State, Label> {
 
     }
 
+    @Suppress("unused")
     data class State(
         val language: String
     )
@@ -40,6 +41,7 @@ class RulesStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory
 ) {
 
+    @Suppress("unused")
     fun create(language: String): RulesStore =
         object : RulesStore, Store<Intent, State, Label> by storeFactory.create(
             name = "RulesStore",
@@ -51,10 +53,12 @@ class RulesStoreFactory @Inject constructor(
             reducer = ReducerImpl
         ) {}
 
+    @Suppress("unused")
     private sealed interface Action {
         data class LanguageIsChanged(val language: String) : Action
     }
 
+    @Suppress("unused")
     private sealed interface Msg {
         data class LanguageIsChanged(val language: String) : Msg
     }

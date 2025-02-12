@@ -44,6 +44,7 @@ class UserRepositoryImpl @Inject constructor(
     private val context: Context
 ) : UserRepository {
 
+    @Suppress("unused")
     private var usersNicknamesList: MutableList<String> = mutableListOf()
         set(value) {
             field = value
@@ -536,8 +537,7 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun deleteTaskFromFirebase(
         externalTask: ExternalTask,
-        taskType: TaskType,
-        token: String
+        taskType: TaskType
     ) {
         withContext(Dispatchers.IO) {
             addRemindersToDeleteSchedule(externalTask.task)
