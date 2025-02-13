@@ -25,7 +25,6 @@ fun ResendSmsButton(
 ) {
     Button(
         onClick = {
-            //component.onClickSendSmsAgain()
             CoroutineScope(Dispatchers.Default).launch {
                 phoneFirebaseRepository.resendVerificationCode(
                     "+" + state.emailOrPhone,

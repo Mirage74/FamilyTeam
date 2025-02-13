@@ -32,13 +32,3 @@ data class MenuItems(
     }
 }
 
-//data class MenuItems(
-//    @SerializedName("items")
-//    val items: List<String> = listOf(MENU_ITEM_RULES, MENU_ITEM_ABOUT)
-//) {
-//    companion object {
-//        const val MENU_ITEM_RULES = "Rules"
-//        const val MENU_ITEM_ABOUT = "About"
-//    }
-//}
-

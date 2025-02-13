@@ -23,7 +23,7 @@ import dagger.assisted.AssistedInject
 import kotlinx.serialization.Serializable
 import java.util.UUID
 
-
+@Suppress("unused")
 class DefaultRootComponent @AssistedInject constructor(
     private val notLoggedComponentFactory: DefaultNotLoggedComponent.Factory,
     private val regAdminComponentFactory: DefaultRegAdminComponent.Factory,
@@ -45,7 +45,6 @@ class DefaultRootComponent @AssistedInject constructor(
         childFactory = ::child
     )
 
-    @Suppress("unused")
     override val stack: Value<ChildStack<*, Child>> = _stack
 
     @OptIn(com.arkivanov.decompose.DelicateDecomposeApi::class)
@@ -79,8 +78,6 @@ class DefaultRootComponent @AssistedInject constructor(
                 val component = regAdminComponentFactory.create(
                     onAdminRegisteredAndVerified = {
                         navigation.replaceAll(Config.LoggedUser(UUID.randomUUID().toString()))
-                    }, onAbout = {
-                        navigation.push(Config.About)
                     }, onAdminExistButWrongPassword = { userLogin ->
                         navigation.replaceAll(Config.NotLogged)
                         navigation.push(Config.LoginUser(userLogin))
@@ -143,11 +140,6 @@ class DefaultRootComponent @AssistedInject constructor(
         }
     }
 
-
-//    override fun onBackClicked(toIndex: Int) {
-//        navigation.popTo(index = toIndex)
-//    }
-
     @Serializable
     sealed interface Config {
 
@@ -160,7 +152,6 @@ class DefaultRootComponent @AssistedInject constructor(
         @Serializable
         data class LoginUser(val user: User) : Config
 
-        @Suppress("unused")
         @Serializable
         data class LoggedUser(val id: String) : Config
 

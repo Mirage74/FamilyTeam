@@ -2,7 +2,6 @@ package com.balex.common.data.iap
 
 import android.app.Activity
 import android.content.Context
-import kotlinx.coroutines.DelicateCoroutinesApi
 
 /**
  * Initialize billing service.

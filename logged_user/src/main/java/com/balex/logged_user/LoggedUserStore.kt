@@ -229,7 +229,6 @@ class LoggedUserStoreFactory @Inject constructor(
             initialState = State(
                 sessionId,
                 getUserUseCase(),
-                //isDeviceTokenSaved = false,
                 isDeviceTokenSaved = true,
                 listOf(),
                 ShopItems(),
@@ -402,7 +401,7 @@ class LoggedUserStoreFactory @Inject constructor(
                             }
                         }
                     } else {
-                        Log.d("ExecutorImpl, SaveDeviceToken error", "token is empty")
+                        Log.e("ExecutorImpl, SaveDeviceToken error", "token is empty")
                         dispatch(Msg.IsTokenSavedSuccessfully(false))
                     }
 
@@ -759,7 +758,6 @@ class LoggedUserStoreFactory @Inject constructor(
                 }
 
                 is Msg.UserIsChanged -> {
-                    //if (msg.user.nickName != User.DEFAULT_NICK_NAME && this.isDeviceTokenSaved) {
                     if (msg.user.nickName != User.DEFAULT_NICK_NAME) {
                         copy(
                             user = msg.user,

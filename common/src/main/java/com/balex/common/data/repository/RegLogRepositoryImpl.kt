@@ -69,9 +69,8 @@ class RegLogRepositoryImpl @Inject constructor(
                 value.copy(token = field.token)
             }
             field = newValue
-            Log.d("Firestore token", "globalRepoUser new value token: ${value.token}")
             if (value.token.isBlank() && field.token.isNotBlank()) {
-                Log.d("Firestore token", "globalRepoUser new value token is blank")
+                Log.e("Firestore token", "globalRepoUser new value token is blank")
             }
             coroutineScope.launch {
                 isCurrentUserNeedRefreshFlow.emit(Unit)
@@ -127,7 +126,6 @@ class RegLogRepositoryImpl @Inject constructor(
             try {
                 val userFakeEmailFromStorage = Storage.getUser(context)
                 val phoneLanguageFromStorage = Storage.getLanguage(context)
-                Log.d("getUser", "userFakeEmailFromStorage begin: $userFakeEmailFromStorage")
 
                 val phoneLang =
                     if (phoneLanguageFromStorage != Storage.NO_LANGUAGE_SAVED_IN_SHARED_PREFERENCES) {
@@ -149,19 +147,10 @@ class RegLogRepositoryImpl @Inject constructor(
                     emit(globalRepoUser)
                 } else {
                     if (!globalRepoUser.pressedLogoutButton) {
-
-                        Log.d(
-                            "getUser",
-                            "signToFirebase, userFakeEmailFromStorage, globalUser.token : $userFakeEmailFromStorage ${globalRepoUser.token}"
-                        )
                         signToFirebaseWithEmailAndPasswordFromPreferences(
                             userFakeEmailFromStorage,
                             Storage.getUsersPassword(context),
                             phoneLang
-                        )
-                        Log.d(
-                            "getUser",
-                            "signToFirebase, userFakeEmailFromStorage, globalUser.token AFTER : $userFakeEmailFromStorage ${globalRepoUser.token}"
                         )
                     }
                 }
@@ -210,10 +199,6 @@ class RegLogRepositoryImpl @Inject constructor(
                     if (userListener != null && userListener.nickName == globalRepoUser.nickName && globalRepoUser != userListener) {
 
                         globalRepoUser = userListener
-                        Log.d("Firestore token", "userListener : $userListener")
-//                        coroutineScope.launch {
-//                            isCurrentUserNeedRefreshFlow.emit(Unit)
-//                        }
                     }
                 }
             }
@@ -223,7 +208,6 @@ class RegLogRepositoryImpl @Inject constructor(
 
 
     override fun observeLanguage(): StateFlow<String> {
-        //val job = Job()
         return flow {
             try {
                 val phoneLanguageFromStorage = Storage.getLanguage(context)
@@ -243,11 +227,7 @@ class RegLogRepositoryImpl @Inject constructor(
             } catch (e: Exception) {
                 Log.e("observeLanguage", "Error: ${e.message}", e)
             }
-//            } finally {
-//                job.cancel()
-//            }
         }
-            //.takeWhile { job.isActive }
             .stateIn(
                 scope = coroutineScope,
                 started = SharingStarted.Lazily,
@@ -280,8 +260,6 @@ class RegLogRepositoryImpl @Inject constructor(
 
     override suspend fun resetWrongPasswordUserToDefault() {
         isWrongPassword = User()
-        //isWrongPasswordNeedRefreshFlow.emit(Unit)
-
     }
 
     override fun getRepoUser(): User {
@@ -289,7 +267,6 @@ class RegLogRepositoryImpl @Inject constructor(
     }
 
     override fun setNewToken(newToken: String) {
-        Log.d("Firestore token", "setNewToken newToken $newToken")
         token = newToken
         val newUser = globalRepoUser.copy(token = newToken)
         globalRepoUser = newUser
@@ -313,7 +290,6 @@ class RegLogRepositoryImpl @Inject constructor(
 
     override suspend fun setUserWithError(message: String) {
         globalRepoUser = User(existErrorInData = true, errorMessage = message)
-        //isCurrentUserNeedRefreshFlow.emit(Unit)
     }
 
     override fun saveLanguage(language: String) {
@@ -341,7 +317,7 @@ class RegLogRepositoryImpl @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                Log.d("removeRecordFromCollection, adminsCollection ", "Error: ${e.message}")
+                Log.e("removeRecordFromCollection, adminsCollection ", "Error: ${e.message}")
             }
         }
 
@@ -352,7 +328,7 @@ class RegLogRepositoryImpl @Inject constructor(
                     document.delete().await()
                 }
             } catch (e: Exception) {
-                Log.d("removeRecordFromCollection, usersCollection", "Error: ${e.message}")
+                Log.e("removeRecordFromCollection, usersCollection", "Error: ${e.message}")
             }
         }
     }
@@ -415,9 +391,7 @@ class RegLogRepositoryImpl @Inject constructor(
             )
             Storage.saveUsersPassword(context, newUser.password)
             Storage.saveLanguage(context, language)
-            Log.d("Firestore token", "addUserToCollection,  newUser: $newUser")
             globalRepoUser = newUser
-            //isCurrentUserNeedRefreshFlow.emit(Unit)
             Result.success(Unit)
         } catch (e: Exception) {
             setUserWithError(ERROR_ADD_USER_TO_FIREBASE)
@@ -442,7 +416,6 @@ class RegLogRepositoryImpl @Inject constructor(
             val result = addAdminToCollection(newAdmin)
             if (result.isSuccess) {
                 admin = newAdmin
-                //isCurrentAdminNeedRefreshFlow.emit(Unit)
             }
         } else {
             sendVerificationEmailAndWaitForResult(
@@ -460,7 +433,6 @@ class RegLogRepositoryImpl @Inject constructor(
 
 
     override suspend fun refreshFCMLastTimeUpdated() {
-        //deleteOldTasks()
         if (globalRepoUser.nickName != User.DEFAULT_FAKE_EMAIL &&
             globalRepoUser.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
         ) {
@@ -527,7 +499,7 @@ class RegLogRepositoryImpl @Inject constructor(
                     }
 
                 } catch (e: Exception) {
-                    Log.d("refreshFCMLastTimeUpdated error", e.toString())
+                    Log.e("refreshFCMLastTimeUpdated error", e.toString())
                 }
             }
         }
@@ -568,12 +540,7 @@ class RegLogRepositoryImpl @Inject constructor(
                             val firebaseAuthUser = authRes.user
                             if (!globalRepoUser.pressedLogoutButton) {
                                 if (firebaseAuthUser != null) {
-                                    Log.d(
-                                        "Firestore token",
-                                        "userFromCollection : $userFromCollection"
-                                    )
                                     globalRepoUser = userFromCollection
-                                    //isCurrentUserNeedRefreshFlow.emit(Unit)
                                 } else {
                                     setUserWithError("signToFirebaseWithEmailAndPasswordFromPreferences: ERROR AUTH USER: $fakeEmail")
                                 }
@@ -583,8 +550,6 @@ class RegLogRepositoryImpl @Inject constructor(
                         globalRepoUser = userFromCollection.copy(password = User.WRONG_PASSWORD)
                         isWrongPassword =
                             userFromCollection.copy(password = User.WRONG_PASSWORD)
-
-                        //isWrongPasswordNeedRefreshFlow.emit(Unit)
                     }
                 } else {
                     //setUserWithError("signToFirebaseWithEmailAndPasswordFromPreferences: ADMIN_NOT_FOUND: ${extractedUser.adminEmailOrPhone}")
@@ -594,7 +559,6 @@ class RegLogRepositoryImpl @Inject constructor(
                             nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES,
                             language = phoneLang
                         )
-                    Log.d("getUser", "signToFirebase 2,  emptyUserNotSaved: $emptyUserNotSaved")
                     globalRepoUser = emptyUserNotSaved
                 }
 
@@ -606,7 +570,6 @@ class RegLogRepositoryImpl @Inject constructor(
                         nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES,
                         language = phoneLang
                     )
-                Log.d("getUser", "signToFirebase 3,  emptyUserNotSaved: $emptyUserNotSaved")
                 globalRepoUser = emptyUserNotSaved
             }
 
@@ -614,7 +577,6 @@ class RegLogRepositoryImpl @Inject constructor(
             val errCode = e.errorCode.trim()
             if (errCode == "ERROR_INVALID_CREDENTIAL" || errCode == "ERROR_USER_NOT_FOUND") {
                 isWrongPassword = globalRepoUser
-                //isWrongPasswordNeedRefreshFlow.emit(Unit)
             } else {
                 Storage.clearPreferences(context)
                 setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
@@ -652,7 +614,6 @@ class RegLogRepositoryImpl @Inject constructor(
                     if (adminFromCollection.nickName != Admin.DEFAULT_NICK_NAME) {
                         if (firebaseAuthUser.isEmailVerified) {
                             admin = adminFromCollection
-                            //isCurrentAdminNeedRefreshFlow.emit(Unit)
                         } else {
                             sendVerificationEmailAndWaitForResult(
                                 firebaseAuthUser,
@@ -711,7 +672,6 @@ class RegLogRepositoryImpl @Inject constructor(
                 )
                 if (user != null && user.password != adminPassword) {
                     isWrongPassword = user
-                    //isWrongPasswordNeedRefreshFlow.emit(Unit)
                 }
             } else {
                 val errCode = e.errorCode.trim()
@@ -761,20 +721,14 @@ class RegLogRepositoryImpl @Inject constructor(
                 }
                 if (firebaseUser != null && !globalRepoUser.pressedLogoutButton) {
                     val userFromCollection = findUserInCollection(userToSignIn)
-                    Log.d(
-                        "Firestore token",
-                        "signToFirebase 4,  userFromCollection: $userFromCollection"
-                    )
                     globalRepoUser =
                         if (userFromCollection != null && userFromCollection.nickName != User.DEFAULT_NICK_NAME) {
                             userFromCollection
-                            //isCurrentUserNeedRefreshFlow.emit(Unit)
 
                         } else {
                             val result = addUserToCollection(newUser)
                             if (result.isSuccess) {
                                 newUser
-                                //isCurrentUserNeedRefreshFlow.emit(Unit)
                             } else {
                                 setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
                                 return StatusFakeEmailSignIn.OTHER_FAKE_EMAIL_SIGN_IN_ERROR
@@ -868,7 +822,7 @@ class RegLogRepositoryImpl @Inject constructor(
                 setUserWithError("registerAndVerifyNewTeamByEmail: $REGISTRATION_ERROR: ${e.message}")
             }
         } else {
-            //storageSavePreferences(email, nickName, password, language)
+            Log.i("registerAndVerifyNewTeamByEmail", "Team '$email' already registered")
 
         }
     }
@@ -1079,14 +1033,11 @@ class RegLogRepositoryImpl @Inject constructor(
             return false
         }
         isWrongPassword = User(adminEmailOrPhone = email)
-        //isWrongPasswordNeedRefreshFlow.emit(Unit)
         return false
     }
 
     override suspend fun setWrongPasswordUser(user: User) {
         isWrongPassword = user
-        //isWrongPasswordNeedRefreshFlow.emit(Unit)
-
     }
 
     override fun createFakeUserEmail(nick: String, data: String): String {
@@ -1171,7 +1122,6 @@ class RegLogRepositoryImpl @Inject constructor(
                     )
                     if (trySignIn == StatusFakeEmailSignIn.USER_SIGNED_IN) {
                         admin = adminData
-                        //isCurrentUserNeedRefreshFlow.emit(Unit)
                     }
                     return globalRepoUser
                 }
@@ -1187,7 +1137,6 @@ class RegLogRepositoryImpl @Inject constructor(
     }
 
     private suspend fun deleteOldRemindersFromSchedule(currentTimestamp: Long) {
-        //Log.d("currentTimestamp", "currentTimestamp: ${currentTimestamp}")
         try {
             val querySnapshot: QuerySnapshot
             withContext(Dispatchers.IO) {
@@ -1197,7 +1146,6 @@ class RegLogRepositoryImpl @Inject constructor(
                     .await()
             }
 
-            //Log.d("currentTimestamp", "querySnapshot size: ${querySnapshot.size()}")
             for (document in querySnapshot.documents) {
                 currentCoroutineContext().ensureActive()
                 withContext(Dispatchers.IO) {
@@ -1236,7 +1184,6 @@ class RegLogRepositoryImpl @Inject constructor(
 
     private suspend fun deleteOldDocumentsFromRemindersQueueCollection(currentTimestamp: Long) {
         try {
-            //Log.d("currentTimestamp", "currentTimestamp: $currentTimestamp")
             val querySnapshot: QuerySnapshot
             withContext(Dispatchers.IO) {
                 querySnapshot = remindersCollection
@@ -1261,11 +1208,9 @@ class RegLogRepositoryImpl @Inject constructor(
 
     override suspend fun deleteOldTasks() {
         val userForModify = globalRepoUser.copy()
-        Log.d("deleteOldTasks", "globalRepoUser.nickName before: ${globalRepoUser.nickName}")
         if (userForModify.nickName != User.DEFAULT_NICK_NAME &&
             userForModify.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
         ) {
-            Log.d("deleteOldTasks", "globalRepoUser.nickName after: ${globalRepoUser.nickName}")
             val currentTimestamp = System.currentTimeMillis()
             withContext(Dispatchers.IO) {
                 deleteOldRemindersFromSchedule(currentTimestamp)
@@ -1296,9 +1241,6 @@ class RegLogRepositoryImpl @Inject constructor(
                 thingsToDoForOtherUsers = ExternalTasks(externalTasks = tasksForOtherUsers)
             )
 
-
-
-            Log.d("deleteOldTasks", "userForModify $userForModify")
             val userCollection =
                 usersCollection.document(userForModify.adminEmailOrPhone)
                     .collection(userForModify.nickName.lowercase())
@@ -1319,7 +1261,7 @@ class RegLogRepositoryImpl @Inject constructor(
                     userCollection.set(userForUpdate).await()
                 }
             } catch (e: Exception) {
-                Log.d("deleteOldTasks error", e.toString())
+                Log.e("deleteOldTasks error", e.toString())
             }
         }
 

@@ -48,7 +48,7 @@ fun DatePickerFieldToModal(
         value = selectedDate.let {
             onDateSelected(it)
             convertMillisToDate(it)
-        } ?: "",
+        },
         maxLines = 1,
         singleLine = true,
         onValueChange = { },
@@ -60,7 +60,6 @@ fun DatePickerFieldToModal(
             Icon(Icons.Default.DateRange, contentDescription = "Select date")
         },
         modifier = modifier
-            //.fillMaxWidth()
             .pointerInput(selectedDate) {
                 awaitEachGesture {
                     // Modifier.clickable doesn't work for text fields, so we use Modifier.pointerInput

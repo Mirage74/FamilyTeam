@@ -8,7 +8,6 @@ import android.content.Intent
 import androidx.core.app.NotificationCompat
 import com.balex.common.data.datastore.Storage
 import com.balex.common.domain.entity.User
-import com.balex.common.domain.usecases.regLog.GetTokenUseCase
 import com.balex.common.domain.usecases.regLog.GetUserUseCase
 import com.balex.common.domain.usecases.regLog.SetNewTokenUseCase
 import com.balex.common.domain.usecases.user.SaveDeviceTokenUseCase

@@ -55,40 +55,40 @@ android {
 
 dependencies {
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-
     implementation(project(":common"))
     implementation(project(":logged_user"))
 
+    ksp(libs.dagger.compiler)
+    implementation(libs.dagger.core)
 
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.kotlinx.serialization.core)
+    implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.activity)
     implementation(libs.androidx.material3)
-
     implementation(libs.androidx.material)
+    implementation(libs.icons)
+    implementation(libs.androidx.savedstate)
+    implementation(libs.androidx.foundation)
+    implementation(libs.androidx.foundation.layout)
+    implementation(libs.androidx.animation.core)
+    implementation(libs.androidx.annotation)
+    implementation(libs.androidx.core)
+    implementation(libs.androidx.material.icons.core)
+    implementation(libs.androidx.runtime)
+    implementation(libs.javax.inject)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.play.services)
 
-    implementation(libs.mvikotlin.main)
-    implementation(libs.mvikotlin.core)
-    implementation(libs.mvikotlin.coroutines)
-    implementation(libs.mvikotlin.logging)
 
     implementation(libs.decompose.core)
+    implementation(libs.mvikotlin.core)
+    implementation(libs.mvikotlin.coroutines)
+    implementation(libs.back.handler)
+    implementation(libs.instance.keeper)
+    implementation(libs.lifecycle)
+    implementation(libs.state.keeper)
     implementation("com.arkivanov.decompose:extensions-compose:3.2.2")
-
-
-    implementation(libs.dagger.core)
-    ksp(libs.dagger.compiler)
-
-    implementation(libs.glide.compose)
-    implementation(libs.retorfit.core)
-    implementation(libs.retorfit.gsonConverter)
-    implementation(libs.icons)
-
-    implementation(libs.logging.interceptor)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
@@ -97,24 +97,18 @@ dependencies {
     implementation(libs.firebase.database)
     implementation(libs.firebase.firestore.ktx)
 
+    runtimeOnly(libs.billing)
 
-    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.text)
+    implementation(libs.androidx.ui.unit)
+    implementation(libs.androidx.ui)
 
-    implementation(libs.reaktive)
-
-    implementation(libs.billing)
-    implementation(libs.billing.ktx)
-
-
-    implementation(libs.kotlinx.serialization.core)
-    implementation(libs.kotlinx.serialization.json)
-
-
+    androidTestImplementation(libs.androidx.monitor)
+    androidTestImplementation(libs.junit)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
+    debugRuntimeOnly(libs.androidx.ui.test.manifest)
 }

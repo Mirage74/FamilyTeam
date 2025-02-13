@@ -56,7 +56,6 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
         }
 
         lifecycle.doOnResume {
-            //onRefreshLanguage()
             store.startBootstrapperCollectFlow()
             startCollectingLabels()
         }

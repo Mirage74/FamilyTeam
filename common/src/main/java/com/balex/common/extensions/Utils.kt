@@ -8,13 +8,11 @@ import com.balex.common.domain.entity.PrivateTasks
 import com.balex.common.domain.entity.Reminder
 import com.balex.common.domain.entity.Task
 import com.balex.common.domain.entity.ToDoList
-import com.balex.common.domain.entity.User
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
@@ -84,7 +82,6 @@ fun Task.checkData(): Boolean {
     return this.cutoffTime - System.currentTimeMillis() >= Task.MIN_CUTOFF_TIME_FROM_NOW_IN_MILLIS &&
             isCompareAlarmAndCutoffTimeCorrect1 && isCompareAlarmAndCutoffTimeCorrect2 && isCompareAlarmAndCutoffTimeCorrect3 &&
             isCompareAlarm1AndAlarm2Correct && isCompareAlarm1AndAlarm3Correct && isCompareAlarm2AndAlarm3Correct
-    //return true
 }
 
 fun Task.toExternalTask(taskOwner: String): ExternalTask {
@@ -100,7 +97,6 @@ fun Task.toReminder(alarmNumber: Int, token: String): Reminder {
     val readableAlarmTime: String
     val pattern = "dd MMMM yyyy HH:mm"
     val formatter = SimpleDateFormat(pattern, Locale.getDefault())
-    //val formatter = SimpleDateFormat(pattern, Locale.ENGLISH)
     formatter.timeZone = TimeZone.getTimeZone("UTC")
     when (alarmNumber) {
         1 -> {

@@ -28,7 +28,6 @@ class BillingService(
 
     override fun init(key: String?) {
         decodedKey = key
-        Log.d("init", "key: $key")
         mBillingClient = BillingClient.newBuilder(context).setListener(this).enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()).build()
         mBillingClient.startConnection(object : BillingClientStateListener{
             override fun onBillingServiceDisconnected() {
@@ -41,7 +40,6 @@ class BillingService(
                 when {
                     billingResult.isOk() -> {
                         isBillingClientConnected(true, billingResult.responseCode)
-                        Log.d("onBillingSetupFinished", "billingResult: $billingResult")
                         nonConsumableKeys.queryProductDetails(BillingClient.ProductType.INAPP) {
                             consumableKeys.queryProductDetails(BillingClient.ProductType.INAPP) {
                                 subscriptionSkuKeys.queryProductDetails(BillingClient.ProductType.SUBS) {
@@ -72,35 +70,14 @@ class BillingService(
             .build()
         )
 
-        Log.d("queryPurchases", "inAppResult.purchasesList: ${inAppResult.purchasesList}")
         processPurchases(inAppResult.purchasesList, isRestore = true)
         val subsResult: PurchasesResult = mBillingClient.queryPurchasesAsync(
             QueryPurchasesParams.newBuilder()
             .setProductType(BillingClient.ProductType.SUBS)
             .build()
         )
-        Log.d("queryPurchases", "subsResult.purchasesList: ${subsResult.purchasesList}")
         processPurchases(subsResult.purchasesList, isRestore = true)
     }
-
-//    private suspend fun queryPurchases() {
-//        mBillingClient.queryPurchasesAsync(
-//            QueryPurchasesParams.newBuilder()
-//                .setProductType(BillingClient.ProductType.INAPP)
-//                .build()
-//        ).let { inAppResult ->
-//            Log.d("queryPurchases", "inAppResult.purchasesList: ${inAppResult.purchasesList}")
-//            processPurchases(inAppResult.purchasesList, isRestore = true)
-//
-//            mBillingClient.queryPurchasesAsync(
-//                QueryPurchasesParams.newBuilder()
-//                    .setProductType(BillingClient.ProductType.SUBS)
-//                    .build()
-//            ).let { subsResult ->
-//                processPurchases(subsResult.purchasesList, isRestore = true)
-//            }
-//        }
-//    }
 
 
     override fun buy(activity: Activity, sku: String, obfuscatedAccountId: String?, obfuscatedProfileId: String?) {
@@ -221,8 +198,6 @@ class BillingService(
 
                     // Grant entitlement to the user.
                     val productDetails = productDetails[purchase.products[0]]
-                    Log.d("processPurchases", "productDetails: $productDetails")
-                    Log.d("processPurchases", "purchase: $purchase")
                     val isProductConsumable = consumableKeys.contains(purchase.products[0])
                     when (productDetails?.productType) {
                         BillingClient.ProductType.INAPP -> {
@@ -238,7 +213,7 @@ class BillingService(
                                                 productOwned(getPurchaseInfo(purchase), false)
                                             }
                                             else -> {
-                                                Log.d(
+                                                Log.i(
                                                     TAG,
                                                     "Handling consumables : Error during consumption attempt -> ${billingResult.debugMessage}"
                                                 )
@@ -329,7 +304,6 @@ class BillingService(
             if (billingResult.isOk()) {
                 isBillingClientConnected(true, billingResult.responseCode)
                 productDetailsList.forEach {
-                    Log.d("queryProductDetails", "productDetails: $it")
                     productDetails[it.productId] = it
                 }
 

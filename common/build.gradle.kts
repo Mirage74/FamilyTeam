@@ -46,34 +46,44 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.security.crypto)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation (libs.androidx.navigation.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.kotlinx.serialization.core)
-    implementation(libs.kotlinx.serialization.json)
-    implementation(libs.retorfit.gsonConverter)
 
-
-    implementation(libs.decompose.core)
-
-    implementation(libs.mvikotlin.main)
-    implementation(libs.mvikotlin.core)
-    implementation(libs.mvikotlin.coroutines)
-    implementation(libs.mvikotlin.logging)
-
-    implementation(libs.dagger.core)
-    implementation(libs.billing.ktx)
     ksp(libs.dagger.compiler)
-
-    implementation(libs.room.core)
     ksp(libs.room.compiler)
 
+    api(libs.dagger.core)
+    api(libs.javax.inject)
+    api(libs.androidx.runtime)
+    api(libs.androidx.room.runtime)
+    api(libs.kotlinx.coroutines.core)
+    api(libs.billing)
 
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.core)
+    implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.material3)
+    implementation(libs.material)
+    implementation(libs.androidx.foundation)
+    implementation(libs.androidx.foundation.layout)
+    implementation(libs.androidx.material.icons.core)
+    implementation(libs.androidx.runtime.saveable)
+    implementation(libs.androidx.annotation)
+
+    implementation(libs.androidx.security.crypto)
+
+    implementation(libs.kotlinx.serialization.core)
+
+    implementation(libs.decompose.core)
+    implementation(libs.mvikotlin.main)
+    implementation(libs.mvikotlin.core)
+    implementation(libs.mvikotlin.logging)
+    implementation(libs.lifecycle)
+
+    implementation(libs.billing.ktx)
+
+    implementation(libs.room.core)
+    implementation(libs.androidx.room.common)
+    implementation(libs.androidx.sqlite)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
@@ -82,11 +92,17 @@ dependencies {
     implementation(libs.firebase.database)
     implementation(libs.firebase.firestore.ktx)
 
+    implementation(libs.gson)
+
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.text)
+    implementation(libs.androidx.ui.unit)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-
-
+    androidTestImplementation(libs.androidx.monitor)
+    androidTestImplementation(libs.junit)
 
 }
 java {

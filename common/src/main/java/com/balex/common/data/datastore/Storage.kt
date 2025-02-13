@@ -20,36 +20,21 @@ object Storage {
 
 
     private fun getEncryptedSharedPreferences(context: Context): SharedPreferences {
-        //context.getSharedPreferences("encrypted_prefs", Context.MODE_PRIVATE).edit().clear().apply()
-        val pref = (EncryptedSharedPreferences.create(
+        return (EncryptedSharedPreferences.create(
             FILE_NAME,
             masterKeyAlias,
             context,
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         ))
-//        return (EncryptedSharedPreferences.create(
-//            FILE_NAME,
-//            masterKeyAlias,
-//            context,
-//            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-//            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-//        ))
-        return pref
     }
 
 
     fun getUser(context: Context): String {
-        //context.deleteSharedPreferences(FILE_NAME)
-        //context.getSharedPreferences("encrypted_prefs", Context.MODE_PRIVATE).edit().clear().apply()
-        val sharedPreferences = getEncryptedSharedPreferences(context)
-        val user = sharedPreferences.getString(USER_KEY, NO_USER_SAVED_IN_SHARED_PREFERENCES)
-//        return getEncryptedSharedPreferences(context).getString(
-//            USER_KEY,
-//            NO_USER_SAVED_IN_SHARED_PREFERENCES
-//        ).toString().trim()
-        Log.d("getUser", "user: $user")
-        return user.toString()
+        return getEncryptedSharedPreferences(context).getString(
+            USER_KEY,
+            NO_USER_SAVED_IN_SHARED_PREFERENCES
+        ).toString().trim()
     }
 
     fun saveUser(context: Context, userName: String) {
@@ -85,7 +70,6 @@ object Storage {
     }
 
     fun clearPreferences(context: Context) {
-        Log.d("getUser", "clearPreferences called")
         getEncryptedSharedPreferences(context).edit().apply {
             putString(USER_KEY, NO_USER_SAVED_IN_SHARED_PREFERENCES)
             putString(USER_PASSWORD_KEY, NO_USER_PASSWORD_SAVED_IN_SHARED_PREFERENCES)
@@ -100,5 +84,4 @@ object Storage {
             putString(LANGUAGE_KEY, language.trim())
         }.apply()
     }
-
 }

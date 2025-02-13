@@ -25,7 +25,6 @@ class DefaultRegAdminComponent @AssistedInject constructor(
     private val getLanguageUseCase: GetLanguageUseCase,
     @Suppress("unused")
     override val phoneFirebaseRepository: PhoneFirebaseRepository,
-    @Assisted("onAbout") private val onAbout: () -> Unit,
     @Assisted("onAdminExistButWrongPassword") private val onAdminExistButWrongPassword: (User) -> Unit,
     @Assisted("onAdminRegisteredAndVerified") private val onAdminRegisteredAndVerified: () -> Unit,
     @Suppress("unused")
@@ -55,17 +54,12 @@ class DefaultRegAdminComponent @AssistedInject constructor(
             store.labels.collect {
                 when (it) {
 
-                    RegAdminStore.Label.ClickedAbout -> {
-                        onAbout()
-                    }
-
                     RegAdminStore.Label.AdminIsRegisteredAndVerified -> {
                         onAdminRegisteredAndVerified()
                     }
 
 
                     is RegAdminStore.Label.LoginPageWrongPassword -> {
-                        //resetUserToDefaultUseCase()
                         onAdminExistButWrongPassword(it.user)
                     }
                 }
@@ -127,7 +121,6 @@ class DefaultRegAdminComponent @AssistedInject constructor(
     interface Factory {
 
         fun create(
-            @Assisted("onAbout") onAbout: () -> Unit,
             @Assisted("onAdminExistButWrongPassword") onAdminExistButWrongPassword: (User) -> Unit,
             @Assisted("onAdminRegisteredAndVerified") onAdminRegisteredAndVerified: () -> Unit,
             @Assisted("componentContext") componentContext: ComponentContext

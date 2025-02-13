@@ -83,11 +83,10 @@ fun LoggedUserContent(
 
     LaunchedEffect(deviceToken) {
         if (isFirstRun || state.sessionId != previousSessionId) {
-            Log.d("LoggedUserContent", "deviceToken: $deviceToken")
             if (deviceToken.isNotEmpty()) {
                 component.sendIntent(LoggedUserStore.Intent.SaveDeviceToken(deviceToken))
             } else {
-                Log.d("LoggedUserContent", "deviceToken is empty")
+                Log.e("LoggedUserContent", "deviceToken is empty")
             }
             isFirstRun = false
             previousSessionId = state.sessionId

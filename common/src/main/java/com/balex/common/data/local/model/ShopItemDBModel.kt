@@ -1,6 +1,5 @@
 package com.balex.common.data.local.model
 
-import androidx.compose.ui.text.intl.Locale
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 

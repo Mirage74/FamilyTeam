@@ -11,8 +11,6 @@ class FamilyApp : Application() {
     override fun onCreate() {
         super.onCreate()
         applicationComponent = DaggerApplicationComponent.factory().create(this)
-
-        //Log.d("applicationComponent", applicationComponent.toString())
         FirebaseApp.initializeApp(this)
 
     }

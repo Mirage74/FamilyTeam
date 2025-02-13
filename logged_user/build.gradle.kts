@@ -40,28 +40,48 @@ android {
 }
 
 dependencies {
-    implementation(project(":common"))
-    implementation(libs.dagger.core)
     ksp(libs.dagger.compiler)
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.navigation.compose)
+
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.icons)
+    implementation(libs.androidx.activity.compose)
+
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.material)
+    implementation(libs.icons)
 
     implementation(libs.decompose.core)
-
-    implementation(libs.mvikotlin.main)
     implementation(libs.mvikotlin.core)
     implementation(libs.mvikotlin.coroutines)
-    implementation(libs.mvikotlin.logging)
 
-    implementation(libs.billing)
+    runtimeOnly(libs.billing)
 
     implementation(libs.kotlinx.serialization.core)
-    implementation(libs.kotlinx.serialization.json)
+
+    implementation(libs.androidx.animation.core)
+    implementation(libs.androidx.foundation)
+    implementation(libs.androidx.ui.graphics)
+
+    implementation(libs.androidx.ui.geometry)
+    implementation(libs.androidx.ui.text)
+    implementation(libs.androidx.ui.unit)
+
+    api(project(":common"))
+    api(libs.dagger.core)
+    api(libs.androidx.foundation.layout)
+    api(libs.androidx.runtime)
+    api(libs.back.handler)
+    api(libs.instance.keeper)
+    api(libs.lifecycle)
+    api(libs.state.keeper)
+    api(libs.javax.inject)
+    api(libs.kotlinx.coroutines.core)
+    api(libs.androidx.ui)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.monitor)
+    androidTestImplementation(libs.junit)
+
+
 }

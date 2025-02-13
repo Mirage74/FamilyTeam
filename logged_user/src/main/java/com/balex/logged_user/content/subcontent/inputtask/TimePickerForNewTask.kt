@@ -119,7 +119,6 @@ fun DialWithDialog(
     onDismiss: () -> Unit,
     context: Context
 ) {
-    //val currentTime = Calendar.getInstance()
     val focusManager = LocalFocusManager.current
 
     val timePickerState = rememberTimePickerState(

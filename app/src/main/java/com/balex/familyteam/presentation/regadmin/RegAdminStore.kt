@@ -10,13 +10,16 @@ import com.balex.common.R
 import com.balex.common.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
 import com.balex.common.domain.entity.RegistrationOption
 import com.balex.common.domain.entity.User
-import com.balex.common.extensions.*
-import com.balex.common.domain.usecases.regLog.GetLanguageUseCase
 import com.balex.common.domain.usecases.regLog.IsWrongPasswordUseCase
 import com.balex.common.domain.usecases.regLog.ObserveLanguageUseCase
 import com.balex.common.domain.usecases.regLog.ObserveUserUseCase
 import com.balex.common.domain.usecases.regLog.RegisterAndVerifyByEmailUseCase
 import com.balex.common.domain.usecases.regLog.SaveLanguageUseCase
+import com.balex.common.extensions.REGEX_PATTERN_EMAIL
+import com.balex.common.extensions.REGEX_PATTERN_NOT_ANY_LETTERS_NUMBERS_UNDERSCORE
+import com.balex.common.extensions.REGEX_PATTERN_NOT_LATIN_LETTERS_NUMBERS_UNDERSCORE
+import com.balex.common.extensions.REGEX_PATTERN_NOT_LETTERS
+import com.balex.common.extensions.REGEX_PATTERN_NOT_NUMBERS
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.Intent
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.Label
 import com.balex.familyteam.presentation.regadmin.RegAdminStore.State
@@ -47,10 +50,6 @@ interface RegAdminStore : Store<Intent, State, Label> {
         data class PasswordFieldChanged(val currentPasswordText: String) : Intent
 
         data class SmsNumberFieldChanged(val currentSmsNumberText: String) : Intent
-
-        data object ClickedAbout : Intent
-
-        data object RefreshLanguage : Intent
 
         data class ClickedChangeLanguage(val language: String) : Intent
 
@@ -89,8 +88,6 @@ interface RegAdminStore : Store<Intent, State, Label> {
 
     sealed interface Label {
 
-        data object ClickedAbout : Label
-
         data object AdminIsRegisteredAndVerified : Label
 
         data class LoginPageWrongPassword(val user: User) : Label
@@ -100,7 +97,6 @@ interface RegAdminStore : Store<Intent, State, Label> {
 
 class RegAdminStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
-    private val getLanguageUseCase: GetLanguageUseCase,
     private val observeLanguageUseCase: ObserveLanguageUseCase,
     private val observeIsWrongPasswordUseCase: IsWrongPasswordUseCase,
     private val saveLanguageUseCase: SaveLanguageUseCase,
@@ -344,14 +340,6 @@ class RegAdminStoreFactory @Inject constructor(
                     } else {
                         dispatch(Msg.SmsMatchedNotMatched)
                     }
-                }
-
-                Intent.ClickedAbout -> {
-                    publish(Label.ClickedAbout)
-                }
-
-                Intent.RefreshLanguage -> {
-                    dispatch(Msg.LanguageIsChanged(getLanguageUseCase()))
                 }
 
                 is Intent.ClickedChangeLanguage -> {

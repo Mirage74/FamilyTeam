@@ -65,34 +65,20 @@ class UserRepositoryImpl @Inject constructor(
     private val coroutineScope = CoroutineScope(Dispatchers.Main.immediate)
 
     override fun observeUsersList(): StateFlow<List<String>> {
-        Log.d("Firestore token", "observeUsersList begin")
-        //val job = Job()
         return flow {
-            //try {
-            Log.d("Firestore token", "observeUsersList middle")
-                usersNicknamesList = getUsersListFromFirebase()
-                //if (usersNicknamesList.isNotEmpty()) {
+            usersNicknamesList = getUsersListFromFirebase()
+            emit(usersNicknamesList)
+            if (!isAdminUsersNickNamesListListenerRegistered) {
+                addUsersListListenerInFirebase()
+                isAdminUsersNickNamesListListenerRegistered = true
+            }
+
+            isCurrentUsersListNeedRefreshFlow.collect {
+                if (!usersNicknamesList.isEmpty()) {
                     emit(usersNicknamesList)
-                    if (!isAdminUsersNickNamesListListenerRegistered) {
-                        addUsersListListenerInFirebase()
-                        isAdminUsersNickNamesListListenerRegistered = true
-                    }
-
-                    isCurrentUsersListNeedRefreshFlow.collect {
-                        if (!usersNicknamesList.isEmpty()) {
-                            emit(usersNicknamesList)
-                        }
-
-                    }
-                //}
-
-            //}
-//            finally {
-//                job.cancel()
-//            }
+                }
+            }
         }
-
-            //.takeWhile { job.isActive }
             .stateIn(
                 scope = coroutineScope,
                 started = SharingStarted.Lazily,
@@ -105,19 +91,19 @@ class UserRepositoryImpl @Inject constructor(
         if (currentUser.adminEmailOrPhone != User.DEFAULT_FAKE_EMAIL && currentUser.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
 
 
-        val adminCollection = adminsCollection.document(currentUser.adminEmailOrPhone)
+            val adminCollection = adminsCollection.document(currentUser.adminEmailOrPhone)
 
-        adminCollection.addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                return@addSnapshotListener
-            }
-            snapshot?.let {
-                val admin = it.toObject(Admin::class.java) ?: Admin()
-                if (admin.nickName != Admin.DEFAULT_NICK_NAME) {
-                    usersNicknamesList = admin.usersNickNamesList.toMutableList()
+            adminCollection.addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    return@addSnapshotListener
+                }
+                snapshot?.let {
+                    val admin = it.toObject(Admin::class.java) ?: Admin()
+                    if (admin.nickName != Admin.DEFAULT_NICK_NAME) {
+                        usersNicknamesList = admin.usersNickNamesList.toMutableList()
+                    }
                 }
             }
-        }
         }
     }
 
@@ -142,7 +128,7 @@ class UserRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Log.d("addRemindersToSchedule error", e.toString())
+            Log.e("addRemindersToSchedule error", e.toString())
         }
     }
 
@@ -191,7 +177,7 @@ class UserRepositoryImpl @Inject constructor(
                 document?.reference?.delete()?.await()
             }
         } catch (e: Exception) {
-            Log.d("addRemindersToDeleteSchedule error", e.toString())
+            Log.w("addRemindersToDeleteSchedule error", e.toString())
         }
     }
 
@@ -209,9 +195,7 @@ class UserRepositoryImpl @Inject constructor(
                     try {
                         setNewTokenUseCase(token)
                         userCollection.update("token", token).await()
-                        Log.d("Firestore token", "Token успешно обновлён $token")
                     } catch (e: Exception) {
-                        Log.e("Firestore token", "Ошибка обновления токена", e)
                     }
                     val g = 5
 
@@ -219,7 +203,6 @@ class UserRepositoryImpl @Inject constructor(
                     if (oldToken != token) {
                         setNewTokenUseCase(token)
                         userCollection.update("token", token).await()
-                        Log.d("Firestore token", "oldToken != token $token")
                         cancelOldRemindersAndCreateNew(oldToken, token)
                     }
                 }
@@ -421,10 +404,10 @@ class UserRepositoryImpl @Inject constructor(
                     userCollection.set(userForUpdate).await()
                 }
             } catch (e: Exception) {
-                Log.d("addPrivateTaskToFirebase error", e.toString())
+                Log.e("addPrivateTaskToFirebase error", e.toString())
             }
         } else {
-            Log.d("addPrivateTaskToFirebase error", "No available tasks to add")
+            Log.i("addPrivateTaskToFirebase error", "No available tasks to add")
         }
     }
 
@@ -472,7 +455,7 @@ class UserRepositoryImpl @Inject constructor(
                     userCollection.set(userForUpdate).await()
                 }
             } catch (e: Exception) {
-                Log.d("addExternalTaskToFirebase error modify user", e.toString())
+                Log.e("addExternalTaskToFirebase error modify user", e.toString())
             }
 
 
@@ -527,11 +510,11 @@ class UserRepositoryImpl @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                Log.d("addExternalTaskToFirebase error external user", e.toString())
+                Log.e("addExternalTaskToFirebase error external user", e.toString())
             }
 
         } else {
-            Log.d("addExternalTaskToFirebase error", "No available tasks to add")
+            Log.i("addExternalTaskToFirebase error", "No available tasks to add")
         }
     }
 
@@ -578,7 +561,7 @@ class UserRepositoryImpl @Inject constructor(
                         userCollectionCurrentUser.update("listToDo", listToDoForUpdate).await()
                     }
                 } catch (e: Exception) {
-                    Log.d("deleteTaskFromFirebase, TaskType.PRIVATE, error", e.toString())
+                    Log.e("deleteTaskFromFirebase, TaskType.PRIVATE, error", e.toString())
                 }
             } else if (taskType == TaskType.MY_TO_OTHER_USER) {
                 val externalTasksToUpdate =
@@ -593,7 +576,7 @@ class UserRepositoryImpl @Inject constructor(
                         userCollectionCurrentUser.update("listToDo", listToDoForUpdate).await()
                     }
                 } catch (e: Exception) {
-                    Log.d(
+                    Log.e(
                         "deleteTaskFromFirebase, TaskType.MY_TO_OTHER_USER, my list error",
                         e.toString()
                     )
@@ -613,7 +596,7 @@ class UserRepositoryImpl @Inject constructor(
                                 .await()
                         }
                     } catch (e: Exception) {
-                        Log.d(
+                        Log.e(
                             "deleteTaskFromFirebase, TaskType.MY_TO_OTHER_USER, other user list error",
                             e.toString()
                         )
@@ -632,7 +615,7 @@ class UserRepositoryImpl @Inject constructor(
                         userCollectionCurrentUser.update("listToDo", listToDoForUpdate).await()
                     }
                 } catch (e: Exception) {
-                    Log.d(
+                    Log.e(
                         "deleteTaskFromFirebase, TaskType.FROM_OTHER_USER_FOR_ME, my list error",
                         e.toString()
                     )
@@ -652,7 +635,7 @@ class UserRepositoryImpl @Inject constructor(
                                 .await()
                         }
                     } catch (e: Exception) {
-                        Log.d(
+                        Log.e(
                             "deleteTaskFromFirebase, TaskType.FROM_OTHER_USER_FOR_ME, other user list error",
                             e.toString()
                         )
@@ -666,7 +649,6 @@ class UserRepositoryImpl @Inject constructor(
 
     private suspend fun getUsersListFromFirebase(): MutableList<String> {
         val newToken = getTokenUseCase()
-        Log.d("Firestore token", "getUsersListFromFirebase newToken $newToken")
         if (newToken != NO_NEW_TOKEN) {
             saveDeviceToken(newToken)
         }
@@ -691,16 +673,10 @@ class UserRepositoryImpl @Inject constructor(
                 if (adminData != null) {
                     usersList.addAll(adminData.usersNickNamesList)
                 }
-//                else {
-//                    usersList.add(admin.nickName)
-//                }
 
 
             } catch (exception: Exception) {
-                //exception.printStackTrace()
-                //throw RuntimeException("getUsersListFromFirebase: $ERROR_GET_USERS_LIST_FROM_FIREBASE")
-                Log.d("getUsersListFromFirebase", exception.toString())
-
+                Log.e("getUsersListFromFirebase", exception.toString())
             }
             currentTry++
         }
@@ -738,7 +714,7 @@ class UserRepositoryImpl @Inject constructor(
         if (premiumStatus != BillingRepositoryImpl.Companion.PremiumStatus.NO_PREMIUM) {
 
             val userForModify = getUserUseCase()
-            val coinCost = when (premiumStatus) {
+            val premiumCostInCoins = when (premiumStatus) {
                 BillingRepositoryImpl.Companion.PremiumStatus.ONE_MONTH -> {
                     context.resources.getInteger(R.integer.premium_account_one_month_cost)
                 }
@@ -751,7 +727,9 @@ class UserRepositoryImpl @Inject constructor(
                     context.resources.getInteger(R.integer.premium_account_unlimited_cost)
                 }
 
-                BillingRepositoryImpl.Companion.PremiumStatus.NO_PREMIUM -> 0
+                else -> {
+                    0
+                }
             }
             val premiumStatusExpiration = when (premiumStatus) {
 
@@ -775,14 +753,14 @@ class UserRepositoryImpl @Inject constructor(
                     System.currentTimeMillis() + MILLIS_IN_100_YEAR
                 }
 
-                BillingRepositoryImpl.Companion.PremiumStatus.NO_PREMIUM -> {
+                else -> {
                     userForModify.premiumAccountExpirationDate
                 }
             }
             val userForUpdate = userForModify.copy(
                 hasPremiumAccount = true,
                 premiumAccountExpirationDate = premiumStatusExpiration,
-                teamCoins = userForModify.teamCoins - coinCost
+                teamCoins = userForModify.teamCoins - premiumCostInCoins
             )
 
             val userCollection =
@@ -795,7 +773,7 @@ class UserRepositoryImpl @Inject constructor(
                     userCollection.set(userForUpdate).await()
                 }
             } catch (e: Exception) {
-                Log.d("setPremiumStatus error", "error setPremiumStatus in firebase: $e")
+                Log.e("setPremiumStatus error", "error setPremiumStatus in firebase: $e")
             }
         }
     }

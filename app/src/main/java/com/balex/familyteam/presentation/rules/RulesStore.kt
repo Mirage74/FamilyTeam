@@ -17,8 +17,6 @@ interface RulesStore : Store<Intent, State, Label> {
 
     sealed interface Intent {
 
-        data object RefreshLanguage : Intent
-
         data class ClickedChangeLanguage(val language: String) : Intent
 
         data object ClickedAbout : Intent
@@ -76,9 +74,6 @@ class RulesStoreFactory @Inject constructor(
     private inner class ExecutorImpl : CoroutineExecutor<Intent, Action, State, Msg, Label>() {
         override fun executeIntent(intent: Intent) {
             when (intent) {
-                Intent.RefreshLanguage -> {
-                    dispatch(Msg.LanguageIsChanged(state().language))
-                }
 
                 is Intent.ClickedChangeLanguage -> {
                     saveLanguageUseCase(intent.language)

@@ -117,7 +117,6 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
                     PhoneAuthProvider.verifyPhoneNumber(options)
                 }
 
-                //Log.d("sendSmsVerifyCode", "Code sent successfully: $verificationId")
 
             } catch (e: Exception) {
                 Log.e("sendSmsVerifyCode", "Error: ${e.message}")
@@ -180,8 +179,6 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
 
                 PhoneAuthProvider.verifyPhoneNumber(options)
             }
-
-            //Log.d("resendVerificationCode", "Code resent successfully")
 
         } catch (e: Exception) {
             Log.e("resendVerificationCode", "Error: ${e.message}")
@@ -252,7 +249,7 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
                 }
 
             } catch (e: Exception) {
-//                Log.e("signInWithCredential", "Error: ${e.message}")
+                Log.e("signInWithCredential", "Error: ${e.message}")
 //                setUserWithErrorUseCase("registerAndSignInWithCredential, auth.signInWithCredential, error: ${e.message}")
 
             }

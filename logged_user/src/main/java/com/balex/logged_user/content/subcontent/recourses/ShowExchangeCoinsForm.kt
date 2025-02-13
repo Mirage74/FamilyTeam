@@ -187,7 +187,6 @@ fun ExchangeCoinsFormContent(
 
 @Composable
 fun SectionBuyCoins(onClickedBuyCoins: () -> Unit, context: Context) {
-    //val context = LocalContext.current
     Button(
         onClick = { onClickedBuyCoins() },
         modifier = Modifier
@@ -209,7 +208,6 @@ fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComp
     val reminderName = ( context.getString(commonR.string.reminders) ).trim()
 
     var selectedCoinsQuantity by remember { mutableIntStateOf(state.user.teamCoins) }
-    //var selectedOption by remember { mutableStateOf(taskName) }
     var selectedOption by remember(taskName) { mutableStateOf(taskName) }
     val rateResource = if (selectedOption == taskName) {
         context.resources.getInteger(commonR.integer.rate_one_coin_to_task)
@@ -327,7 +325,6 @@ fun SectionExchangeCoins(state: LoggedUserStore.State, component: LoggedUserComp
 
 @Composable
 fun SectionBuyPremiumAccount(state: LoggedUserStore.State, component: LoggedUserComponent, context: Context) {
-    //val context = LocalContext.current
     val oneMonth = BillingRepositoryImpl.Companion.PremiumStatus.ONE_MONTH
     val oneYear = BillingRepositoryImpl.Companion.PremiumStatus.ONE_YEAR
     val unlimited = BillingRepositoryImpl.Companion.PremiumStatus.UNLIMITED

@@ -46,14 +46,13 @@ class BillingRepositoryImpl @Inject constructor(
             val versionName = packageInfo.versionName
             Log.d("AppVersion", "Current version: $versionName")
         } catch (e: Exception) {
-            Log.e("AppVersion", "Failed to get version name", e)
+            Log.i("AppVersion", "Failed to get version name", e)
         }
     }
 
     override fun initIapConnector(activity: Activity) {
 
         logAppVersion(context)
-        //Log.d("launchPurchaseFlow", "Initializing IAP Connector")
 
         iapConnector = IapConnector(
             context = activity,
@@ -65,7 +64,6 @@ class BillingRepositoryImpl @Inject constructor(
         iapConnector.addPurchaseListener(object : PurchaseServiceListener {
 
             override fun onProductPurchased(purchaseInfo: DataWrappers.PurchaseInfo) {
-                Log.d("launchPurchaseFlow", "onProductPurchased, purchaseInfo: $purchaseInfo")
                 val jsonObject = JSONObject(purchaseInfo.originalJson)
                 val quantity: Int
                 try {
@@ -74,7 +72,7 @@ class BillingRepositoryImpl @Inject constructor(
                         addCreditsToUser(quantity)
                     }
                 } catch (e: Exception) {
-                    Log.d("launchPurchaseFlow", "Wrong quantity in jsonObject: $jsonObject")
+                    Log.e("launchPurchaseFlow", "Wrong quantity in jsonObject: $jsonObject")
                     e.printStackTrace()
                 }
             }
@@ -91,7 +89,7 @@ class BillingRepositoryImpl @Inject constructor(
                 purchaseInfo: DataWrappers.PurchaseInfo?,
                 billingResponseCode: Int?
             ) {
-                Log.d(
+                Log.w(
                     "launchPurchaseFlow",
                     "onPurchaseFailed, billingResponseCode: $billingResponseCode"
                 )

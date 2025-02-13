@@ -196,7 +196,7 @@ fun ShowContent(
         verticalArrangement = Arrangement.SpaceEvenly
     ) {
 
-        val context = com.balex.common.LocalLocalizedContext.current
+        val context = LocalLocalizedContext.current
         val regAdmText = context.getString(R.string.reg_adm)
         val logUserText = context.getString(R.string.login_button)
         val textSize = dimensionResource(id = commonR.dimen.button_text_size).value.sp

@@ -11,7 +11,6 @@ import com.balex.common.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENC
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.CheckUserInCollectionAndLoginIfExistErrorMessages
 import com.balex.common.domain.entity.User
 import com.balex.common.domain.entity.User.Companion.NO_ERROR_MESSAGE
-import com.balex.common.extensions.*
 import com.balex.common.domain.usecases.regLog.CheckUserInCollectionAndLoginIfExistUseCase
 import com.balex.common.domain.usecases.regLog.GetLanguageUseCase
 import com.balex.common.domain.usecases.regLog.IsWrongPasswordUseCase
@@ -19,6 +18,10 @@ import com.balex.common.domain.usecases.regLog.ObserveLanguageUseCase
 import com.balex.common.domain.usecases.regLog.ObserveUserUseCase
 import com.balex.common.domain.usecases.regLog.SaveLanguageUseCase
 import com.balex.common.domain.usecases.regLog.StorageSavePreferencesUseCase
+import com.balex.common.extensions.REGEX_PATTERN_EMAIL
+import com.balex.common.extensions.REGEX_PATTERN_NOT_LATIN_LETTERS_NUMBERS_UNDERSCORE
+import com.balex.common.extensions.REGEX_PATTERN_NOT_LETTERS
+import com.balex.common.extensions.REGEX_PATTERN_ONLY_NUMBERS_FIRST_NOT_ZERO
 import com.balex.common.extensions.formatStringFirstLetterUppercase
 import com.balex.familyteam.presentation.loginuser.LoginUserStore.Intent
 import com.balex.familyteam.presentation.loginuser.LoginUserStore.Label
@@ -42,8 +45,6 @@ interface LoginUserStore : Store<Intent, State, Label> {
         data object ClickedChangePasswordVisibility : Intent
 
         data class PasswordFieldChanged(val currentPasswordText: String) : Intent
-
-        data object RefreshLanguage : Intent
 
         data class ClickedChangeLanguage(val language: String) : Intent
     }
@@ -92,7 +93,6 @@ interface LoginUserStore : Store<Intent, State, Label> {
 class LoginUserStoreFactory @Inject constructor(
     private val storeFactory: StoreFactory,
     private val observeIsWrongPasswordUseCase: IsWrongPasswordUseCase,
-    private val getLanguageUseCase: GetLanguageUseCase,
     private val observeLanguageUseCase: ObserveLanguageUseCase,
     private val saveLanguageUseCase: SaveLanguageUseCase,
     private val observeUserUseCase: ObserveUserUseCase,
@@ -209,7 +209,6 @@ class LoginUserStoreFactory @Inject constructor(
             }
             passwordJob = scope.launch {
                 observeIsWrongPasswordUseCase().collect {
-                    //if (it.nickName != User.DEFAULT_NICK_NAME) {
                     if (it.adminEmailOrPhone.isNotBlank()) {
                         dispatch(Action.AdminAndUserExistButWrongPassword(it))
                     }
@@ -321,10 +320,6 @@ class LoginUserStoreFactory @Inject constructor(
                             }
                         }
                     }
-                }
-
-                Intent.RefreshLanguage -> {
-                    dispatch(Msg.LanguageIsChanged(getLanguageUseCase()))
                 }
 
                 is Intent.ClickedChangeLanguage -> {

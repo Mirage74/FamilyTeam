@@ -1,8 +1,5 @@
 package com.balex.common.data.iap
 
-import com.balex.common.data.iap.BillingServiceListener
-import com.balex.common.data.iap.DataWrappers
-
 interface PurchaseServiceListener : BillingServiceListener {
     /**
      * Callback will be triggered upon obtaining information about product prices

@@ -93,7 +93,7 @@ class AdminRepositoryImpl @Inject constructor(
                     emitUsersNicknamesListNeedRefreshUseCase()
                 }
             } catch (e: Exception) {
-                Log.d("AdminRepositoryImpl", "deleteUser, Error: ${e.message}")
+                Log.w("AdminRepositoryImpl", "deleteUser, Error: ${e.message}")
             }
         }
     }
@@ -132,7 +132,7 @@ class AdminRepositoryImpl @Inject constructor(
                     emitUsersNicknamesListNeedRefreshUseCase()
                 }
             } catch (e: Exception) {
-                Log.d("AdminRepositoryImpl", "deleteUser del data, Error: ${e.message}")
+                Log.e("AdminRepositoryImpl", "deleteUser del data, Error: ${e.message}")
             }
             val deletedUser = DeletedSubUser(
                 adminEmailOrPhone = admin.emailOrPhoneNumber,
@@ -144,7 +144,7 @@ class AdminRepositoryImpl @Inject constructor(
                     deletedSubUsersCollection.add(deletedUser).await()
                 }
             } catch (e: Exception) {
-                Log.d("AdminRepositoryImpl", "deleteUser add to collection, Error: ${e.message}")
+                Log.e("AdminRepositoryImpl", "deleteUser add to collection, Error: ${e.message}")
             }
 
         }
