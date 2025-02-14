@@ -16,10 +16,12 @@ import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.Task
 import com.balex.common.domain.usecases.regLog.DeleteOldTasksUseCase
 import com.balex.common.domain.usecases.regLog.GetLanguageUseCase
+import com.balex.common.domain.usecases.regLog.GetUserUseCase
 import com.balex.common.domain.usecases.regLog.LogoutUserUseCase
 import com.balex.common.domain.usecases.regLog.RefreshFCMLastTimeUpdatedUseCase
 import com.balex.common.domain.usecases.regLog.StorageClearPreferencesUseCase
 import com.balex.common.extensions.componentScope
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -32,6 +34,7 @@ import kotlinx.coroutines.launch
 
 class DefaultLoggedUserComponent @AssistedInject constructor(
     private val storeFactory: LoggedUserStoreFactory,
+    private val getUserUseCase: GetUserUseCase,
     private val getLanguageUseCase: GetLanguageUseCase,
     private val logoutUserUseCase: LogoutUserUseCase,
     private val deleteOldTasksUseCase: DeleteOldTasksUseCase,
@@ -50,6 +53,7 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     private var scope = componentScope()
 
     init {
+        FirebaseCrashlytics.getInstance().setUserId(getUserUseCase().adminEmailOrPhone+ "-" + getUserUseCase().nickName)
         scope.launch {
             refreshFCMLastTimeUpdatedUseCase()
             deleteOldTasksUseCase()
@@ -235,6 +239,7 @@ class DefaultLoggedUserComponent @AssistedInject constructor(
     }
 
     override suspend fun onClickLogout() {
+        FirebaseCrashlytics.getInstance().setUserId("")
         logoutUserUseCase()
         storageClearPreferencesUseCase()
         onLogout()

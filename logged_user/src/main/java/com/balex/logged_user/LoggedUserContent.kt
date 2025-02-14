@@ -2,7 +2,6 @@ package com.balex.logged_user
 
 import android.app.Activity
 import android.content.Context
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -56,6 +55,7 @@ import androidx.compose.ui.unit.sp
 import com.balex.common.LocalLocalizedContext
 import com.balex.common.SwitchLanguage
 import com.balex.common.domain.entity.MenuItems
+import com.balex.common.extensions.logTextToFirebase
 import com.balex.common.theme.DarkBlue
 import com.balex.logged_user.content.AdminPanelContent
 import com.balex.logged_user.content.MyTasksForOtherUsersContent
@@ -86,7 +86,7 @@ fun LoggedUserContent(
             if (deviceToken.isNotEmpty()) {
                 component.sendIntent(LoggedUserStore.Intent.SaveDeviceToken(deviceToken))
             } else {
-                Log.e("LoggedUserContent", "deviceToken is empty")
+                logTextToFirebase("LoggedUserContent, deviceToken is empty")
             }
             isFirstRun = false
             previousSessionId = state.sessionId

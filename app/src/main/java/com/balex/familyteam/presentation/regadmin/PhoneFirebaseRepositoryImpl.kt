@@ -1,6 +1,5 @@
 package com.balex.familyteam.presentation.regadmin
 
-import android.util.Log
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_ADMINS_COLLECTION
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_USERS_COLLECTION
 import com.balex.common.domain.entity.Admin
@@ -15,6 +14,7 @@ import com.balex.common.domain.usecases.regLog.SetUserWithErrorUseCase
 import com.balex.common.domain.usecases.regLog.SetWrongPasswordUserUseCase
 import com.balex.common.domain.usecases.regLog.SignToFirebaseWithFakeEmailUseCase
 import com.balex.common.extensions.formatStringPhoneDelLeadNullAndAddPlus
+import com.balex.common.extensions.logExceptionToFirebase
 import com.balex.familyteam.presentation.MainActivity
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
@@ -94,7 +94,7 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
                                             password
                                         )
                                     } catch (e: Exception) {
-                                        Log.e("sendSmsVerifyCode", "Error: ${e.message}")
+                                        logExceptionToFirebase("sendSmsVerifyCode", e.message.toString())
                                         setUserWithErrorUseCase("sendSmsVerifyCode, registerAndSignInWithCredential, error: ${e.message}")
                                     }
                                 }
@@ -119,7 +119,7 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
 
 
             } catch (e: Exception) {
-                Log.e("sendSmsVerifyCode", "Error: ${e.message}")
+                logExceptionToFirebase("sendSmsVerifyCode", e.message.toString())
                 setUserWithErrorUseCase("sendSmsVerifyCode, PhoneAuthProvider.verifyPhoneNumber(options), error: ${e.message}")
             }
         } else {
@@ -181,7 +181,7 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
             }
 
         } catch (e: Exception) {
-            Log.e("resendVerificationCode", "Error: ${e.message}")
+            logExceptionToFirebase("resendVerificationCode", e.message.toString())
             setUserWithErrorUseCase("resendVerificationCode, PhoneAuthProvider.verifyPhoneNumber(options), error: ${e.message}")
         }
     }
@@ -249,7 +249,7 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
                 }
 
             } catch (e: Exception) {
-                Log.e("signInWithCredential", "Error: ${e.message}")
+                logExceptionToFirebase("signInWithCredential", e.message.toString())
 //                setUserWithErrorUseCase("registerAndSignInWithCredential, auth.signInWithCredential, error: ${e.message}")
 
             }

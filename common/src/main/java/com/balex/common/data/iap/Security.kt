@@ -2,7 +2,8 @@ package com.balex.common.data.iap
 
 import android.text.TextUtils
 import android.util.Base64
-import android.util.Log
+import com.balex.common.extensions.logExceptionToFirebase
+import com.balex.common.extensions.logTextToFirebase
 import java.io.IOException
 import java.security.InvalidKeyException
 import java.security.KeyFactory
@@ -19,7 +20,7 @@ import java.security.spec.X509EncodedKeySpec
  */
 @Suppress("unused")
 object Security {
-    private const val TAG = "IABUtil/Security"
+    //private const val TAG = "IABUtil/Security"
     private const val KEY_FACTORY_ALGORITHM = "RSA"
     private const val SIGNATURE_ALGORITHM = "SHA1withRSA"
 
@@ -37,7 +38,7 @@ object Security {
         if ((TextUtils.isEmpty(signedData) || TextUtils.isEmpty(base64PublicKey)
                         || TextUtils.isEmpty(signature))
         ) {
-            Log.w(TAG, "Purchase verification failed: missing data.")
+            logTextToFirebase("verifyPurchase, Purchase verification failed: missing data.")
             return false
         }
         val key = generatePublicKey(base64PublicKey)
@@ -62,7 +63,7 @@ object Security {
             throw RuntimeException(e)
         } catch (e: InvalidKeySpecException) {
             val msg = "Invalid key specification: $e"
-            Log.w(TAG, msg)
+            logTextToFirebase("generatePublicKey: " + msg)
             throw IOException(msg)
         }
     }
@@ -81,7 +82,7 @@ object Security {
         try {
             signatureBytes = Base64.decode(signature, Base64.DEFAULT)
         } catch (e: IllegalArgumentException) {
-            Log.w(TAG, "Base64 decoding failed.")
+            logExceptionToFirebase("fun verify, Base64 decoding failed.", e.message.toString())
             return false
         }
         try {
@@ -89,7 +90,7 @@ object Security {
             signatureAlgorithm.initVerify(publicKey)
             signatureAlgorithm.update(signedData.toByteArray())
             if (!signatureAlgorithm.verify(signatureBytes)) {
-                Log.w(TAG, "Signature verification failed...")
+                logTextToFirebase("fun verify, Signature verification failed...")
                 return false
             }
             return true
@@ -97,9 +98,9 @@ object Security {
             // "RSA" is guaranteed to be available.
             throw RuntimeException(e)
         } catch (e: InvalidKeyException) {
-            Log.w(TAG, "Invalid key specification.")
+            logExceptionToFirebase("fun verify, Invalid key specification", e.message.toString())
         } catch (e: SignatureException) {
-            Log.w(TAG, "Signature exception.")
+            logExceptionToFirebase("fun verify, Signature exception", e.message.toString())
         }
         return false
     }

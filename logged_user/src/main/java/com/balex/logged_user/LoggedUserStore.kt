@@ -2,7 +2,6 @@ package com.balex.logged_user
 
 import android.app.Activity
 import android.content.Context
-import android.util.Log
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
@@ -45,6 +44,7 @@ import com.balex.common.extensions.REGEX_PATTERN_NOT_ANY_LETTERS_NUMBERS_UNDERSC
 import com.balex.common.extensions.REGEX_PATTERN_NOT_LATIN_LETTERS_NUMBERS_UNDERSCORE
 import com.balex.common.extensions.REGEX_PATTERN_NOT_LETTERS
 import com.balex.common.extensions.checkData
+import com.balex.common.extensions.logTextToFirebase
 import com.balex.logged_user.LoggedUserStore.Intent
 import com.balex.logged_user.LoggedUserStore.Label
 import com.balex.logged_user.LoggedUserStore.State
@@ -367,7 +367,7 @@ class LoggedUserStoreFactory @Inject constructor(
         fun start() {
             if (job.isCancelled) {
                 job = SupervisorJob()
-                scopeBootstrapper =  CoroutineScope(Dispatchers.Main + job)
+                scopeBootstrapper = CoroutineScope(Dispatchers.Main + job)
             }
 
             refreshShopListUseCase()
@@ -401,7 +401,7 @@ class LoggedUserStoreFactory @Inject constructor(
                             }
                         }
                     } else {
-                        Log.e("ExecutorImpl, SaveDeviceToken error", "token is empty")
+                        logTextToFirebase("ExecutorImpl, SaveDeviceToken error, token is empty")
                         dispatch(Msg.IsTokenSavedSuccessfully(false))
                     }
 
@@ -530,8 +530,8 @@ class LoggedUserStoreFactory @Inject constructor(
                                 password = state().password
                             )
                         )
+                        dispatch(Msg.ButtonRegisterNewUserInFirebaseClicked)
                     }
-                    dispatch(Msg.ButtonRegisterNewUserInFirebaseClicked)
                 }
 
                 Intent.ClickedCancelRegisterNewUserInFirebase -> {
@@ -825,7 +825,12 @@ class LoggedUserStoreFactory @Inject constructor(
                 }
 
                 Msg.ButtonRegisterNewUserInFirebaseClicked -> {
-                    copy(isCreateNewUserClicked = false)
+                    copy(
+                        isCreateNewUserClicked = false,
+                        nickName = "",
+                        displayName = "",
+                        password = ""
+                    )
                 }
 
                 Msg.ClickedCancelRegisterNewUserInFirebase -> {

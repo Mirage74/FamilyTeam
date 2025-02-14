@@ -144,7 +144,7 @@ fun InputOrEditTaskForm(
                 )
             }
 
-            Text(context.getString(R.string.task_description))
+            Text(context.getString(R.string.user_must_at_least_one_time_login))
             OutlinedTextField(
                 value = description,
                 onValueChange = {

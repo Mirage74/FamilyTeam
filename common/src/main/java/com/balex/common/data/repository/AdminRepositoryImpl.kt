@@ -1,7 +1,6 @@
 package com.balex.common.data.repository
 
 import android.content.Context
-import android.util.Log
 import com.balex.common.R
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_ADMINS_COLLECTION
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_USERS_COLLECTION
@@ -14,6 +13,7 @@ import com.balex.common.domain.usecases.regLog.GetRepoAdminUseCase
 import com.balex.common.domain.usecases.regLog.GetUserUseCase
 import com.balex.common.domain.usecases.user.EmitUsersNicknamesListNeedRefreshUseCase
 import com.balex.common.extensions.formatStringFirstLetterUppercase
+import com.balex.common.extensions.logExceptionToFirebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
@@ -93,7 +93,7 @@ class AdminRepositoryImpl @Inject constructor(
                     emitUsersNicknamesListNeedRefreshUseCase()
                 }
             } catch (e: Exception) {
-                Log.w("AdminRepositoryImpl", "deleteUser, Error: ${e.message}")
+                logExceptionToFirebase("AdminRepositoryImpl, deleteUser", e.message.toString())
             }
         }
     }
@@ -132,7 +132,7 @@ class AdminRepositoryImpl @Inject constructor(
                     emitUsersNicknamesListNeedRefreshUseCase()
                 }
             } catch (e: Exception) {
-                Log.e("AdminRepositoryImpl", "deleteUser del data, Error: ${e.message}")
+                logExceptionToFirebase("AdminRepositoryImpl, deleteUser", e.message.toString())
             }
             val deletedUser = DeletedSubUser(
                 adminEmailOrPhone = admin.emailOrPhoneNumber,
@@ -144,7 +144,7 @@ class AdminRepositoryImpl @Inject constructor(
                     deletedSubUsersCollection.add(deletedUser).await()
                 }
             } catch (e: Exception) {
-                Log.e("AdminRepositoryImpl", "deleteUser add to collection, Error: ${e.message}")
+                logExceptionToFirebase("AdminRepositoryImpl, deleteUser", e.message.toString())
             }
 
         }

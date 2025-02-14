@@ -1,7 +1,6 @@
 package com.balex.common.data.repository
 
 import android.content.Context
-import android.util.Log
 import com.balex.common.R
 import com.balex.common.data.datastore.Storage
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_ADMINS_COLLECTION
@@ -19,6 +18,8 @@ import com.balex.common.domain.usecases.regLog.GetRepoAdminUseCase
 import com.balex.common.domain.usecases.regLog.GetTokenUseCase
 import com.balex.common.domain.usecases.regLog.GetUserUseCase
 import com.balex.common.domain.usecases.regLog.SetNewTokenUseCase
+import com.balex.common.extensions.logExceptionToFirebase
+import com.balex.common.extensions.logTextToFirebase
 import com.balex.common.extensions.numberOfReminders
 import com.balex.common.extensions.toReminder
 import com.google.firebase.firestore.ktx.firestore
@@ -128,7 +129,7 @@ class UserRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Log.e("addRemindersToSchedule error", e.toString())
+            logExceptionToFirebase("addRemindersToSchedule", e.message.toString())
         }
     }
 
@@ -177,7 +178,7 @@ class UserRepositoryImpl @Inject constructor(
                 document?.reference?.delete()?.await()
             }
         } catch (e: Exception) {
-            Log.w("addRemindersToDeleteSchedule error", e.toString())
+            logExceptionToFirebase("addRemindersToDeleteSchedule", e.message.toString())
         }
     }
 
@@ -404,10 +405,10 @@ class UserRepositoryImpl @Inject constructor(
                     userCollection.set(userForUpdate).await()
                 }
             } catch (e: Exception) {
-                Log.e("addPrivateTaskToFirebase error", e.toString())
+                logExceptionToFirebase("addPrivateTaskToFirebase", e.message.toString())
             }
         } else {
-            Log.i("addPrivateTaskToFirebase error", "No available tasks to add")
+            logTextToFirebase("addPrivateTaskToFirebase, no available tasks to add")
         }
     }
 
@@ -415,106 +416,106 @@ class UserRepositoryImpl @Inject constructor(
         externalTask: ExternalTask,
         taskMode: TaskMode
     ) {
-        val currentUser = getUserUseCase()
+        val token = getUserToken(externalTask.taskOwner)
+        if (token != NO_TOKEN) {
 
-        if (currentUser.availableTasksToAdd > 0 || taskMode == TaskMode.EDIT) {
-            val toDoOld = currentUser.listToDo
-            val updatedTodoList =
+            val currentUser = getUserUseCase()
+
+            if (currentUser.availableTasksToAdd > 0 || taskMode == TaskMode.EDIT) {
+                val toDoOld = currentUser.listToDo
+                val updatedTodoList =
+                    if (taskMode == TaskMode.ADD) {
+                        toDoOld.copy(
+                            thingsToDoForOtherUsers = toDoOld.thingsToDoForOtherUsers.copy(
+                                externalTasks = toDoOld.thingsToDoForOtherUsers.externalTasks + externalTask
+                            )
+                        )
+                    } else {
+                        toDoOld.copy(
+                            thingsToDoForOtherUsers = toDoOld.thingsToDoForOtherUsers.copy(
+                                externalTasks = toDoOld.thingsToDoForOtherUsers.externalTasks.map { taskItem ->
+                                    if (taskItem.task.id == externalTask.task.id) externalTask else taskItem
+                                }
+                            )
+                        )
+                    }
+
+                val newAvailableFCM = if (taskMode == TaskMode.ADD) {
+                    currentUser.availableFCM - externalTask.task.numberOfReminders()
+                } else currentUser.availableFCM
+
+                val userForUpdate = currentUser.copy(
+                    listToDo = updatedTodoList,
+                    availableTasksToAdd = currentUser.availableTasksToAdd - 1,
+                    availableFCM = newAvailableFCM
+                )
+                val userCollection =
+                    usersCollection.document(currentUser.adminEmailOrPhone)
+                        .collection(currentUser.nickName.lowercase())
+                        .document(currentUser.nickName.lowercase())
+
+                try {
+                    withContext(Dispatchers.IO) {
+                        userCollection.set(userForUpdate).await()
+                    }
+                } catch (e: Exception) {
+                    logExceptionToFirebase("addExternalTaskToFirebase", e.message.toString())
+                }
+
+
+                val externalUserCollection =
+                    usersCollection.document(currentUser.adminEmailOrPhone)
+                        .collection(externalTask.taskOwner.lowercase())
+                        .document(externalTask.taskOwner.lowercase())
+
                 if (taskMode == TaskMode.ADD) {
-                    toDoOld.copy(
-                        thingsToDoForOtherUsers = toDoOld.thingsToDoForOtherUsers.copy(
-                            externalTasks = toDoOld.thingsToDoForOtherUsers.externalTasks + externalTask
-                        )
-                    )
-                } else {
-                    toDoOld.copy(
-                        thingsToDoForOtherUsers = toDoOld.thingsToDoForOtherUsers.copy(
-                            externalTasks = toDoOld.thingsToDoForOtherUsers.externalTasks.map { taskItem ->
-                                if (taskItem.task.id == externalTask.task.id) externalTask else taskItem
-                            }
-                        )
-                    )
-                }
-
-            val newAvailableFCM = if (taskMode == TaskMode.ADD) {
-                currentUser.availableFCM - externalTask.task.numberOfReminders()
-            } else currentUser.availableFCM
-
-            val userForUpdate = currentUser.copy(
-                listToDo = updatedTodoList,
-                availableTasksToAdd = currentUser.availableTasksToAdd - 1,
-                availableFCM = newAvailableFCM
-            )
-            val userCollection =
-                usersCollection.document(currentUser.adminEmailOrPhone)
-                    .collection(currentUser.nickName.lowercase())
-                    .document(currentUser.nickName.lowercase())
-
-            try {
-                withContext(Dispatchers.IO) {
-                    userCollection.set(userForUpdate).await()
-                }
-            } catch (e: Exception) {
-                Log.e("addExternalTaskToFirebase error modify user", e.toString())
-            }
-
-
-            val externalUserCollection =
-                usersCollection.document(currentUser.adminEmailOrPhone)
-                    .collection(externalTask.taskOwner.lowercase())
-                    .document(externalTask.taskOwner.lowercase())
-
-            if (taskMode == TaskMode.ADD) {
-                val token = getUserToken(externalTask.taskOwner)
-                if (token != NO_TOKEN) {
                     addRemindersToSchedule(externalTask.task, token)
                 }
 
-            }
+                try {
+                    withContext(Dispatchers.IO) {
+                        val externalUserSnapshot = externalUserCollection.get().await()
+                        val externalUser = externalUserSnapshot?.toObject(User::class.java)
+                        if (externalUser != null) {
+                            val toDoOldExternal = externalUser.listToDo
 
-            try {
-                withContext(Dispatchers.IO) {
-                    val externalUserSnapshot = externalUserCollection.get().await()
-                    val externalUser = externalUserSnapshot?.toObject(User::class.java)
-                    if (externalUser != null) {
-                        val toDoOldExternal = externalUser.listToDo
-
-                        val updatedTodoListExternal =
-                            if (taskMode == TaskMode.ADD) {
-                                toDoOldExternal.copy(
-                                    thingsToDoShared = toDoOldExternal.thingsToDoShared.copy(
-                                        externalTasks = toDoOldExternal.thingsToDoShared.externalTasks + externalTask.copy(
-                                            taskOwner = currentUser.nickName
+                            val updatedTodoListExternal =
+                                if (taskMode == TaskMode.ADD) {
+                                    toDoOldExternal.copy(
+                                        thingsToDoShared = toDoOldExternal.thingsToDoShared.copy(
+                                            externalTasks = toDoOldExternal.thingsToDoShared.externalTasks + externalTask.copy(
+                                                taskOwner = currentUser.nickName
+                                            )
                                         )
                                     )
-                                )
-                            } else {
-                                toDoOldExternal.copy(
-                                    thingsToDoShared = toDoOldExternal.thingsToDoShared.copy(
-                                        externalTasks = toDoOldExternal.thingsToDoShared.externalTasks.map { taskItem ->
-                                            if (taskItem.task.id == externalTask.task.id) {
-                                                externalTask.copy(taskOwner = taskItem.taskOwner)
-                                            } else {
-                                                taskItem
+                                } else {
+                                    toDoOldExternal.copy(
+                                        thingsToDoShared = toDoOldExternal.thingsToDoShared.copy(
+                                            externalTasks = toDoOldExternal.thingsToDoShared.externalTasks.map { taskItem ->
+                                                if (taskItem.task.id == externalTask.task.id) {
+                                                    externalTask.copy(taskOwner = taskItem.taskOwner)
+                                                } else {
+                                                    taskItem
+                                                }
                                             }
-                                        }
+                                        )
                                     )
-                                )
-                            }
-                        val userForUpdateExternal = externalUser.copy(
-                            listToDo = updatedTodoListExternal
-                        )
+                                }
+                            val userForUpdateExternal = externalUser.copy(
+                                listToDo = updatedTodoListExternal
+                            )
 
-                        externalUserCollection.set(userForUpdateExternal).await()
+                            externalUserCollection.set(userForUpdateExternal).await()
 
+                        }
                     }
+                } catch (e: Exception) {
+                    logExceptionToFirebase("addExternalTaskToFirebase", e.message.toString())
                 }
-            } catch (e: Exception) {
-                Log.e("addExternalTaskToFirebase error external user", e.toString())
-            }
 
-        } else {
-            Log.i("addExternalTaskToFirebase error", "No available tasks to add")
+            } else {
+                logTextToFirebase("addExternalTaskToFirebase, no available tasks to add")
+            }
         }
     }
 
@@ -561,7 +562,7 @@ class UserRepositoryImpl @Inject constructor(
                         userCollectionCurrentUser.update("listToDo", listToDoForUpdate).await()
                     }
                 } catch (e: Exception) {
-                    Log.e("deleteTaskFromFirebase, TaskType.PRIVATE, error", e.toString())
+                    logExceptionToFirebase("deleteTaskFromFirebase", e.message.toString())
                 }
             } else if (taskType == TaskType.MY_TO_OTHER_USER) {
                 val externalTasksToUpdate =
@@ -576,10 +577,7 @@ class UserRepositoryImpl @Inject constructor(
                         userCollectionCurrentUser.update("listToDo", listToDoForUpdate).await()
                     }
                 } catch (e: Exception) {
-                    Log.e(
-                        "deleteTaskFromFirebase, TaskType.MY_TO_OTHER_USER, my list error",
-                        e.toString()
-                    )
+                    logExceptionToFirebase("deleteTaskFromFirebase", e.message.toString())
                 }
 
                 if (externalUserData != null) {
@@ -596,9 +594,9 @@ class UserRepositoryImpl @Inject constructor(
                                 .await()
                         }
                     } catch (e: Exception) {
-                        Log.e(
+                        logExceptionToFirebase(
                             "deleteTaskFromFirebase, TaskType.MY_TO_OTHER_USER, other user list error",
-                            e.toString()
+                            e.message.toString()
                         )
                     }
                 }
@@ -615,9 +613,9 @@ class UserRepositoryImpl @Inject constructor(
                         userCollectionCurrentUser.update("listToDo", listToDoForUpdate).await()
                     }
                 } catch (e: Exception) {
-                    Log.e(
+                    logExceptionToFirebase(
                         "deleteTaskFromFirebase, TaskType.FROM_OTHER_USER_FOR_ME, my list error",
-                        e.toString()
+                        e.message.toString()
                     )
                 }
 
@@ -635,9 +633,9 @@ class UserRepositoryImpl @Inject constructor(
                                 .await()
                         }
                     } catch (e: Exception) {
-                        Log.e(
+                        logExceptionToFirebase(
                             "deleteTaskFromFirebase, TaskType.FROM_OTHER_USER_FOR_ME, other user list error",
-                            e.toString()
+                            e.message.toString()
                         )
                     }
                 }
@@ -676,7 +674,7 @@ class UserRepositoryImpl @Inject constructor(
 
 
             } catch (exception: Exception) {
-                Log.e("getUsersListFromFirebase", exception.toString())
+                logExceptionToFirebase("getUsersListFromFirebase", exception.message.toString())
             }
             currentTry++
         }
@@ -706,7 +704,10 @@ class UserRepositoryImpl @Inject constructor(
                 userCollection.set(userForUpdate).await()
             }
         } catch (e: Exception) {
-            Log.d("exchangeCoins error", "error update coins in firebase: $e")
+            logExceptionToFirebase(
+                "exchangeCoins, error update coins in firebase",
+                e.message.toString()
+            )
         }
     }
 
@@ -773,7 +774,10 @@ class UserRepositoryImpl @Inject constructor(
                     userCollection.set(userForUpdate).await()
                 }
             } catch (e: Exception) {
-                Log.e("setPremiumStatus error", "error setPremiumStatus in firebase: $e")
+                logExceptionToFirebase(
+                    "setPremiumStatus, error setPremiumStatus in firebase",
+                    e.message.toString()
+                )
             }
         }
     }

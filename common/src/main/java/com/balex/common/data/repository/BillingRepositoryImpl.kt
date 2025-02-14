@@ -2,7 +2,6 @@ package com.balex.common.data.repository
 
 import android.app.Activity
 import android.content.Context
-import android.util.Log
 import com.balex.common.BuildConfig
 import com.balex.common.data.iap.DataWrappers
 import com.balex.common.data.iap.IapConnector
@@ -10,6 +9,8 @@ import com.balex.common.data.iap.PurchaseServiceListener
 import com.balex.common.domain.repository.BillingRepository
 import com.balex.common.domain.usecases.regLog.GetUserUseCase
 import com.balex.common.domain.usecases.user.ExchangeCoinsUseCase
+import com.balex.common.extensions.logExceptionToFirebase
+import com.balex.common.extensions.logTextToFirebase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -40,19 +41,19 @@ class BillingRepositoryImpl @Inject constructor(
         iapConnector.purchase(activity, TEAM_COIN)
     }
 
-    private fun logAppVersion(context: Context) {
-        try {
-            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            val versionName = packageInfo.versionName
-            Log.d("AppVersion", "Current version: $versionName")
-        } catch (e: Exception) {
-            Log.i("AppVersion", "Failed to get version name", e)
-        }
-    }
+//    private fun logAppVersion(context: Context) {
+//        try {
+//            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+//            val versionName = packageInfo.versionName
+//            Log.d("AppVersion", "Current version: $versionName")
+//        } catch (e: Exception) {
+//            Log.i("AppVersion", "Failed to get version name", e)
+//        }
+//    }
 
     override fun initIapConnector(activity: Activity) {
 
-        logAppVersion(context)
+        //logAppVersion(context)
 
         iapConnector = IapConnector(
             context = activity,
@@ -72,27 +73,24 @@ class BillingRepositoryImpl @Inject constructor(
                         addCreditsToUser(quantity)
                     }
                 } catch (e: Exception) {
-                    Log.e("launchPurchaseFlow", "Wrong quantity in jsonObject: $jsonObject")
+                    logExceptionToFirebase("launchPurchaseFlow, Wrong quantity in jsonObject:", "$jsonObject.")
                     e.printStackTrace()
                 }
             }
 
             override fun onPricesUpdated(iapKeyPrices: Map<String, List<DataWrappers.ProductDetails>>) {
-                Log.d("launchPurchaseFlow", "onProductPurchased, onPricesUpdated: $iapKeyPrices")
+                logTextToFirebase("launchPurchaseFlow, onPricesUpdated: $iapKeyPrices")
             }
 
             override fun onProductRestored(purchaseInfo: DataWrappers.PurchaseInfo) {
-                Log.d("launchPurchaseFlow", "onProductRestored, purchaseInfo: $purchaseInfo")
+                logTextToFirebase("launchPurchaseFlow, onProductRestored, purchaseInfo: $purchaseInfo")
             }
 
             override fun onPurchaseFailed(
                 purchaseInfo: DataWrappers.PurchaseInfo?,
                 billingResponseCode: Int?
             ) {
-                Log.w(
-                    "launchPurchaseFlow",
-                    "onPurchaseFailed, billingResponseCode: $billingResponseCode"
-                )
+                logTextToFirebase("launchPurchaseFlow, onPurchaseFailed, billingResponseCode: $billingResponseCode")
             }
         })
     }

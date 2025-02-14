@@ -56,6 +56,8 @@ dependencies {
 
     runtimeOnly(libs.billing)
 
+    implementation(libs.firebase.crashlytics.ktx)
+
     implementation(libs.kotlinx.serialization.core)
 
     implementation(libs.androidx.animation.core)

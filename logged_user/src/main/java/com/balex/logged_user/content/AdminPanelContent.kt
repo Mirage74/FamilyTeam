@@ -107,24 +107,27 @@ fun ShowUsersList(
         items(state.usersNicknamesList) { userNickname ->
             var offsetX by remember { mutableFloatStateOf(0f) }
             val animatedOffsetX by animateFloatAsState(targetValue = offsetX, label = "")
+            val isSwipeEnabled = state.user.nickName.trim() != userNickname.trim()
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(4.dp)
                     .padding(bottom = 16.dp)
                     .pointerInput(Unit) {
-                        detectHorizontalDragGestures(
-                            onDragEnd = {
-                                if (offsetX > 100f) {
-                                    component.onAdminPageRemoveUserClicked(userNickname)
-                                } else {
-                                    offsetX = 0f
+                        if (isSwipeEnabled) {
+                            detectHorizontalDragGestures(
+                                onDragEnd = {
+                                    if (offsetX > 100f) {
+                                        component.onAdminPageRemoveUserClicked(userNickname)
+                                    } else {
+                                        offsetX = 0f
+                                    }
+                                },
+                                onHorizontalDrag = { _, dragAmount ->
+                                    offsetX = (offsetX + dragAmount).coerceAtLeast(0f)
                                 }
-                            },
-                            onHorizontalDrag = { _, dragAmount ->
-                                offsetX = (offsetX + dragAmount).coerceAtLeast(0f)
-                            }
-                        )
+                            )
+                        }
                     }
                     .offset { IntOffset(animatedOffsetX.dp.roundToPx(), 0) }
                     .drawBehind {
@@ -145,19 +148,20 @@ fun ShowUsersList(
                         .weight(1f),
                 )
 
-                IconButton(
-                    onClick = {
-                        component.onAdminPageRemoveUserClicked(userNickname)
-                    },
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete user",
-                        tint = Color.Gray,
-                    )
+                if (state.user.nickName.trim() != userNickname.trim()) {
+                    IconButton(
+                        onClick = {
+                            component.onAdminPageRemoveUserClicked(userNickname)
+                        },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete user",
+                            tint = Color.Gray,
+                        )
+                    }
                 }
-
             }
         }
     }

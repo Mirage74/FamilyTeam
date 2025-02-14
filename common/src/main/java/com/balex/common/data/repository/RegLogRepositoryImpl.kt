@@ -2,7 +2,6 @@ package com.balex.common.data.repository
 
 import android.content.Context
 import android.content.res.Configuration
-import android.util.Log
 import com.balex.common.R
 import com.balex.common.data.datastore.Storage
 import com.balex.common.data.repository.UserRepositoryImpl.Companion.FIREBASE_SCHEDULERS_COLLECTION
@@ -17,6 +16,8 @@ import com.balex.common.domain.entity.User
 import com.balex.common.domain.repository.RegLogRepository
 import com.balex.common.extensions.formatStringFirstLetterUppercase
 import com.balex.common.extensions.formatStringPhoneDelLeadNullAndAddPlus
+import com.balex.common.extensions.logExceptionToFirebase
+import com.balex.common.extensions.logTextToFirebase
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
@@ -70,7 +71,7 @@ class RegLogRepositoryImpl @Inject constructor(
             }
             field = newValue
             if (value.token.isBlank() && field.token.isNotBlank()) {
-                Log.e("Firestore token", "globalRepoUser new value token is blank")
+                logTextToFirebase("Firestore token, globalRepoUser new value token is blank")
             }
             coroutineScope.launch {
                 isCurrentUserNeedRefreshFlow.emit(Unit)
@@ -161,7 +162,7 @@ class RegLogRepositoryImpl @Inject constructor(
                     emit(globalRepoUser)
                 }
             } catch (e: Exception) {
-                Log.e("observeUser", "Error: ${e.message}", e)
+                logExceptionToFirebase("observeUser", e.message.toString())
             }
         }
             .stateIn(
@@ -225,7 +226,7 @@ class RegLogRepositoryImpl @Inject constructor(
                     emit(language)
                 }
             } catch (e: Exception) {
-                Log.e("observeLanguage", "Error: ${e.message}", e)
+                logExceptionToFirebase("observeLanguage", e.message.toString())
             }
         }
             .stateIn(
@@ -317,7 +318,7 @@ class RegLogRepositoryImpl @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                Log.e("removeRecordFromCollection, adminsCollection ", "Error: ${e.message}")
+                logExceptionToFirebase("removeRecordFromCollection, adminsCollection", e.message.toString())
             }
         }
 
@@ -328,7 +329,7 @@ class RegLogRepositoryImpl @Inject constructor(
                     document.delete().await()
                 }
             } catch (e: Exception) {
-                Log.e("removeRecordFromCollection, usersCollection", "Error: ${e.message}")
+                logExceptionToFirebase("removeRecordFromCollection, usersCollection", e.message.toString())
             }
         }
     }
@@ -499,7 +500,7 @@ class RegLogRepositoryImpl @Inject constructor(
                     }
 
                 } catch (e: Exception) {
-                    Log.e("refreshFCMLastTimeUpdated error", e.toString())
+                    logExceptionToFirebase("refreshFCMLastTimeUpdated", e.message.toString())
                 }
             }
         }
@@ -583,7 +584,7 @@ class RegLogRepositoryImpl @Inject constructor(
             }
 
         } catch (e: Exception) {
-            Log.e("signToFirebaseInWithEmailAndPassword, Error", e.message ?: "Unknown error")
+            logExceptionToFirebase("signToFirebaseWithEmailAndPasswordFromPreferences", e.message.toString())
             setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
         }
     }
@@ -679,15 +680,12 @@ class RegLogRepositoryImpl @Inject constructor(
                     return StatusEmailSignIn.ADMIN_NOT_FOUND
                 } else {
                     Storage.clearPreferences(context)
-                    Log.e(
-                        "signToFirebaseInWithEmailAndPassword, Error",
-                        e.message ?: "Unknown error"
-                    )
+                    logExceptionToFirebase("signToFirebaseInWithEmailAndPassword", e.message ?: "Unknown error")
                     return StatusEmailSignIn.OTHER_SIGN_IN_ERROR
                 }
             }
         } catch (e: Exception) {
-            Log.e("signToFirebaseInWithEmailAndPassword, Error", e.message ?: "Unknown error")
+            logExceptionToFirebase("signToFirebaseInWithEmailAndPassword", e.message ?: "Unknown error")
             //setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
         }
 
@@ -744,10 +742,7 @@ class RegLogRepositoryImpl @Inject constructor(
                     return StatusFakeEmailSignIn.USER_NOT_FOUND
                 } else {
                     Storage.clearPreferences(context)
-                    Log.e(
-                        "signToFirebaseInWithEmailAndPassword, Error",
-                        e.message ?: "Unknown error"
-                    )
+                    logExceptionToFirebase("signToFirebaseInWithEmailAndPassword", e.message ?: "Unknown error")
                     return StatusFakeEmailSignIn.OTHER_FAKE_EMAIL_SIGN_IN_ERROR
                 }
             }
@@ -822,8 +817,7 @@ class RegLogRepositoryImpl @Inject constructor(
                 setUserWithError("registerAndVerifyNewTeamByEmail: $REGISTRATION_ERROR: ${e.message}")
             }
         } else {
-            Log.i("registerAndVerifyNewTeamByEmail", "Team '$email' already registered")
-
+            logTextToFirebase("registerAndVerifyNewTeamByEmail: Team '$email' already registered")
         }
     }
 
@@ -889,7 +883,7 @@ class RegLogRepositoryImpl @Inject constructor(
             )
 
         } catch (e: Exception) {
-            Log.e("regUserWithFakeEmail", "Error: ${e.message}")
+            logExceptionToFirebase("regUserWithFakeEmail", e.message.toString())
         }
     }
 
@@ -1261,7 +1255,7 @@ class RegLogRepositoryImpl @Inject constructor(
                     userCollection.set(userForUpdate).await()
                 }
             } catch (e: Exception) {
-                Log.e("deleteOldTasks error", e.toString())
+                logExceptionToFirebase("deleteOldTasks", e.message.toString())
             }
         }
 
