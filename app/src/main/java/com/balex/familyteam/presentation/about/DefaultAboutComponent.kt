@@ -5,7 +5,10 @@ import com.arkivanov.mvikotlin.core.instancekeeper.getStore
 import com.arkivanov.mvikotlin.extensions.coroutines.labels
 import com.arkivanov.mvikotlin.extensions.coroutines.stateFlow
 import com.balex.common.domain.usecases.regLog.GetLanguageUseCase
+import com.balex.common.domain.usecases.regLog.LogoutUserUseCase
+import com.balex.common.domain.usecases.regLog.StorageClearPreferencesUseCase
 import com.balex.common.extensions.componentScope
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -16,7 +19,10 @@ import kotlinx.coroutines.launch
 class DefaultAboutComponent @AssistedInject constructor(
     private val storeFactory: AboutStoreFactory,
     private val getLanguageUseCase: GetLanguageUseCase,
+    private val logoutUserUseCase: LogoutUserUseCase,
+    private val storageClearPreferencesUseCase: StorageClearPreferencesUseCase,
     @Assisted("onRules") private val onRules: () -> Unit,
+    @Assisted("onLogout") private val onLogout: () -> Unit,
     @Suppress("unused")
     @Assisted("componentContext") componentContext: ComponentContext
 ) : AboutComponent, ComponentContext by componentContext {
@@ -48,11 +54,16 @@ class DefaultAboutComponent @AssistedInject constructor(
         store.accept(AboutStore.Intent.ClickedRules)
     }
 
+    override suspend fun onClickDeleteAccount(userName: String) {
+        store.accept(AboutStore.Intent.DeleteAccount(userName, onLogout))
+    }
+
     @AssistedFactory
     interface Factory {
 
         fun create(
             @Assisted("onRules") onRules: () -> Unit,
+            @Assisted("onLogout") onLogout: () -> Unit,
             @Assisted("componentContext") componentContext: ComponentContext
         ): DefaultAboutComponent
     }

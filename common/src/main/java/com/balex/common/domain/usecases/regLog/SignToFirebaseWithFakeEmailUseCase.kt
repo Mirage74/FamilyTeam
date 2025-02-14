@@ -8,6 +8,6 @@ import javax.inject.Inject
 class SignToFirebaseWithFakeEmailUseCase @Inject constructor(
     private val repository: RegLogRepository
 ) {
-    suspend operator fun invoke(userToSignIn: User) =
-        repository.signToFirebaseWithFakeEmail(userToSignIn)
+    suspend operator fun invoke(userToSignIn: User, userNameTrySignIn: String) =
+        repository.signToFirebaseWithFakeEmail(userToSignIn, userNameTrySignIn)
 }

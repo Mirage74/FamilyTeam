@@ -34,7 +34,7 @@ import kotlinx.coroutines.launch
 
 class DefaultLoggedUserComponent @AssistedInject constructor(
     private val storeFactory: LoggedUserStoreFactory,
-    private val getUserUseCase: GetUserUseCase,
+    getUserUseCase: GetUserUseCase,
     private val getLanguageUseCase: GetLanguageUseCase,
     private val logoutUserUseCase: LogoutUserUseCase,
     private val deleteOldTasksUseCase: DeleteOldTasksUseCase,

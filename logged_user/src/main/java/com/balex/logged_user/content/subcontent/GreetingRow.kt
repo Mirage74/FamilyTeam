@@ -18,6 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.balex.common.LocalLocalizedContext
+import com.balex.common.data.datastore.Storage
+import com.balex.common.domain.entity.User
 import com.balex.logged_user.R
 
 @Composable
@@ -48,10 +50,14 @@ fun GreetingRow(
             Spacer(modifier = Modifier.width(4.dp))
         }
 
-        Text(
-            text = context.getString(R.string.hello_text, displayName),
-            style = MaterialTheme.typography.headlineMedium
-        )
+        if (userNameFromState.isNotEmpty() && userNameFromState != User.DEFAULT_NICK_NAME &&
+            userNameFromState != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
+        ) {
+            Text(
+                text = context.getString(R.string.hello_text, displayName),
+                style = MaterialTheme.typography.headlineMedium
+            )
+        }
     }
 }
 

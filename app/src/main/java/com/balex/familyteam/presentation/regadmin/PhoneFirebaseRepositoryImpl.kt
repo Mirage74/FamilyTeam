@@ -303,7 +303,7 @@ class PhoneFirebaseRepositoryImpl @Inject constructor(
                     return ADMIN_IS_FOUND_IN_COLLECTION_BUT_PASSWORD_IS_WRONG
                 } else {
                     try {
-                        signToFirebaseWithFakeEmailUseCase(adminAsUser)
+                        signToFirebaseWithFakeEmailUseCase(adminAsUser, adminAsUser.nickName)
 
                         return adminAsUser.nickName
 

@@ -14,6 +14,7 @@ import com.balex.common.domain.entity.PrivateTasks
 import com.balex.common.domain.entity.RegistrationOption
 import com.balex.common.domain.entity.User
 import com.balex.common.domain.repository.RegLogRepository
+import com.balex.common.domain.usecases.user.SaveDeviceTokenUseCase
 import com.balex.common.extensions.formatStringFirstLetterUppercase
 import com.balex.common.extensions.formatStringPhoneDelLeadNullAndAddPlus
 import com.balex.common.extensions.logExceptionToFirebase
@@ -69,17 +70,20 @@ class RegLogRepositoryImpl @Inject constructor(
             } else {
                 value.copy(token = field.token)
             }
-            field = newValue
-            if (value.token.isBlank() && field.token.isNotBlank()) {
-                logTextToFirebase("Firestore token, globalRepoUser new value token is blank")
-            }
-            coroutineScope.launch {
-                isCurrentUserNeedRefreshFlow.emit(Unit)
-                if (!isUserListenerRegistered && value.adminEmailOrPhone != User.DEFAULT_FAKE_EMAIL && value.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
-                    addUserListenerInFirebase()
-                    isUserListenerRegistered = true
+            if (field != newValue) {
+                field = newValue
+                if (value.token.isBlank() && field.token.isNotBlank()) {
+                    logTextToFirebase("Firestore token, globalRepoUser new value token is blank")
+                }
+                coroutineScope.launch {
+                    isCurrentUserNeedRefreshFlow.emit(Unit)
+                    if (!isUserListenerRegistered && value.adminEmailOrPhone != User.DEFAULT_FAKE_EMAIL && value.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
+                        addUserListenerInFirebase()
+                        isUserListenerRegistered = true
+                    }
                 }
             }
+
         }
 
     @Suppress("unused")
@@ -255,7 +259,7 @@ class RegLogRepositoryImpl @Inject constructor(
         listenerRegistrations.clear()
         globalRepoUser = User(pressedLogoutButton = true)
         admin = Admin()
-        isWrongPassword = User()
+        isWrongPassword = User(nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES)
         isUserMailOrPhoneVerified = false
     }
 
@@ -318,7 +322,10 @@ class RegLogRepositoryImpl @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                logExceptionToFirebase("removeRecordFromCollection, adminsCollection", e.message.toString())
+                logExceptionToFirebase(
+                    "removeRecordFromCollection, adminsCollection",
+                    e.message.toString()
+                )
             }
         }
 
@@ -329,7 +336,10 @@ class RegLogRepositoryImpl @Inject constructor(
                     document.delete().await()
                 }
             } catch (e: Exception) {
-                logExceptionToFirebase("removeRecordFromCollection, usersCollection", e.message.toString())
+                logExceptionToFirebase(
+                    "removeRecordFromCollection, usersCollection",
+                    e.message.toString()
+                )
             }
         }
     }
@@ -584,7 +594,10 @@ class RegLogRepositoryImpl @Inject constructor(
             }
 
         } catch (e: Exception) {
-            logExceptionToFirebase("signToFirebaseWithEmailAndPasswordFromPreferences", e.message.toString())
+            logExceptionToFirebase(
+                "signToFirebaseWithEmailAndPasswordFromPreferences",
+                e.message.toString()
+            )
             setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
         }
     }
@@ -680,19 +693,28 @@ class RegLogRepositoryImpl @Inject constructor(
                     return StatusEmailSignIn.ADMIN_NOT_FOUND
                 } else {
                     Storage.clearPreferences(context)
-                    logExceptionToFirebase("signToFirebaseInWithEmailAndPassword", e.message ?: "Unknown error")
+                    logExceptionToFirebase(
+                        "signToFirebaseInWithEmailAndPassword",
+                        e.message ?: "Unknown error"
+                    )
                     return StatusEmailSignIn.OTHER_SIGN_IN_ERROR
                 }
             }
         } catch (e: Exception) {
-            logExceptionToFirebase("signToFirebaseInWithEmailAndPassword", e.message ?: "Unknown error")
+            logExceptionToFirebase(
+                "signToFirebaseInWithEmailAndPassword",
+                e.message ?: "Unknown error"
+            )
             //setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
         }
 
         return StatusEmailSignIn.OTHER_SIGN_IN_ERROR
     }
 
-    override suspend fun signToFirebaseWithFakeEmail(userToSignIn: User): StatusFakeEmailSignIn {
+    override suspend fun signToFirebaseWithFakeEmail(
+        userToSignIn: User,
+        userNameTrySignIn: String
+    ): StatusFakeEmailSignIn {
         if (userToSignIn.fakeEmail != User.DEFAULT_FAKE_EMAIL) {
             try {
                 if (FirebaseAuth.getInstance().currentUser != null) {
@@ -719,19 +741,24 @@ class RegLogRepositoryImpl @Inject constructor(
                 }
                 if (firebaseUser != null && !globalRepoUser.pressedLogoutButton) {
                     val userFromCollection = findUserInCollection(userToSignIn)
-                    globalRepoUser =
-                        if (userFromCollection != null && userFromCollection.nickName != User.DEFAULT_NICK_NAME) {
-                            userFromCollection
-
-                        } else {
-                            val result = addUserToCollection(newUser)
-                            if (result.isSuccess) {
-                                newUser
-                            } else {
-                                setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
-                                return StatusFakeEmailSignIn.OTHER_FAKE_EMAIL_SIGN_IN_ERROR
-                            }
+                    if (userFromCollection != null) {
+                        if (userFromCollection.nickName.lowercase()
+                                .trim() == userNameTrySignIn.lowercase().trim()
+                        ) {
+                            globalRepoUser =
+                                if (userFromCollection.nickName != User.DEFAULT_NICK_NAME) {
+                                    userFromCollection
+                                } else {
+                                    val result = addUserToCollection(newUser)
+                                    if (result.isSuccess) {
+                                        newUser
+                                    } else {
+                                        setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
+                                        return StatusFakeEmailSignIn.OTHER_FAKE_EMAIL_SIGN_IN_ERROR
+                                    }
+                                }
                         }
+                    }
                     return StatusFakeEmailSignIn.USER_SIGNED_IN
 
                 }
@@ -742,7 +769,10 @@ class RegLogRepositoryImpl @Inject constructor(
                     return StatusFakeEmailSignIn.USER_NOT_FOUND
                 } else {
                     Storage.clearPreferences(context)
-                    logExceptionToFirebase("signToFirebaseInWithEmailAndPassword", e.message ?: "Unknown error")
+                    logExceptionToFirebase(
+                        "signToFirebaseInWithEmailAndPassword",
+                        e.message ?: "Unknown error"
+                    )
                     return StatusFakeEmailSignIn.OTHER_FAKE_EMAIL_SIGN_IN_ERROR
                 }
             }
@@ -1009,7 +1039,8 @@ class RegLogRepositoryImpl @Inject constructor(
                         nickName = admin.nickName,
                         fakeEmail = createFakeUserEmail(admin.nickName, email),
                         password = password
-                    )
+                    ),
+                    nickName
                 )
                 return false
             } else {
@@ -1112,7 +1143,8 @@ class RegLogRepositoryImpl @Inject constructor(
                                 adminEmailOrPhoneWithPlus
                             ),
                             password = password
-                        )
+                        ),
+                        nickName
                     )
                     if (trySignIn == StatusFakeEmailSignIn.USER_SIGNED_IN) {
                         admin = adminData

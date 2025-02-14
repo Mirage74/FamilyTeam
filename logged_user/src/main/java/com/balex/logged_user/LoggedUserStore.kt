@@ -11,6 +11,7 @@ import com.balex.common.R
 import com.balex.common.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
 import com.balex.common.data.local.model.ShopItemDBModel
 import com.balex.common.data.repository.BillingRepositoryImpl
+import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.NO_NEW_TOKEN
 import com.balex.common.data.repository.TaskMode
 import com.balex.common.data.repository.UserRepositoryImpl
 import com.balex.common.domain.entity.ExternalTask
@@ -23,10 +24,12 @@ import com.balex.common.domain.usecases.admin.CreateNewUserUseCase
 import com.balex.common.domain.usecases.admin.DeleteUserUseCase
 import com.balex.common.domain.usecases.billing.InitIapConnectorUseCase
 import com.balex.common.domain.usecases.billing.PurchaseCoinsUseCase
+import com.balex.common.domain.usecases.regLog.GetTokenUseCase
 import com.balex.common.domain.usecases.regLog.GetUserUseCase
 import com.balex.common.domain.usecases.regLog.ObserveLanguageUseCase
 import com.balex.common.domain.usecases.regLog.ObserveUserUseCase
 import com.balex.common.domain.usecases.regLog.SaveLanguageUseCase
+import com.balex.common.domain.usecases.regLog.SetNewTokenUseCase
 import com.balex.common.domain.usecases.regLog.StorageSavePreferencesUseCase
 import com.balex.common.domain.usecases.shopList.AddToShopListUseCase
 import com.balex.common.domain.usecases.shopList.GetShopListUseCase
@@ -195,6 +198,8 @@ interface LoggedUserStore : Store<Intent, State, Label> {
 
 class LoggedUserStoreFactory @Inject constructor(
     private val getUserUseCase: GetUserUseCase,
+    private val getTokenUseCase: GetTokenUseCase,
+    private val setNewTokenUseCase: SetNewTokenUseCase,
     private val saveDeviceTokenUseCase: SaveDeviceTokenUseCase,
     private val observeShopListUseCase: ObserveShopListUseCase,
     private val refreshShopListUseCase: RefreshShopListUseCase,
@@ -629,6 +634,13 @@ class LoggedUserStoreFactory @Inject constructor(
                             action.user.password,
                             action.user.language
                         )
+                        val tokenFromRepo = getTokenUseCase()
+                        if (tokenFromRepo != NO_NEW_TOKEN) {
+                            scope.launch {
+                                saveDeviceTokenUseCase(tokenFromRepo)
+                                setNewTokenUseCase(NO_NEW_TOKEN)
+                            }
+                        }
                         dispatch(Msg.UserIsChanged(action.user))
                     }
                 }

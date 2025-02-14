@@ -9,4 +9,6 @@ interface AboutComponent {
     fun onLanguageChanged(language: String)
 
     fun onClickRules()
+
+    suspend fun onClickDeleteAccount(userName: String)
 }

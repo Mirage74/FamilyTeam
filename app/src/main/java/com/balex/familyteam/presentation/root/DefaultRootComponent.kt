@@ -116,6 +116,9 @@ class DefaultRootComponent @AssistedInject constructor(
                         navigation.pop()
                         navigation.push(Config.Rules)
                     },
+                    onLogout = {
+                        navigation.replaceAll(Config.NotLogged)
+                    },
                     componentContext = childComponentContext
                 )
                 Child.About(component)

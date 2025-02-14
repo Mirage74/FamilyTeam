@@ -76,6 +76,6 @@ interface RegLogRepository {
 
     suspend fun removeRecordFromCollection(collectionName: String, emailOrPhoneNumber: String)
 
-    suspend fun signToFirebaseWithFakeEmail(userToSignIn: User): StatusFakeEmailSignIn
+    suspend fun signToFirebaseWithFakeEmail(userToSignIn: User, userNameTrySignIn: String): StatusFakeEmailSignIn
 
 }

@@ -5,6 +5,9 @@ import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
+import com.balex.common.domain.entity.User
+import com.balex.common.domain.usecases.admin.DeleteSelfAccountUseCase
+import com.balex.common.domain.usecases.regLog.GetUserUseCase
 import com.balex.common.domain.usecases.regLog.ObserveLanguageUseCase
 import com.balex.common.domain.usecases.regLog.SaveLanguageUseCase
 import com.balex.familyteam.presentation.about.AboutStore.Intent
@@ -21,11 +24,14 @@ interface AboutStore : Store<Intent, State, Label> {
 
         data object ClickedRules : Intent
 
+        data class DeleteAccount(val userName: String, val navigateToNotloggedScreen: () -> Unit) : Intent
+
     }
 
     @Suppress("unused")
     data class State(
-        val language: String
+        val language: String,
+        val user: User,
     )
 
     sealed interface Label {
@@ -34,6 +40,8 @@ interface AboutStore : Store<Intent, State, Label> {
 }
 
 class AboutStoreFactory @Inject constructor(
+    private val getUserUseCase: GetUserUseCase,
+    private val deleteSelfAccountUseCase: DeleteSelfAccountUseCase,
     private val saveLanguageUseCase: SaveLanguageUseCase,
     private val observeLanguageUseCase: ObserveLanguageUseCase,
     private val storeFactory: StoreFactory
@@ -44,7 +52,8 @@ class AboutStoreFactory @Inject constructor(
         object : AboutStore, Store<Intent, State, Label> by storeFactory.create(
             name = "AboutStore",
             initialState = State(
-                language = language
+                language = language,
+                user = getUserUseCase()
             ),
             bootstrapper = BootstrapperImpl(),
             executorFactory = ::ExecutorImpl,
@@ -84,6 +93,12 @@ class AboutStoreFactory @Inject constructor(
 
                 Intent.ClickedRules -> {
                     publish(Label.ClickedRules)
+                }
+
+                is Intent.DeleteAccount -> {
+                    scope.launch {
+                        deleteSelfAccountUseCase(intent.userName, intent.navigateToNotloggedScreen)
+                    }
                 }
             }
         }

@@ -176,7 +176,7 @@ class NotLoggedStoreFactory @Inject constructor(
                                     if (getWrongPasswordUserUseCase().nickName == User.DEFAULT_NICK_NAME
                                         && login != User.DEFAULT_NICK_NAME
                                     ) {
-                                        signToFirebaseWithFakeEmailUseCase(getUserUseCase())
+                                        signToFirebaseWithFakeEmailUseCase(getUserUseCase(), getUserUseCase().nickName)
                                         dispatch(Action.UserExistInPreferenceAndLoadedUserData)
                                     }
                                 }

@@ -184,27 +184,29 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun saveDeviceToken(token: String) {
         val user = getUserUseCase()
-        withContext(Dispatchers.IO) {
-            val userCollection =
-                usersCollection.document(user.adminEmailOrPhone)
-                    .collection(user.nickName.lowercase())
-                    .document(user.nickName.lowercase())
-            val userSnapshot = userCollection.get().await()
-            if (userSnapshot.exists()) {
-                val oldToken = userSnapshot.get("token").toString()
-                if (oldToken.isBlank()) {
-                    try {
-                        setNewTokenUseCase(token)
-                        userCollection.update("token", token).await()
-                    } catch (e: Exception) {
-                    }
-                    val g = 5
+        if (token.isNotBlank()) {
+            setNewTokenUseCase(token)
+        }
+        if (user.nickName != User.DEFAULT_NICK_NAME && user.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
+            withContext(Dispatchers.IO) {
+                val userCollection =
+                    usersCollection.document(user.adminEmailOrPhone)
+                        .collection(user.nickName.lowercase())
+                        .document(user.nickName.lowercase())
+                val userSnapshot = userCollection.get().await()
+                if (userSnapshot.exists()) {
+                    val oldToken = userSnapshot.get("token").toString()
+                    if (oldToken.isBlank()) {
+                        try {
+                            userCollection.update("token", token).await()
+                        } catch (e: Exception) {
+                        }
 
-                } else {
-                    if (oldToken != token) {
-                        setNewTokenUseCase(token)
-                        userCollection.update("token", token).await()
-                        cancelOldRemindersAndCreateNew(oldToken, token)
+                    } else {
+                        if (oldToken != token) {
+                            userCollection.update("token", token).await()
+                            cancelOldRemindersAndCreateNew(oldToken, token)
+                        }
                     }
                 }
             }
