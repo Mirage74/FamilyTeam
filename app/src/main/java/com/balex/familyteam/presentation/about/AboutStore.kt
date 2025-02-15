@@ -7,6 +7,7 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import com.balex.common.domain.entity.User
 import com.balex.common.domain.usecases.admin.DeleteSelfAccountUseCase
+import com.balex.common.domain.usecases.admin.DeleteTeamUseCase
 import com.balex.common.domain.usecases.regLog.GetUserUseCase
 import com.balex.common.domain.usecases.regLog.ObserveLanguageUseCase
 import com.balex.common.domain.usecases.regLog.SaveLanguageUseCase
@@ -26,6 +27,8 @@ interface AboutStore : Store<Intent, State, Label> {
 
         data class DeleteAccount(val userName: String, val navigateToNotloggedScreen: () -> Unit) : Intent
 
+        data class DeleteTeam(val navigateToNotloggedScreen: () -> Unit) : Intent
+
     }
 
     @Suppress("unused")
@@ -42,6 +45,7 @@ interface AboutStore : Store<Intent, State, Label> {
 class AboutStoreFactory @Inject constructor(
     private val getUserUseCase: GetUserUseCase,
     private val deleteSelfAccountUseCase: DeleteSelfAccountUseCase,
+    private val deleteTeamUseCase: DeleteTeamUseCase,
     private val saveLanguageUseCase: SaveLanguageUseCase,
     private val observeLanguageUseCase: ObserveLanguageUseCase,
     private val storeFactory: StoreFactory
@@ -98,6 +102,11 @@ class AboutStoreFactory @Inject constructor(
                 is Intent.DeleteAccount -> {
                     scope.launch {
                         deleteSelfAccountUseCase(intent.userName, intent.navigateToNotloggedScreen)
+                    }
+                }
+                is Intent.DeleteTeam -> {
+                    scope.launch {
+                        deleteTeamUseCase(intent.navigateToNotloggedScreen)
                     }
                 }
             }

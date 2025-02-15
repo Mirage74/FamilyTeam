@@ -5,6 +5,7 @@ import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineBootstrapper
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
+import com.balex.common.data.datastore.Storage
 import com.balex.common.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
 import com.balex.common.data.repository.RegLogRepositoryImpl
 import com.balex.common.domain.entity.User
@@ -20,7 +21,6 @@ import com.balex.common.domain.usecases.regLog.StorageClearPreferencesUseCase
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore.Intent
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore.Label
 import com.balex.familyteam.presentation.notlogged.NotLoggedStore.State
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -188,7 +188,7 @@ class NotLoggedStoreFactory @Inject constructor(
 
             passwordJob = scope.launch {
                 observeIsWrongPasswordUseCase().collect {
-                    if (it.nickName != User.DEFAULT_NICK_NAME) {
+                    if (it.nickName != User.DEFAULT_NICK_NAME && it.nickName != NO_USER_SAVED_IN_SHARED_PREFERENCES) {
                         dispatch(Action.AdminAndUserExistButWrongPassword(it))
                     }
                 }

@@ -8,7 +8,6 @@ import com.balex.common.domain.usecases.regLog.GetLanguageUseCase
 import com.balex.common.domain.usecases.regLog.LogoutUserUseCase
 import com.balex.common.domain.usecases.regLog.StorageClearPreferencesUseCase
 import com.balex.common.extensions.componentScope
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -19,8 +18,6 @@ import kotlinx.coroutines.launch
 class DefaultAboutComponent @AssistedInject constructor(
     private val storeFactory: AboutStoreFactory,
     private val getLanguageUseCase: GetLanguageUseCase,
-    private val logoutUserUseCase: LogoutUserUseCase,
-    private val storageClearPreferencesUseCase: StorageClearPreferencesUseCase,
     @Assisted("onRules") private val onRules: () -> Unit,
     @Assisted("onLogout") private val onLogout: () -> Unit,
     @Suppress("unused")
@@ -56,6 +53,10 @@ class DefaultAboutComponent @AssistedInject constructor(
 
     override suspend fun onClickDeleteAccount(userName: String) {
         store.accept(AboutStore.Intent.DeleteAccount(userName, onLogout))
+    }
+
+    override suspend fun onClickDeleteTeam() {
+        store.accept(AboutStore.Intent.DeleteTeam(onLogout))
     }
 
     @AssistedFactory

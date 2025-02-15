@@ -53,7 +53,9 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.balex.common.LocalLocalizedContext
+import com.balex.common.LocalizedContextProvider
 import com.balex.common.SwitchLanguage
+import com.balex.common.data.ads.InterstitialAdHelper
 import com.balex.common.domain.entity.MenuItems
 import com.balex.common.extensions.logTextToFirebase
 import com.balex.common.theme.DarkBlue
@@ -80,6 +82,7 @@ fun LoggedUserContent(
 
     var previousSessionId by remember { mutableStateOf<String?>(null) }
     var isFirstRun by remember { mutableStateOf(true) }
+    val context = LocalLocalizedContext.current
 
     LaunchedEffect(deviceToken) {
         if (isFirstRun || state.sessionId != previousSessionId) {
@@ -92,6 +95,9 @@ fun LoggedUserContent(
             previousSessionId = state.sessionId
         }
         component.initIapConnector(activity)
+
+        InterstitialAdHelper.showAd(context) {
+        }
     }
 
 
@@ -107,8 +113,7 @@ fun LoggedUserContent(
     }
 
 
-    com.balex.common.LocalizedContextProvider(languageCode = state.language.lowercase()) {
-        val context = LocalLocalizedContext.current
+    LocalizedContextProvider(languageCode = state.language.lowercase()) {
         when (state.loggedUserState) {
             LoggedUserStore.State.LoggedUserState.Content -> {
                 LoggedUserScreen(component, state, deviceToken, activity, context)

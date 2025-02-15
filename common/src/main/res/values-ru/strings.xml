@@ -28,7 +28,7 @@
     <string name="sell">Продать</string>
     <string name="buy">Купить</string>
     <string name="rate">Курс</string>
-
+    <string name="wrong_password">Неверный пароль</string>
     <string name="rules_text">
         \u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Общая информация\n\n\u00A0\u00A0\u00A0Вы
         можете зарегистрировать свою Команду как администратор и создать неограниченное
@@ -66,5 +66,8 @@
         ).\n\u00A0\u00A0\u00A0Приложение позволяет пользователям создавать или удалять онлайн задачи
         для выполнения (себе или другим членам группы), а также список покупок.
     </string>
+    <string name="delete_account">Удалить пользователя %s</string>
+    <string name="delete_team">Удалить всю команду %s</string>
+    <string name="enter_password_for_confirm_delete">Введите пароль для подтверждения</string>
 
 </resources>

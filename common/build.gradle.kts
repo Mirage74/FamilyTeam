@@ -100,6 +100,8 @@ dependencies {
     implementation(libs.androidx.ui.text)
     implementation(libs.androidx.ui.unit)
 
+    implementation(libs.play.services.ads)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.monitor)

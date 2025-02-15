@@ -28,7 +28,7 @@
     <string name="sell">Verkaufen</string>
     <string name="buy">Kaufen</string>
     <string name="rate">Bewerten</string>
-
+    <string name="wrong_password">Falsches Passwort</string>
     <string name="rules_text">
         \u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Allgemeine Informationen\n\n\u00A0\u00A0\u00A0Sie können
         Ihr Team als Administrator registrieren und eine unbegrenzte Anzahl von Teammitgliedern
@@ -70,5 +70,8 @@
         Online-Aufgaben zu erstellen oder zu löschen, um diese zu erledigen (für sich selbst oder
         für andere Mitglieder der Gruppe), sowie eine Einkaufsliste zu führen.
     </string>
+    <string name="delete_account">Das Konto %s löschen</string>
+    <string name="delete_team">ALL TEAM %s löschen</string>
+    <string name="enter_password_for_confirm_delete">Passwort ein, um das Löschen zu bestätigen.</string>
 
 </resources>

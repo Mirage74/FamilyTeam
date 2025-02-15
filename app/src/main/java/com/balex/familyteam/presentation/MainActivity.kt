@@ -15,6 +15,7 @@ import com.arkivanov.decompose.defaultComponentContext
 import com.balex.familyteam.appComponent
 import com.balex.familyteam.presentation.root.DefaultRootComponent
 import com.balex.familyteam.presentation.root.RootContent
+import com.google.android.gms.ads.MobileAds
 import com.google.firebase.messaging.FirebaseMessaging
 import javax.inject.Inject
 
@@ -27,6 +28,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         appComponent.inject(this)
         super.onCreate(savedInstanceState)
+        MobileAds.initialize(this) {}
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==

@@ -11,4 +11,6 @@ interface AboutComponent {
     fun onClickRules()
 
     suspend fun onClickDeleteAccount(userName: String)
+
+    suspend fun onClickDeleteTeam()
 }

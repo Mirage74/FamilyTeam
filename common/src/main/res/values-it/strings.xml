@@ -28,7 +28,7 @@
     <string name="sell">Vendere</string>
     <string name="buy">Comprare</string>
     <string name="rate">Valutare</string>
-
+    <string name="wrong_password">Password sbagliata</string>
     <string name="rules_text">
         \u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Informazioni generali\n\n\u00A0\u00A0\u00A0Puoi
         registrare il tuo Team come amministratore e creare un numero illimitato di membri del team,
@@ -68,5 +68,8 @@
         consente agli utenti di creare o eliminare attività online da eseguire (per sé stessi o per
         altri membri del gruppo), nonché una lista della spesa.
     </string>
+    <string name="delete_account">Eliminare l\'account %s</string>
+    <string name="delete_team">Eliminare TUTTO IL TEAM %s</string>
+    <string name="enter_password_for_confirm_delete">Inserire la password per confermare l\'eliminazione</string>
 
 </resources>

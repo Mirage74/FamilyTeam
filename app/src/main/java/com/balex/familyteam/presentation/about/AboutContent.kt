@@ -157,7 +157,12 @@ fun ShowAboutContent(component: AboutComponent, user: User, context: Context) {
     ) {
         ShowAboutText(context)
         if (user.nickName != User.DEFAULT_NICK_NAME && user.nickName != NO_USER_SAVED_IN_SHARED_PREFERENCES) {
-            ShowDeleteUserButton(user, component)
+            if (!user.hasAdminRights) {
+                ShowDeleteUserButton(user, component)
+            } else {
+                ShowDeleteTeamButton(user, component)
+            }
+
         }
     }
 }
@@ -183,6 +188,7 @@ fun ShowDeleteUserButton(userForDelete: User, component: AboutComponent) {
     var inputText by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val context = LocalLocalizedContext.current
 
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
         Button(
@@ -191,13 +197,14 @@ fun ShowDeleteUserButton(userForDelete: User, component: AboutComponent) {
             colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
             border = BorderStroke(2.dp, Color.Red)
         ) {
-            Text(text = "Delete account ${userForDelete.nickName}")
+            val text = context.getString(R.string.delete_account, userForDelete.nickName)
+            Text(text = text)
         }
 
         if (showConfirmation) {
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "Enter your username for confirm delete")
-
+            val text = context.getString(R.string.enter_password_for_confirm_delete)
+            Text(text = text)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -210,10 +217,13 @@ fun ShowDeleteUserButton(userForDelete: User, component: AboutComponent) {
                     onValueChange = { inputText = it },
                     isError = errorMessage,
                     label = {
-                        if (errorMessage) Text(
-                            "Wrong username",
-                            color = Color.Red
-                        ) else null
+                        if (errorMessage) {
+                            val textWrongPassword = context.getString(R.string.wrong_password)
+                            Text(
+                                text = textWrongPassword,
+                                color = Color.Red
+                            )
+                        }
                     },
                     modifier = Modifier.weight(1f)
                 )
@@ -223,7 +233,7 @@ fun ShowDeleteUserButton(userForDelete: User, component: AboutComponent) {
                 Button(colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
                     border = BorderStroke(2.dp, Color.Red),
                     onClick = {
-                        if (inputText.lowercase().trim() == userForDelete.nickName.lowercase().trim()) {
+                        if (inputText.trim() == userForDelete.password.trim()) {
                             scope.launch {
                                 component.onClickDeleteAccount(userForDelete.nickName)
                             }
@@ -238,7 +248,83 @@ fun ShowDeleteUserButton(userForDelete: User, component: AboutComponent) {
                             }
                         }
                     }) {
-                    Text("OK")
+                    val textOk = context.getString(R.string.button_ok)
+                    Text(text = textOk)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ShowDeleteTeamButton(userForDelete: User, component: AboutComponent) {
+    var showConfirmation by remember { mutableStateOf(false) }
+    var inputText by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val context = LocalLocalizedContext.current
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+        Button(
+            onClick = { showConfirmation = true },
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
+            border = BorderStroke(2.dp, Color.Red)
+        ) {
+            val text = context.getString(R.string.delete_team, userForDelete.adminEmailOrPhone)
+            Text(text = text)
+        }
+
+        if (showConfirmation) {
+            Spacer(modifier = Modifier.height(8.dp))
+            val text = context.getString(R.string.enter_password_for_confirm_delete)
+            Text(text = text)
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                OutlinedTextField(
+                    value = inputText,
+                    onValueChange = { inputText = it },
+                    isError = errorMessage,
+                    label = {
+                        if (errorMessage) {
+                            val textWrongPassword = context.getString(R.string.wrong_password)
+                            Text(
+                                text = textWrongPassword,
+                                color = Color.Red
+                            )
+                        }
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Button(colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
+                    border = BorderStroke(2.dp, Color.Red),
+                    onClick = {
+                        if (inputText.trim() == userForDelete.password.trim()) {
+                            scope.launch {
+                                component.onClickDeleteTeam()
+                            }
+                            showConfirmation = false
+                        } else {
+                            errorMessage = true
+                            CoroutineScope(Dispatchers.Main).launch {
+                                delay(WRONG_USERNAME_ERROR_DELAY_TIME_IN_MILLIS)
+                                showConfirmation = false
+                                errorMessage = false
+                                inputText = ""
+                            }
+                        }
+                    }) {
+                    val textOk = context.getString(R.string.button_ok)
+                    Text(text = textOk)
                 }
             }
         }

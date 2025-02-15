@@ -152,7 +152,7 @@ class AdminRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteTeam() {
+    override suspend fun deleteTeam(navigateToNotloggedScreen: () -> Unit) {
         val currentUser = getUserUseCase()
         val admin = getRepoAdminUseCase()
         if (currentUser.hasAdminRights && currentUser.adminEmailOrPhone == admin.emailOrPhoneNumber) {
@@ -164,7 +164,11 @@ class AdminRepositoryImpl @Inject constructor(
 
             try {
                 withContext(Dispatchers.IO) {
-                    allUsersCollection.delete().await()
+                    for (nick in admin.usersNickNamesList) {
+                        allUsersCollection
+                            .collection(nick.lowercase())
+                            .document(nick.lowercase()).delete().await()
+                    }
                 }
             } catch (e: Exception) {
                 logExceptionToFirebase("AdminRepositoryImpl, deleteTeam, users", e.message.toString())
@@ -191,6 +195,23 @@ class AdminRepositoryImpl @Inject constructor(
             } catch (e: Exception) {
                 logExceptionToFirebase("AdminRepositoryImpl, deleteTeam, deletedTeamCollection.add", e.message.toString())
             }
+
+            val deletedUser = DeletedSubUser(
+                adminEmailOrPhone = admin.emailOrPhoneNumber,
+                nickName = currentUser.nickName,
+                fakeEmail = createFakeUserEmailUseCase(currentUser.nickName, admin.emailOrPhoneNumber)
+            )
+            try {
+                withContext(Dispatchers.IO) {
+                    deletedSubUsersCollection.add(deletedUser).await()
+                }
+            } catch (e: Exception) {
+                logExceptionToFirebase("AdminRepositoryImpl, deleteUser", e.message.toString())
+            }
+
+            FirebaseCrashlytics.getInstance().setUserId("")
+            logoutUserUseCase()
+            navigateToNotloggedScreen()
         }
     }
 

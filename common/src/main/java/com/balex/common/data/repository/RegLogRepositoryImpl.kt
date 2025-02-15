@@ -14,7 +14,6 @@ import com.balex.common.domain.entity.PrivateTasks
 import com.balex.common.domain.entity.RegistrationOption
 import com.balex.common.domain.entity.User
 import com.balex.common.domain.repository.RegLogRepository
-import com.balex.common.domain.usecases.user.SaveDeviceTokenUseCase
 import com.balex.common.extensions.formatStringFirstLetterUppercase
 import com.balex.common.extensions.formatStringPhoneDelLeadNullAndAddPlus
 import com.balex.common.extensions.logExceptionToFirebase
@@ -70,8 +69,9 @@ class RegLogRepositoryImpl @Inject constructor(
             } else {
                 value.copy(token = field.token)
             }
-            if (field != newValue) {
-                field = newValue
+            val valuePhoneWithPlus = newValue.copy(adminEmailOrPhone = newValue.adminEmailOrPhone.formatStringPhoneDelLeadNullAndAddPlus())
+            if (field != valuePhoneWithPlus) {
+                field = valuePhoneWithPlus
                 if (value.token.isBlank() && field.token.isNotBlank()) {
                     logTextToFirebase("Firestore token, globalRepoUser new value token is blank")
                 }
@@ -257,7 +257,8 @@ class RegLogRepositoryImpl @Inject constructor(
     override suspend fun logoutUser() {
         listenerRegistrations.forEach { it.remove() }
         listenerRegistrations.clear()
-        globalRepoUser = User(pressedLogoutButton = true)
+        globalRepoUser = User(pressedLogoutButton = true, nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES)
+        storageClearPreferences()
         admin = Admin()
         isWrongPassword = User(nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES)
         isUserMailOrPhoneVerified = false
@@ -1084,7 +1085,7 @@ class RegLogRepositoryImpl @Inject constructor(
             return User(
                 nickName = nick,
                 fakeEmail = fakeEmail,
-                adminEmailOrPhone = phone,
+                adminEmailOrPhone = phone.formatStringPhoneDelLeadNullAndAddPlus(),
                 password = Storage.getUsersPassword(context)
             )
         } else {

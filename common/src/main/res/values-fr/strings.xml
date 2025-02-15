@@ -28,7 +28,7 @@
     <string name="sell">Vendre</string>
     <string name="buy">Acheter</string>
     <string name="rate">Évaluer</string>
-
+    <string name="wrong_password">Mot de passe incorrect</string>
     <string name="rules_text">
         \u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Informations générales\n\n\u00A0\u00A0\u00A0Vous pouvez
         enregistrer votre Équipe en tant qu\'administrateur et créer un nombre illimité de membres
@@ -73,4 +73,7 @@
         des tâches en ligne à réaliser (pour eux-mêmes ou pour d\'autres membres du groupe), ainsi
         qu\'une liste de courses.
     </string>
+    <string name="delete_account">Supprimer le compte %s</string>
+    <string name="delete_team">Supprimer TOUS les TEAM %s</string>
+    <string name="enter_password_for_confirm_delete">Entrez votre mot de passe pour confirmer la suppression</string>
 </resources>

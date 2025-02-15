@@ -28,7 +28,7 @@
     <string name="sell">Vender</string>
     <string name="buy">Comprar</string>
     <string name="rate">Evaluar</string>
-
+    <string name="wrong_password">Contraseña incorrecta</string>
     <string name="rules_text">
         \u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Información general\n\n\u00A0\u00A0\u00A0Puede registrar
         su Equipo como administrador y crear un número ilimitado de miembros del equipo, o recibir
@@ -66,5 +66,8 @@
         o eliminar tareas en línea para realizar (para ellos mismos o para otros miembros del grupo),
         así como una lista de compras.
     </string>
+    <string name="delete_account">Eliminar cuenta %s</string>
+    <string name="delete_team">Borrar TODOS TEAM %s</string>
+    <string name="enter_password_for_confirm_delete">Introduzca su contraseña para confirmar la eliminación</string>
 
 </resources>

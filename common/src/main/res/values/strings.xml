@@ -28,7 +28,10 @@
     <string name="sell"> Sell </string>
     <string name="buy"> Buy </string>
     <string name="rate">Rate</string>
-
+    <string name="delete_account">Delete account %s</string>
+    <string name="delete_team">Delete ALL TEAM %s</string>
+    <string name="enter_password_for_confirm_delete">Enter your password for confirm delete</string>
+    <string name="wrong_password">Wrong password</string>
 
     <string name="rules_text">
         \u00A0\u00A0\u00A0\u00A0\u00A0\u00A0General Information\n\n\u00A0\u00A0\u00A0You can

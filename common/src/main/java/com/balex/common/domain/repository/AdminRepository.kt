@@ -9,7 +9,7 @@ interface AdminRepository {
 
     suspend fun deleteUser(userName: String)
 
-    suspend fun deleteTeam()
+    suspend fun deleteTeam(navigateToNotloggedScreen: () -> Unit)
 
     suspend fun deleteSelfAccount(userName: String, navigateToNotloggedScreen: () -> Unit)
 
