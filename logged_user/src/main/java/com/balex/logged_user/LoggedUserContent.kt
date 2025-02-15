@@ -48,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
@@ -82,7 +83,7 @@ fun LoggedUserContent(
 
     var previousSessionId by remember { mutableStateOf<String?>(null) }
     var isFirstRun by remember { mutableStateOf(true) }
-    val context = LocalLocalizedContext.current
+    val contextForAds = LocalContext.current
 
     LaunchedEffect(deviceToken) {
         if (isFirstRun || state.sessionId != previousSessionId) {
@@ -96,7 +97,7 @@ fun LoggedUserContent(
         }
         component.initIapConnector(activity)
 
-        InterstitialAdHelper.showAd(context) {
+        InterstitialAdHelper.showAd(contextForAds) {
         }
     }
 
@@ -114,6 +115,7 @@ fun LoggedUserContent(
 
 
     LocalizedContextProvider(languageCode = state.language.lowercase()) {
+        val context = LocalLocalizedContext.current
         when (state.loggedUserState) {
             LoggedUserStore.State.LoggedUserState.Content -> {
                 LoggedUserScreen(component, state, deviceToken, activity, context)
