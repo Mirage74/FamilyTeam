@@ -55,7 +55,9 @@
         cuenta.\n\n\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Ingreso (login) en su cuenta
         personal\n\n\u00A0\u00A0\u00A0Para ingresar, haga clic en el botón \"Entrar\", luego ingrese
         el e-mail o teléfono (con el código de país, pero sin el signo \"+\") del administrador en la
-        línea superior. Luego ingrese su Nick y contraseña, y haga clic en el botón \"Entrar\".
+        línea superior. Luego ingrese su Nick y contraseña, y haga clic en el botón \"Entrar\".\n
+        Importante Para poder recibir recordatorios, la aplicación debe estar autorizada a recibir\n
+        notificaciones push.
     </string>
     <string name="about_text">
         Nombre de la aplicación:\n\"Equipo familiar\"\n\nAutor de la aplicación:\nAliaksandr

@@ -60,7 +60,11 @@
         personnel\n\n\u00A0\u00A0\u00A0Pour vous connecter, cliquez sur le bouton \"Entrer\", puis
         entrez l\'e-mail ou le téléphone (avec le code du pays, mais sans le signe \"+\") de
         l\'administrateur dans le champ supérieur. Ensuite, entrez votre Surnom et mot de passe, puis
-        cliquez sur le bouton \"Entrer\".
+        cliquez sur le bouton \"Entrer\".\n
+        Important : pour pouvoir recevoir des rappels, l\'application doit être autorisée à recevoir\n
+        des notifications push. Pour pouvoir recevoir des rappels, l\'application doit être autorisée\n
+        à recevoir des notifications push.
+
 
     </string>
     <string name="about_text">

@@ -57,7 +57,10 @@
         personale\n\n\u00A0\u00A0\u00A0Per accedere, clicca sul pulsante \"Accedere\", poi inserisci
         l\'email o il telefono (con il prefisso del paese, ma senza il simbolo \"+\") dell\'amministratore
         nella barra superiore. Successivamente, inserisci il tuo Nick e la tua password e clicca sul
-        pulsante \"Accedere\".
+        pulsante \"Accedere\".\n
+        Importante! Per poter ricevere i promemoria, l\'applicazione deve essere abilitata\n
+        a ricevere le notifiche push.
+
     </string>
     <string name="about_text">
         Nome dell\'applicazione:\n\"Team familiare\"\n\nAutore dell\'applicazione:\nAliaksandr

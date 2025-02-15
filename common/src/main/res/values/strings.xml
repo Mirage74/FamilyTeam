@@ -58,7 +58,9 @@
         account.\n\n\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Logging into Your Account\n\n\u00A0\u00A0\u00A0To
         log in, click the button \"Login\", then enter the administrator’s email or phone number (with
         country code but without the \"+\" sign) in the top field. Next, enter your Nickname and
-        password, and click the button \"Login\".
+        password, and click the button \"Login\".\n
+        Important! To be able to receive reminders, the application must be allowed to receive\n
+        push notifications.
     </string>
 
     <string name="about_text">

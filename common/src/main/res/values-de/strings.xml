@@ -59,7 +59,10 @@
         Konto\n\n\u00A0\u00A0\u00A0Um sich anzumelden, klicken Sie auf den Button \"Anmelden\", geben
         Sie dann die E-Mail oder Telefonnummer (mit Ländervorwahl, aber ohne das Zeichen \"+\") des
         Administrators in das obere Feld ein. Geben Sie anschließend Ihren Nicknamen und Ihr
-        Passwort ein und klicken Sie auf den Button \"Anmelden\".
+        Passwort ein und klicken Sie auf den Button \"Anmelden\". \n
+        Wichtig! Um Erinnerungen empfangen zu können, muss die Anwendung Push-Benachrichtigungen\n
+        empfangen dürfen.
+
     </string>
     <string name="about_text">
         App-Name:\n\"Familienteam\"\n\nApp-Entwickler:\nAliaksandr Babrouski\n\nApp-

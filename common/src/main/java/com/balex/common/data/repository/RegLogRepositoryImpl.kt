@@ -77,7 +77,9 @@ class RegLogRepositoryImpl @Inject constructor(
                 }
                 coroutineScope.launch {
                     isCurrentUserNeedRefreshFlow.emit(Unit)
-                    if (!isUserListenerRegistered && value.adminEmailOrPhone != User.DEFAULT_FAKE_EMAIL && value.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES) {
+                    if (!isUserListenerRegistered && value.adminEmailOrPhone != User.DEFAULT_FAKE_EMAIL &&
+                        value.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES &&
+                        value.nickName != User.DEFAULT_NICK_NAME) {
                         addUserListenerInFirebase()
                         isUserListenerRegistered = true
                     }
