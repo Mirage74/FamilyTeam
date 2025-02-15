@@ -47,6 +47,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.balex.common.LocalLocalizedContext
+import com.balex.common.LocalizedContextProvider
 import com.balex.common.R
 import com.balex.common.SwitchLanguage
 import com.balex.common.data.datastore.Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES
@@ -61,8 +62,8 @@ import kotlinx.coroutines.launch
 fun AboutContent(component: AboutComponent) {
     val state by component.model.collectAsState(Dispatchers.Main.immediate)
 
-    com.balex.common.LocalizedContextProvider(languageCode = state.language.lowercase()) {
-        val context = LocalLocalizedContext.current
+    LocalizedContextProvider(languageCode = state.language.lowercase()) {
+        val context =  LocalLocalizedContext.current
         AboutScreen(component, context)
     }
 }

@@ -3,6 +3,8 @@ package com.balex.common.data.ads
 import android.app.Activity
 import android.content.Context
 import com.google.android.gms.ads.*
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 
 object InterstitialAdHelper {
     private var interstitialAd: InterstitialAd? = null
