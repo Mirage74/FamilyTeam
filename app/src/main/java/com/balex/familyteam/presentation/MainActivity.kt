@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         appComponent.inject(this)
         super.onCreate(savedInstanceState)
-        //MobileAds.initialize(this) {}
+        MobileAds.initialize(this) {}
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
@@ -50,9 +50,10 @@ class MainActivity : ComponentActivity() {
                 return@addOnCompleteListener
             }
             val token = task.result
+            val component = rootComponentFactory.create(defaultComponentContext())
             setContent {
                 RootContent(
-                    component = rootComponentFactory.create(defaultComponentContext()),
+                    component,
                     this,
                     token
                 )
@@ -66,9 +67,10 @@ class MainActivity : ComponentActivity() {
         if (isGranted) {
             permissionsIsGranted()
         } else {
+            val component = rootComponentFactory.create(defaultComponentContext())
             setContent {
                 RootContent(
-                    component = rootComponentFactory.create(defaultComponentContext()),
+                    component,
                     this,
                     NO_NOTIFICATION_PERMISSION_GRANTED
                 )
