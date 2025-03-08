@@ -1,6 +1,7 @@
 package com.balex.familyteam.presentation.loginuser
 
 import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.essenty.lifecycle.Lifecycle
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.arkivanov.essenty.lifecycle.doOnPause
 import com.arkivanov.essenty.lifecycle.doOnResume
@@ -33,6 +34,12 @@ class DefaultLoginUserComponent @AssistedInject constructor(
     private val scope = componentScope()
 
     init {
+//        lifecycle.subscribe(object : Lifecycle.Callbacks {
+//
+//            override fun onResume() {
+//                super.onResume()
+//            }
+//        })
         lifecycle.doOnResume {
             startCollectingLabels()
         }

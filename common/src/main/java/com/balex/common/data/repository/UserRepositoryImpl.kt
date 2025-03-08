@@ -6,6 +6,7 @@ import com.balex.common.data.datastore.Storage
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_ADMINS_COLLECTION
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.FIREBASE_USERS_COLLECTION
 import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.NO_NEW_TOKEN
+import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.NO_NOTIFICATION_PERMISSION_GRANTED
 import com.balex.common.domain.entity.Admin
 import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.ExternalTasks
@@ -18,6 +19,7 @@ import com.balex.common.domain.usecases.regLog.GetRepoAdminUseCase
 import com.balex.common.domain.usecases.regLog.GetTokenUseCase
 import com.balex.common.domain.usecases.regLog.GetUserUseCase
 import com.balex.common.domain.usecases.regLog.SetNewTokenUseCase
+import com.balex.common.extensions.isNotEmptyNickName
 import com.balex.common.extensions.logExceptionToFirebase
 import com.balex.common.extensions.logTextToFirebase
 import com.balex.common.extensions.numberOfReminders
@@ -75,7 +77,7 @@ class UserRepositoryImpl @Inject constructor(
             }
 
             isCurrentUsersListNeedRefreshFlow.collect {
-                if (!usersNicknamesList.isEmpty()) {
+                if (usersNicknamesList.isNotEmpty()) {
                     emit(usersNicknamesList)
                 }
             }
@@ -116,20 +118,22 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     private suspend fun addRemindersToSchedule(task: Task, token: String) {
-        try {
-            withContext(Dispatchers.IO) {
-                if (task.alarmTime1 != Task.NO_ALARM) {
-                    scheduleCollection.add(task.toReminder(1, token)).await()
+        if (token != NO_NEW_TOKEN && token.isNotBlank()) {
+            try {
+                withContext(Dispatchers.IO) {
+                    if (task.alarmTime1 != Task.NO_ALARM) {
+                        scheduleCollection.add(task.toReminder(1, token)).await()
+                    }
+                    if (task.alarmTime2 != Task.NO_ALARM) {
+                        scheduleCollection.add(task.toReminder(2, token)).await()
+                    }
+                    if (task.alarmTime3 != Task.NO_ALARM) {
+                        scheduleCollection.add(task.toReminder(3, token)).await()
+                    }
                 }
-                if (task.alarmTime2 != Task.NO_ALARM) {
-                    scheduleCollection.add(task.toReminder(2, token)).await()
-                }
-                if (task.alarmTime3 != Task.NO_ALARM) {
-                    scheduleCollection.add(task.toReminder(3, token)).await()
-                }
+            } catch (e: Exception) {
+                logExceptionToFirebase("addRemindersToSchedule", e.message.toString())
             }
-        } catch (e: Exception) {
-            logExceptionToFirebase("addRemindersToSchedule", e.message.toString())
         }
     }
 
@@ -200,6 +204,7 @@ class UserRepositoryImpl @Inject constructor(
                         try {
                             userCollection.update("token", token).await()
                         } catch (e: Exception) {
+                            logExceptionToFirebase("saveDeviceToken", e.message.toString())
                         }
 
                     } else {
@@ -216,16 +221,18 @@ class UserRepositoryImpl @Inject constructor(
     private suspend fun getUserToken(userName: String): String {
         var userToken = NO_TOKEN
         val user = getUserUseCase()
-        withContext(Dispatchers.IO) {
-            val userCollection =
-                usersCollection.document(user.adminEmailOrPhone)
-                    .collection(userName.lowercase())
-                    .document(userName.lowercase())
-            val userSnapshot = userCollection.get().await()
-            if (userSnapshot.exists()) {
-                val tokenFromFirebase = userSnapshot.get("token").toString()
-                if (!tokenFromFirebase.isBlank()) {
-                    userToken = tokenFromFirebase
+        if (user.isNotEmptyNickName()) {
+            withContext(Dispatchers.IO) {
+                val userCollection =
+                    usersCollection.document(user.adminEmailOrPhone)
+                        .collection(userName.lowercase())
+                        .document(userName.lowercase())
+                val userSnapshot = userCollection.get().await()
+                if (userSnapshot.exists()) {
+                    val tokenFromFirebase = userSnapshot.get("token").toString()
+                    if (tokenFromFirebase.isNotBlank()) {
+                        userToken = tokenFromFirebase
+                    }
                 }
             }
         }
@@ -234,113 +241,115 @@ class UserRepositoryImpl @Inject constructor(
 
 
     private suspend fun cancelOldRemindersAndCreateNew(oldToken: String, newToken: String) {
-        val listRemindersToCancel = mutableListOf<Reminder>()
-        val listRemindersToCreate = mutableListOf<Reminder>()
+        if (newToken != NO_NEW_TOKEN && newToken.isNotBlank()) {
+            val listRemindersToCancel = mutableListOf<Reminder>()
+            val listRemindersToCreate = mutableListOf<Reminder>()
 
-        try {
+            try {
 
-            val scheduleSnapshot = scheduleCollection.get().await()
-            val scheduleReminders = scheduleSnapshot.documents
-            val scheduleRemindersObjects = scheduleSnapshot.documents.mapNotNull { document ->
-                document.toObject(Reminder::class.java)
+                val scheduleSnapshot = scheduleCollection.get().await()
+                val scheduleReminders = scheduleSnapshot.documents
+                val scheduleRemindersObjects = scheduleSnapshot.documents.mapNotNull { document ->
+                    document.toObject(Reminder::class.java)
+                }
+
+                listRemindersToCancel.addAll(scheduleRemindersObjects.filter { it.deviceToken == oldToken })
+
+                listRemindersToCreate.addAll(
+                    listRemindersToCancel.map { reminder ->
+                        reminder.copy(deviceToken = newToken)
+                    }
+                )
+
+
+                for (reminderToCancel in listRemindersToCancel) {
+                    scheduleDeleteCollection.add(reminderToCancel).await()
+
+                    val documentToDelete = scheduleReminders.firstOrNull { doc ->
+                        val reminder = doc.toObject(Reminder::class.java)
+                        reminder?.id == reminderToCancel.id
+                    }
+
+                    if (documentToDelete != null) {
+                        documentToDelete.reference.delete().await()
+                        break
+                    }
+                }
+
+                listRemindersToCreate.forEach {
+                    scheduleCollection.add(it).await()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private suspend fun cancelOldCloudTaskAndCreateNew(oldTask: Task, task: Task, token: String) {
+        if (token != NO_NEW_TOKEN && token.isNotBlank()) {
+            val listRemindersToCancel = mutableListOf<Reminder>()
+            val listRemindersToCreate = mutableListOf<Reminder>()
+
+            if (oldTask.alarmTime1 != task.alarmTime1) {
+                if (oldTask.alarmTime1 == Task.NO_ALARM) {
+                    listRemindersToCreate.add(task.toReminder(1, token))
+                } else if (task.alarmTime1 == Task.NO_ALARM) {
+                    listRemindersToCancel.add(Reminder(id = oldTask.id + 1))
+                } else {
+                    listRemindersToCreate.add(task.toReminder(1, token))
+                    listRemindersToCancel.add(Reminder(id = oldTask.id + 1))
+                }
             }
 
-            listRemindersToCancel.addAll(scheduleRemindersObjects.filter { it.deviceToken == oldToken })
-
-            listRemindersToCreate.addAll(
-                listRemindersToCancel.map { reminder ->
-                    reminder.copy(deviceToken = newToken)
+            if (oldTask.alarmTime2 != task.alarmTime2) {
+                if (oldTask.alarmTime2 == Task.NO_ALARM) {
+                    listRemindersToCreate.add(task.toReminder(2, token))
+                } else if (task.alarmTime2 == Task.NO_ALARM) {
+                    listRemindersToCancel.add(Reminder(id = oldTask.id + 2))
+                } else {
+                    listRemindersToCreate.add(task.toReminder(2, token))
+                    listRemindersToCancel.add(Reminder(id = oldTask.id + 2))
                 }
-            )
+            }
 
-
-            for (reminderToCancel in listRemindersToCancel) {
-                scheduleDeleteCollection.add(reminderToCancel).await()
-
-                val documentToDelete = scheduleReminders.firstOrNull { doc ->
-                    val reminder = doc.toObject(Reminder::class.java)
-                    reminder?.id == reminderToCancel.id
+            if (oldTask.alarmTime3 != task.alarmTime3) {
+                if (oldTask.alarmTime3 == Task.NO_ALARM) {
+                    listRemindersToCreate.add(task.toReminder(3, token))
+                } else if (task.alarmTime3 == Task.NO_ALARM) {
+                    listRemindersToCancel.add(Reminder(id = oldTask.id + 3))
+                } else {
+                    listRemindersToCreate.add(task.toReminder(3, token))
+                    listRemindersToCancel.add(Reminder(id = oldTask.id + 3))
                 }
+            }
 
-                if (documentToDelete != null) {
-                    documentToDelete.reference.delete().await()
-                    break
+
+            try {
+
+                val scheduleSnapshot = scheduleCollection.get().await()
+                val scheduleReminders = scheduleSnapshot.documents
+
+                for (reminderToCancel in listRemindersToCancel) {
+                    scheduleDeleteCollection.add(reminderToCancel).await()
+
+                    val documentToDelete = scheduleReminders.firstOrNull { doc ->
+                        val reminder = doc.toObject(Reminder::class.java)
+                        reminder?.id == reminderToCancel.id
+                    }
+
+                    if (documentToDelete != null) {
+                        documentToDelete.reference.delete().await()
+                        break
+                    }
                 }
+            } catch (e: Exception) {
+                println("Error deleting from Scheduler, cancelOldCloudTaskANdCreateNew: ${e.message}")
             }
 
             listRemindersToCreate.forEach {
                 scheduleCollection.add(it).await()
             }
-
-        } catch (e: Exception) {
-            e.printStackTrace()
         }
-    }
-
-    private suspend fun cancelOldCloudTaskAndCreateNew(oldTask: Task, task: Task, token: String) {
-        val listRemindersToCancel = mutableListOf<Reminder>()
-        val listRemindersToCreate = mutableListOf<Reminder>()
-
-        if (oldTask.alarmTime1 != task.alarmTime1) {
-            if (oldTask.alarmTime1 == Task.NO_ALARM) {
-                listRemindersToCreate.add(task.toReminder(1, token))
-            } else if (task.alarmTime1 == Task.NO_ALARM) {
-                listRemindersToCancel.add(Reminder(id = oldTask.id + 1))
-            } else {
-                listRemindersToCreate.add(task.toReminder(1, token))
-                listRemindersToCancel.add(Reminder(id = oldTask.id + 1))
-            }
-        }
-
-        if (oldTask.alarmTime2 != task.alarmTime2) {
-            if (oldTask.alarmTime2 == Task.NO_ALARM) {
-                listRemindersToCreate.add(task.toReminder(2, token))
-            } else if (task.alarmTime2 == Task.NO_ALARM) {
-                listRemindersToCancel.add(Reminder(id = oldTask.id + 2))
-            } else {
-                listRemindersToCreate.add(task.toReminder(2, token))
-                listRemindersToCancel.add(Reminder(id = oldTask.id + 2))
-            }
-        }
-
-        if (oldTask.alarmTime3 != task.alarmTime3) {
-            if (oldTask.alarmTime3 == Task.NO_ALARM) {
-                listRemindersToCreate.add(task.toReminder(3, token))
-            } else if (task.alarmTime3 == Task.NO_ALARM) {
-                listRemindersToCancel.add(Reminder(id = oldTask.id + 3))
-            } else {
-                listRemindersToCreate.add(task.toReminder(3, token))
-                listRemindersToCancel.add(Reminder(id = oldTask.id + 3))
-            }
-        }
-
-
-        try {
-
-            val scheduleSnapshot = scheduleCollection.get().await()
-            val scheduleReminders = scheduleSnapshot.documents
-
-            for (reminderToCancel in listRemindersToCancel) {
-                scheduleDeleteCollection.add(reminderToCancel).await()
-
-                val documentToDelete = scheduleReminders.firstOrNull { doc ->
-                    val reminder = doc.toObject(Reminder::class.java)
-                    reminder?.id == reminderToCancel.id
-                }
-
-                if (documentToDelete != null) {
-                    documentToDelete.reference.delete().await()
-                    break
-                }
-            }
-        } catch (e: Exception) {
-            println("Error deleting from Scheduler, cancelOldCloudTaskANdCreateNew: ${e.message}")
-        }
-
-        listRemindersToCreate.forEach {
-            scheduleCollection.add(it).await()
-        }
-
     }
 
 
@@ -351,66 +360,71 @@ class UserRepositoryImpl @Inject constructor(
     ) {
 
         val userForModify = getUserUseCase()
+        if (userForModify.isNotEmptyNickName() && token != NO_NEW_TOKEN && token.isNotBlank()) {
 
-        if (userForModify.availableTasksToAdd > 0 || taskMode == TaskMode.EDIT) {
-            val toDoOld = userForModify.listToDo
-            var oldTask = toDoOld.thingsToDoPrivate.privateTasks.find { it.id == task.id }
-            if (oldTask == null) {
-                oldTask = Task()
-            }
-            val updatedTodoList =
+            if (userForModify.availableTasksToAdd > 0 || taskMode == TaskMode.EDIT) {
+                val toDoOld = userForModify.listToDo
+                var oldTask = toDoOld.thingsToDoPrivate.privateTasks.find { it.id == task.id }
+                if (oldTask == null) {
+                    oldTask = Task()
+                }
+                val updatedTodoList =
+                    if (taskMode == TaskMode.ADD) {
+                        toDoOld.copy(
+                            thingsToDoPrivate = toDoOld.thingsToDoPrivate.copy(
+                                privateTasks = toDoOld.thingsToDoPrivate.privateTasks + task
+                            )
+                        )
+                    } else {
+                        if (token != NO_NOTIFICATION_PERMISSION_GRANTED) {
+                            cancelOldCloudTaskAndCreateNew(oldTask, task, token)
+                        }
+                        toDoOld.copy(
+                            thingsToDoPrivate = toDoOld.thingsToDoPrivate.copy(
+                                privateTasks = toDoOld.thingsToDoPrivate.privateTasks.map { taskItem ->
+                                    if (taskItem.id == task.id) task else taskItem
+                                }
+                            )
+                        )
+                    }
+
+                val newAvailableFCM = if (taskMode == TaskMode.ADD) {
+                    userForModify.availableFCM - task.numberOfReminders()
+                } else {
+                    val diffReminders = task.numberOfReminders() - oldTask.numberOfReminders()
+                    if (diffReminders > 0) {
+                        userForModify.availableFCM - diffReminders
+                    } else {
+                        userForModify.availableFCM
+                    }
+                }
+
+                val userForUpdate = userForModify.copy(
+                    listToDo = updatedTodoList,
+                    availableTasksToAdd = userForModify.availableTasksToAdd - 1,
+                    availableFCM = newAvailableFCM
+                )
+                val userCollection =
+                    usersCollection.document(userForModify.adminEmailOrPhone)
+                        .collection(userForModify.nickName.lowercase())
+                        .document(userForModify.nickName.lowercase())
+
                 if (taskMode == TaskMode.ADD) {
-                    toDoOld.copy(
-                        thingsToDoPrivate = toDoOld.thingsToDoPrivate.copy(
-                            privateTasks = toDoOld.thingsToDoPrivate.privateTasks + task
-                        )
-                    )
-                } else {
-                    cancelOldCloudTaskAndCreateNew(oldTask, task, token)
-                    toDoOld.copy(
-                        thingsToDoPrivate = toDoOld.thingsToDoPrivate.copy(
-                            privateTasks = toDoOld.thingsToDoPrivate.privateTasks.map { taskItem ->
-                                if (taskItem.id == task.id) task else taskItem
-                            }
-                        )
-                    )
+                    if (token != NO_NOTIFICATION_PERMISSION_GRANTED) {
+                        addRemindersToSchedule(task, token)
+                    }
                 }
 
-            val newAvailableFCM = if (taskMode == TaskMode.ADD) {
-                userForModify.availableFCM - task.numberOfReminders()
+                try {
+                    withContext(Dispatchers.IO) {
+                        userCollection.set(userForUpdate).await()
+                    }
+                } catch (e: Exception) {
+                    logExceptionToFirebase("addPrivateTaskToFirebase", e.message.toString())
+                }
             } else {
-                val diffReminders = task.numberOfReminders() - oldTask.numberOfReminders()
-                if (diffReminders > 0) {
-                    userForModify.availableFCM - diffReminders
-                } else {
-                    userForModify.availableFCM
-                }
+                logTextToFirebase("addPrivateTaskToFirebase, no available tasks to add")
             }
-
-            val userForUpdate = userForModify.copy(
-                listToDo = updatedTodoList,
-                availableTasksToAdd = userForModify.availableTasksToAdd - 1,
-                availableFCM = newAvailableFCM
-            )
-            val userCollection =
-                usersCollection.document(userForModify.adminEmailOrPhone)
-                    .collection(userForModify.nickName.lowercase())
-                    .document(userForModify.nickName.lowercase())
-
-            if (taskMode == TaskMode.ADD) {
-                addRemindersToSchedule(task, token)
-            }
-
-
-            try {
-                withContext(Dispatchers.IO) {
-                    userCollection.set(userForUpdate).await()
-                }
-            } catch (e: Exception) {
-                logExceptionToFirebase("addPrivateTaskToFirebase", e.message.toString())
-            }
-        } else {
-            logTextToFirebase("addPrivateTaskToFirebase, no available tasks to add")
         }
     }
 
@@ -419,10 +433,8 @@ class UserRepositoryImpl @Inject constructor(
         taskMode: TaskMode
     ) {
         val token = getUserToken(externalTask.taskOwner)
-        if (token != NO_TOKEN) {
-
-            val currentUser = getUserUseCase()
-
+        val currentUser = getUserUseCase()
+        if (token != NO_TOKEN && currentUser.isNotEmptyNickName()) {
             if (currentUser.availableTasksToAdd > 0 || taskMode == TaskMode.EDIT) {
                 val toDoOld = currentUser.listToDo
                 val updatedTodoList =
@@ -531,118 +543,126 @@ class UserRepositoryImpl @Inject constructor(
 
         val currentUser = getUserUseCase()
 
-        val userCollectionCurrentUser =
-            usersCollection.document(currentUser.adminEmailOrPhone)
-                .collection(currentUser.nickName.lowercase())
-                .document(currentUser.nickName.lowercase())
+        if (currentUser.isNotEmptyNickName()) {
 
-        val externalUserCollection =
-            usersCollection.document(currentUser.adminEmailOrPhone)
-                .collection(externalTask.taskOwner.lowercase())
-                .document(externalTask.taskOwner.lowercase())
+            val userCollectionCurrentUser =
+                usersCollection.document(currentUser.adminEmailOrPhone)
+                    .collection(currentUser.nickName.lowercase())
+                    .document(currentUser.nickName.lowercase())
 
-        val currentUserData: User?
-        val externalUserData: User?
-        withContext(Dispatchers.IO) {
-            val documentSnapshotCurrentUser = userCollectionCurrentUser.get().await()
-            currentUserData = documentSnapshotCurrentUser?.toObject(User::class.java)
-            val externalUserSnapshot = externalUserCollection.get().await()
-            externalUserData = externalUserSnapshot?.toObject(User::class.java)
-        }
+            val externalUserCollection =
+                usersCollection.document(currentUser.adminEmailOrPhone)
+                    .collection(externalTask.taskOwner.lowercase())
+                    .document(externalTask.taskOwner.lowercase())
 
-        if (currentUserData != null) {
-            if (taskType == TaskType.PRIVATE) {
-                val privateTasksToUpdate =
-                    currentUserData.listToDo.thingsToDoPrivate.privateTasks.filterNot { task ->
-                        task.id == externalTask.task.id
-                    }
-                val listToDoForUpdate = currentUserData.listToDo.copy(
-                    thingsToDoPrivate = PrivateTasks(privateTasks = privateTasksToUpdate)
-                )
-                try {
-                    withContext(Dispatchers.IO) {
-                        userCollectionCurrentUser.update("listToDo", listToDoForUpdate).await()
-                    }
-                } catch (e: Exception) {
-                    logExceptionToFirebase("deleteTaskFromFirebase", e.message.toString())
-                }
-            } else if (taskType == TaskType.MY_TO_OTHER_USER) {
-                val externalTasksToUpdate =
-                    currentUserData.listToDo.thingsToDoForOtherUsers.externalTasks.filterNot { externalTasksItem ->
-                        externalTasksItem.task.id == externalTask.task.id
-                    }
-                val listToDoForUpdate = currentUserData.listToDo.copy(
-                    thingsToDoForOtherUsers = ExternalTasks(externalTasks = externalTasksToUpdate)
-                )
-                try {
-                    withContext(Dispatchers.IO) {
-                        userCollectionCurrentUser.update("listToDo", listToDoForUpdate).await()
-                    }
-                } catch (e: Exception) {
-                    logExceptionToFirebase("deleteTaskFromFirebase", e.message.toString())
-                }
+            val currentUserData: User?
+            val externalUserData: User?
+            withContext(Dispatchers.IO) {
+                val documentSnapshotCurrentUser = userCollectionCurrentUser.get().await()
+                currentUserData = documentSnapshotCurrentUser?.toObject(User::class.java)
+                val externalUserSnapshot = externalUserCollection.get().await()
+                externalUserData = externalUserSnapshot?.toObject(User::class.java)
+            }
 
-                if (externalUserData != null) {
-                    val otherUserSharedTasks =
-                        externalUserData.listToDo.thingsToDoShared.externalTasks.filterNot { externalTasksItem ->
-                            externalTasksItem.task.id == externalTask.task.id
+            if (currentUserData != null) {
+                if (taskType == TaskType.PRIVATE) {
+                    val privateTasksToUpdate =
+                        currentUserData.listToDo.thingsToDoPrivate.privateTasks.filterNot { task ->
+                            task.id == externalTask.task.id
                         }
-                    val listToDoOtherUserForUpdate = externalUserData.listToDo.copy(
-                        thingsToDoShared = ExternalTasks(externalTasks = otherUserSharedTasks)
+                    val listToDoForUpdate = currentUserData.listToDo.copy(
+                        thingsToDoPrivate = PrivateTasks(privateTasks = privateTasksToUpdate)
                     )
                     try {
                         withContext(Dispatchers.IO) {
-                            externalUserCollection.update("listToDo", listToDoOtherUserForUpdate)
-                                .await()
+                            userCollectionCurrentUser.update("listToDo", listToDoForUpdate).await()
                         }
                     } catch (e: Exception) {
-                        logExceptionToFirebase(
-                            "deleteTaskFromFirebase, TaskType.MY_TO_OTHER_USER, other user list error",
-                            e.message.toString()
-                        )
+                        logExceptionToFirebase("deleteTaskFromFirebase", e.message.toString())
                     }
-                }
-            } else if (taskType == TaskType.FROM_OTHER_USER_FOR_ME) {
-                val externalTasksToUpdate =
-                    currentUserData.listToDo.thingsToDoShared.externalTasks.filterNot { externalTasksItem ->
-                        externalTasksItem.task.id == externalTask.task.id
-                    }
-                val listToDoForUpdate = currentUserData.listToDo.copy(
-                    thingsToDoShared = ExternalTasks(externalTasks = externalTasksToUpdate)
-                )
-                try {
-                    withContext(Dispatchers.IO) {
-                        userCollectionCurrentUser.update("listToDo", listToDoForUpdate).await()
-                    }
-                } catch (e: Exception) {
-                    logExceptionToFirebase(
-                        "deleteTaskFromFirebase, TaskType.FROM_OTHER_USER_FOR_ME, my list error",
-                        e.message.toString()
-                    )
-                }
-
-                if (externalUserData != null) {
-                    val otherUserSharedTasks =
-                        externalUserData.listToDo.thingsToDoForOtherUsers.externalTasks.filterNot { externalTasksItem ->
+                } else if (taskType == TaskType.MY_TO_OTHER_USER) {
+                    val externalTasksToUpdate =
+                        currentUserData.listToDo.thingsToDoForOtherUsers.externalTasks.filterNot { externalTasksItem ->
                             externalTasksItem.task.id == externalTask.task.id
                         }
-                    val listToDoOtherUserForUpdate = externalUserData.listToDo.copy(
-                        thingsToDoForOtherUsers = ExternalTasks(externalTasks = otherUserSharedTasks)
+                    val listToDoForUpdate = currentUserData.listToDo.copy(
+                        thingsToDoForOtherUsers = ExternalTasks(externalTasks = externalTasksToUpdate)
                     )
                     try {
                         withContext(Dispatchers.IO) {
-                            externalUserCollection.update("listToDo", listToDoOtherUserForUpdate)
-                                .await()
+                            userCollectionCurrentUser.update("listToDo", listToDoForUpdate).await()
+                        }
+                    } catch (e: Exception) {
+                        logExceptionToFirebase("deleteTaskFromFirebase", e.message.toString())
+                    }
+
+                    if (externalUserData != null) {
+                        val otherUserSharedTasks =
+                            externalUserData.listToDo.thingsToDoShared.externalTasks.filterNot { externalTasksItem ->
+                                externalTasksItem.task.id == externalTask.task.id
+                            }
+                        val listToDoOtherUserForUpdate = externalUserData.listToDo.copy(
+                            thingsToDoShared = ExternalTasks(externalTasks = otherUserSharedTasks)
+                        )
+                        try {
+                            withContext(Dispatchers.IO) {
+                                externalUserCollection.update(
+                                    "listToDo",
+                                    listToDoOtherUserForUpdate
+                                )
+                                    .await()
+                            }
+                        } catch (e: Exception) {
+                            logExceptionToFirebase(
+                                "deleteTaskFromFirebase, TaskType.MY_TO_OTHER_USER, other user list error",
+                                e.message.toString()
+                            )
+                        }
+                    }
+                } else if (taskType == TaskType.FROM_OTHER_USER_FOR_ME) {
+                    val externalTasksToUpdate =
+                        currentUserData.listToDo.thingsToDoShared.externalTasks.filterNot { externalTasksItem ->
+                            externalTasksItem.task.id == externalTask.task.id
+                        }
+                    val listToDoForUpdate = currentUserData.listToDo.copy(
+                        thingsToDoShared = ExternalTasks(externalTasks = externalTasksToUpdate)
+                    )
+                    try {
+                        withContext(Dispatchers.IO) {
+                            userCollectionCurrentUser.update("listToDo", listToDoForUpdate).await()
                         }
                     } catch (e: Exception) {
                         logExceptionToFirebase(
-                            "deleteTaskFromFirebase, TaskType.FROM_OTHER_USER_FOR_ME, other user list error",
+                            "deleteTaskFromFirebase, TaskType.FROM_OTHER_USER_FOR_ME, my list error",
                             e.message.toString()
                         )
+                    }
+
+                    if (externalUserData != null) {
+                        val otherUserSharedTasks =
+                            externalUserData.listToDo.thingsToDoForOtherUsers.externalTasks.filterNot { externalTasksItem ->
+                                externalTasksItem.task.id == externalTask.task.id
+                            }
+                        val listToDoOtherUserForUpdate = externalUserData.listToDo.copy(
+                            thingsToDoForOtherUsers = ExternalTasks(externalTasks = otherUserSharedTasks)
+                        )
+                        try {
+                            withContext(Dispatchers.IO) {
+                                externalUserCollection.update(
+                                    "listToDo",
+                                    listToDoOtherUserForUpdate
+                                )
+                                    .await()
+                            }
+                        } catch (e: Exception) {
+                            logExceptionToFirebase(
+                                "deleteTaskFromFirebase, TaskType.FROM_OTHER_USER_FOR_ME, other user list error",
+                                e.message.toString()
+                            )
+                        }
                     }
                 }
             }
-
         }
     }
 
@@ -690,80 +710,11 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun exchangeCoins(coins: Int, tasks: Int, reminders: Int) {
         val userForModify = getUserUseCase()
-        val userForUpdate = userForModify.copy(
-            teamCoins = coins,
-            availableTasksToAdd = tasks,
-            availableFCM = reminders
-        )
-
-        val userCollection =
-            usersCollection.document(userForModify.adminEmailOrPhone)
-                .collection(userForModify.nickName.lowercase())
-                .document(userForModify.nickName.lowercase())
-
-        try {
-            withContext(Dispatchers.IO) {
-                userCollection.set(userForUpdate).await()
-            }
-        } catch (e: Exception) {
-            logExceptionToFirebase(
-                "exchangeCoins, error update coins in firebase",
-                e.message.toString()
-            )
-        }
-    }
-
-    override suspend fun setPremiumStatus(premiumStatus: BillingRepositoryImpl.Companion.PremiumStatus) {
-        if (premiumStatus != BillingRepositoryImpl.Companion.PremiumStatus.NO_PREMIUM) {
-
-            val userForModify = getUserUseCase()
-            val premiumCostInCoins = when (premiumStatus) {
-                BillingRepositoryImpl.Companion.PremiumStatus.ONE_MONTH -> {
-                    context.resources.getInteger(R.integer.premium_account_one_month_cost)
-                }
-
-                BillingRepositoryImpl.Companion.PremiumStatus.ONE_YEAR -> {
-                    context.resources.getInteger(R.integer.premium_account_one_year_cost)
-                }
-
-                BillingRepositoryImpl.Companion.PremiumStatus.UNLIMITED -> {
-                    context.resources.getInteger(R.integer.premium_account_unlimited_cost)
-                }
-
-                else -> {
-                    0
-                }
-            }
-            val premiumStatusExpiration = when (premiumStatus) {
-
-                BillingRepositoryImpl.Companion.PremiumStatus.ONE_MONTH -> {
-                    if (userForModify.hasPremiumAccount) {
-                        userForModify.premiumAccountExpirationDate + MILLIS_IN_MONTH
-                    } else {
-                        System.currentTimeMillis() + MILLIS_IN_MONTH
-                    }
-                }
-
-                BillingRepositoryImpl.Companion.PremiumStatus.ONE_YEAR -> {
-                    if (userForModify.hasPremiumAccount) {
-                        userForModify.premiumAccountExpirationDate + MILLIS_IN_YEAR
-                    } else {
-                        System.currentTimeMillis() + MILLIS_IN_YEAR
-                    }
-                }
-
-                BillingRepositoryImpl.Companion.PremiumStatus.UNLIMITED -> {
-                    System.currentTimeMillis() + MILLIS_IN_100_YEAR
-                }
-
-                else -> {
-                    userForModify.premiumAccountExpirationDate
-                }
-            }
+        if (userForModify.isNotEmptyNickName()) {
             val userForUpdate = userForModify.copy(
-                hasPremiumAccount = true,
-                premiumAccountExpirationDate = premiumStatusExpiration,
-                teamCoins = userForModify.teamCoins - premiumCostInCoins
+                teamCoins = coins,
+                availableTasksToAdd = tasks,
+                availableFCM = reminders
             )
 
             val userCollection =
@@ -777,9 +728,82 @@ class UserRepositoryImpl @Inject constructor(
                 }
             } catch (e: Exception) {
                 logExceptionToFirebase(
-                    "setPremiumStatus, error setPremiumStatus in firebase",
+                    "exchangeCoins, error update coins in firebase",
                     e.message.toString()
                 )
+            }
+        }
+    }
+
+    override suspend fun setPremiumStatus(premiumStatus: BillingRepositoryImpl.Companion.PremiumStatus) {
+        if (premiumStatus != BillingRepositoryImpl.Companion.PremiumStatus.NO_PREMIUM) {
+
+            val userForModify = getUserUseCase()
+            if (userForModify.isNotEmptyNickName()) {
+                val premiumCostInCoins = when (premiumStatus) {
+                    BillingRepositoryImpl.Companion.PremiumStatus.ONE_MONTH -> {
+                        context.resources.getInteger(R.integer.premium_account_one_month_cost)
+                    }
+
+                    BillingRepositoryImpl.Companion.PremiumStatus.ONE_YEAR -> {
+                        context.resources.getInteger(R.integer.premium_account_one_year_cost)
+                    }
+
+                    BillingRepositoryImpl.Companion.PremiumStatus.UNLIMITED -> {
+                        context.resources.getInteger(R.integer.premium_account_unlimited_cost)
+                    }
+
+                    else -> {
+                        0
+                    }
+                }
+                val premiumStatusExpiration = when (premiumStatus) {
+
+                    BillingRepositoryImpl.Companion.PremiumStatus.ONE_MONTH -> {
+                        if (userForModify.hasPremiumAccount) {
+                            userForModify.premiumAccountExpirationDate + MILLIS_IN_MONTH
+                        } else {
+                            System.currentTimeMillis() + MILLIS_IN_MONTH
+                        }
+                    }
+
+                    BillingRepositoryImpl.Companion.PremiumStatus.ONE_YEAR -> {
+                        if (userForModify.hasPremiumAccount) {
+                            userForModify.premiumAccountExpirationDate + MILLIS_IN_YEAR
+                        } else {
+                            System.currentTimeMillis() + MILLIS_IN_YEAR
+                        }
+                    }
+
+                    BillingRepositoryImpl.Companion.PremiumStatus.UNLIMITED -> {
+                        System.currentTimeMillis() + MILLIS_IN_100_YEAR
+                    }
+
+                    else -> {
+                        userForModify.premiumAccountExpirationDate
+                    }
+                }
+                val userForUpdate = userForModify.copy(
+                    hasPremiumAccount = true,
+                    premiumAccountExpirationDate = premiumStatusExpiration,
+                    teamCoins = userForModify.teamCoins - premiumCostInCoins
+                )
+
+                val userCollection =
+                    usersCollection.document(userForModify.adminEmailOrPhone)
+                        .collection(userForModify.nickName.lowercase())
+                        .document(userForModify.nickName.lowercase())
+
+                try {
+                    withContext(Dispatchers.IO) {
+                        userCollection.set(userForUpdate).await()
+                    }
+                } catch (e: Exception) {
+                    logExceptionToFirebase(
+                        "setPremiumStatus, error setPremiumStatus in firebase",
+                        e.message.toString()
+                    )
+                }
             }
         }
     }

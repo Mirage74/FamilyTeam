@@ -11,6 +11,7 @@
 
 
     <string name="hello_text">Hello, %s!</string>
+    <string name="choose_user">to whom</string>
     <string name="add_button_text">Add new task</string>
     <string name="add_item_button_text">Add new item</string>
     <string name="save_edited_task_button_text">Save task</string>

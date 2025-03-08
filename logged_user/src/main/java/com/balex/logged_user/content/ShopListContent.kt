@@ -1,5 +1,6 @@
 package com.balex.logged_user.content
 
+import android.app.Activity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -31,7 +32,8 @@ import com.balex.logged_user.content.subcontent.recourses.ShowAvailableResources
 @Composable
 fun ShopListContent(
     component: LoggedUserComponent,
-    state: LoggedUserStore.State
+    state: LoggedUserStore.State,
+    activity: Activity,
 ) {
     val context = LocalLocalizedContext.current
 
@@ -51,6 +53,21 @@ fun ShopListContent(
             GreetingRow(state.user.nickName, state.user.displayName, state.user.hasPremiumAccount)
             Spacer(modifier = Modifier.height(16.dp))
             ShowAvailableResources(state, component::onExchangeCoinsClicked)
+
+            Button(
+                onClick = {component.onBuyCoinsClicked(activity)},
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .padding(horizontal = 64.dp)
+                    .weight(1f)
+            ) {
+                val text = context.getString(R.string.buy_coins_button_text)
+                Text(text)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Button(
                 onClick = { component.onClickAddShopItem() },
                 modifier = Modifier
@@ -63,7 +80,6 @@ fun ShopListContent(
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
-
             ShowShopList(state, component, modifier = Modifier.weight(4f))
         } else {
             var description by remember { mutableStateOf(TextFieldValue("")) }

@@ -6,7 +6,7 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
-import com.arkivanov.decompose.router.stack.push
+import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
 import com.balex.common.domain.entity.User
@@ -55,19 +55,19 @@ class DefaultRootComponent @AssistedInject constructor(
             Config.NotLogged -> {
                 val component = notLoggedComponentFactory.create(
                     onRegAdminClicked = {
-                        navigation.push(Config.RegAdmin)
+                        navigation.pushNew(Config.RegAdmin)
                     },
                     onLoginUserClicked = {
-                        navigation.push(Config.LoginUser(it))
+                        navigation.pushNew(Config.LoginUser(it))
                     },
                     onUserIsLogged = {
                         navigation.replaceAll(Config.LoggedUser(UUID.randomUUID().toString()))
                     },
                     onRules = {
-                        navigation.push(Config.Rules)
+                        navigation.pushNew(Config.Rules)
                     },
                     onAbout = {
-                        navigation.push(Config.About)
+                        navigation.pushNew(Config.About)
                     },
                     componentContext = childComponentContext
                 )
@@ -80,7 +80,7 @@ class DefaultRootComponent @AssistedInject constructor(
                         navigation.replaceAll(Config.LoggedUser(UUID.randomUUID().toString()))
                     }, onAdminExistButWrongPassword = { userLogin ->
                         navigation.replaceAll(Config.NotLogged)
-                        navigation.push(Config.LoginUser(userLogin))
+                        navigation.pushNew(Config.LoginUser(userLogin))
                     },
                     componentContext = childComponentContext
                 )
@@ -102,7 +102,7 @@ class DefaultRootComponent @AssistedInject constructor(
                 val component = rulesComponentFactory.create(
                     onAbout = {
                         navigation.pop()
-                        navigation.push(Config.About)
+                        navigation.pushNew(Config.About)
                     },
                     componentContext = childComponentContext
                 )
@@ -114,7 +114,7 @@ class DefaultRootComponent @AssistedInject constructor(
                 val component = aboutComponentFactory.create(
                     onRules = {
                         navigation.pop()
-                        navigation.push(Config.Rules)
+                        navigation.pushNew(Config.Rules)
                     },
                     onLogout = {
                         navigation.replaceAll(Config.NotLogged)
@@ -128,10 +128,10 @@ class DefaultRootComponent @AssistedInject constructor(
                 val component = loggedUserComponentFactory.create(
                     sessionId = config.id,
                     onRules = {
-                        navigation.push(Config.Rules)
+                        navigation.pushNew(Config.Rules)
                     },
                     onAbout = {
-                        navigation.push(Config.About)
+                        navigation.pushNew(Config.About)
                     },
                     onLogout = {
                         navigation.replaceAll(Config.NotLogged)

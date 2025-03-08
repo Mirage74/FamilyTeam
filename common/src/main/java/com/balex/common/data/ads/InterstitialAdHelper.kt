@@ -41,4 +41,4 @@ object InterstitialAdHelper {
     }
 }
 
-const val BANNER_ID = "ca-app-pub-3112871611759530~9730823858"
+const val BANNER_ID = "ca-app-pub-3112871611759530/2942054220"

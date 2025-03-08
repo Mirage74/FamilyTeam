@@ -1,5 +1,6 @@
 package com.balex.logged_user.content
 
+import android.app.Activity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,12 +22,14 @@ import com.balex.logged_user.R
 import com.balex.logged_user.content.subcontent.GreetingRow
 import com.balex.logged_user.content.subcontent.inputtask.InputOrEditTaskForm
 import com.balex.logged_user.content.subcontent.ShowTasksList
+import com.balex.logged_user.content.subcontent.recourses.ShowAvailableResources
 
 @Composable
 fun MyTasksForOtherUsersContent(
     component: LoggedUserComponent,
     state: LoggedUserStore.State,
     deviceToken: String,
+    activity: Activity,
     paddingValues: PaddingValues
 ) {
 
@@ -41,6 +44,24 @@ fun MyTasksForOtherUsersContent(
 
         if (!state.isAddTaskClicked && !state.isEditTaskClicked) {
             GreetingRow(state.user.nickName, state.user.displayName, state.user.hasPremiumAccount)
+
+            Spacer(modifier = Modifier.height(16.dp))
+            ShowAvailableResources(state) { component.onExchangeCoinsClicked() }
+
+            Button(
+                onClick = {component.onBuyCoinsClicked(activity)},
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .padding(horizontal = 64.dp)
+                    .weight(1f)
+            ) {
+                val text = context.getString(R.string.buy_coins_button_text)
+                Text(text)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Button(
                 onClick = { component.onClickAddNewTask() },
                 modifier = Modifier

@@ -4,14 +4,13 @@ import android.Manifest
 import android.app.AlertDialog
 import android.content.DialogInterface
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import com.arkivanov.decompose.defaultComponentContext
+import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.NO_NOTIFICATION_PERMISSION_GRANTED
 import com.balex.familyteam.appComponent
 import com.balex.familyteam.presentation.root.DefaultRootComponent
 import com.balex.familyteam.presentation.root.RootContent
@@ -30,16 +29,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         MobileAds.initialize(this) {}
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
-                PackageManager.PERMISSION_GRANTED
-            ) {
-                permissionsIsGranted()
-            } else if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
-                showPermissionRationaleDialog()
-            } else {
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            permissionsIsGranted()
+        } else if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+            showPermissionRationaleDialog()
+        } else {
+            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
 
     }
@@ -78,7 +75,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+
     private fun showPermissionRationaleDialog() {
         AlertDialog.Builder(this)
             .setTitle("Permission for notifications")
@@ -92,10 +89,6 @@ class MainActivity : ComponentActivity() {
             }
             .create()
             .show()
-    }
-
-    companion object {
-        const val NO_NOTIFICATION_PERMISSION_GRANTED = "NO_NOTIFICATION_PERMISSION_GRANTED"
     }
 }
 

@@ -98,8 +98,7 @@ interface LoggedUserStore : Store<Intent, State, Label> {
             val task: Task,
             val taskMode: TaskMode,
             val token: String
-        ) :
-            Intent
+        ) : Intent
 
         data class ClickedAddShopItemToDatabase(val shopItem: ShopItemDBModel) : Intent
 

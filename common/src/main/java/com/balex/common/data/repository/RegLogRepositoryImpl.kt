@@ -16,6 +16,7 @@ import com.balex.common.domain.entity.User
 import com.balex.common.domain.repository.RegLogRepository
 import com.balex.common.extensions.formatStringFirstLetterUppercase
 import com.balex.common.extensions.formatStringPhoneDelLeadNullAndAddPlus
+import com.balex.common.extensions.isNotEmptyNickName
 import com.balex.common.extensions.logExceptionToFirebase
 import com.balex.common.extensions.logTextToFirebase
 import com.google.firebase.auth.AuthResult
@@ -69,7 +70,8 @@ class RegLogRepositoryImpl @Inject constructor(
             } else {
                 value.copy(token = field.token)
             }
-            val valuePhoneWithPlus = newValue.copy(adminEmailOrPhone = newValue.adminEmailOrPhone.formatStringPhoneDelLeadNullAndAddPlus())
+            val valuePhoneWithPlus =
+                newValue.copy(adminEmailOrPhone = newValue.adminEmailOrPhone.formatStringPhoneDelLeadNullAndAddPlus())
             if (field != valuePhoneWithPlus) {
                 field = valuePhoneWithPlus
                 if (value.token.isBlank() && field.token.isNotBlank()) {
@@ -79,7 +81,8 @@ class RegLogRepositoryImpl @Inject constructor(
                     isCurrentUserNeedRefreshFlow.emit(Unit)
                     if (!isUserListenerRegistered && value.adminEmailOrPhone != User.DEFAULT_FAKE_EMAIL &&
                         value.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES &&
-                        value.nickName != User.DEFAULT_NICK_NAME) {
+                        value.nickName != User.DEFAULT_NICK_NAME
+                    ) {
                         addUserListenerInFirebase()
                         isUserListenerRegistered = true
                     }
@@ -259,7 +262,8 @@ class RegLogRepositoryImpl @Inject constructor(
     override suspend fun logoutUser() {
         listenerRegistrations.forEach { it.remove() }
         listenerRegistrations.clear()
-        globalRepoUser = User(pressedLogoutButton = true, nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES)
+        globalRepoUser =
+            User(pressedLogoutButton = true, nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES)
         storageClearPreferences()
         admin = Admin()
         isWrongPassword = User(nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES)
@@ -313,36 +317,37 @@ class RegLogRepositoryImpl @Inject constructor(
         collectionName: String,
         emailOrPhoneNumber: String
     ) {
+        if (getRepoUser().isNotEmptyNickName()) {
+            if (collectionName == FIREBASE_ADMINS_COLLECTION || collectionName == FIREBASE_ADMINS_AND_USERS_COLLECTION) {
+                try {
+                    withContext(Dispatchers.IO) {
+                        val document = adminsCollection.document(emailOrPhoneNumber.trim())
+                        val documentSnapshot = document.get().await()
 
-        if (collectionName == FIREBASE_ADMINS_COLLECTION || collectionName == FIREBASE_ADMINS_AND_USERS_COLLECTION) {
-            try {
-                withContext(Dispatchers.IO) {
-                    val document = adminsCollection.document(emailOrPhoneNumber.trim())
-                    val documentSnapshot = document.get().await()
+                        if (documentSnapshot.exists()) {
+                            document.delete().await()
+                        }
+                    }
+                } catch (e: Exception) {
+                    logExceptionToFirebase(
+                        "removeRecordFromCollection, adminsCollection",
+                        e.message.toString()
+                    )
+                }
+            }
 
-                    if (documentSnapshot.exists()) {
+            if (collectionName == FIREBASE_USERS_COLLECTION || collectionName == FIREBASE_ADMINS_AND_USERS_COLLECTION) {
+                try {
+                    val document = usersCollection.document(emailOrPhoneNumber.trim())
+                    withContext(Dispatchers.IO) {
                         document.delete().await()
                     }
+                } catch (e: Exception) {
+                    logExceptionToFirebase(
+                        "removeRecordFromCollection, usersCollection",
+                        e.message.toString()
+                    )
                 }
-            } catch (e: Exception) {
-                logExceptionToFirebase(
-                    "removeRecordFromCollection, adminsCollection",
-                    e.message.toString()
-                )
-            }
-        }
-
-        if (collectionName == FIREBASE_USERS_COLLECTION || collectionName == FIREBASE_ADMINS_AND_USERS_COLLECTION) {
-            try {
-                val document = usersCollection.document(emailOrPhoneNumber.trim())
-                withContext(Dispatchers.IO) {
-                    document.delete().await()
-                }
-            } catch (e: Exception) {
-                logExceptionToFirebase(
-                    "removeRecordFromCollection, usersCollection",
-                    e.message.toString()
-                )
             }
         }
     }
@@ -527,44 +532,56 @@ class RegLogRepositoryImpl @Inject constructor(
 
     ) {
         val extractedUser = extractUserInfoFromFakeEmail(fakeEmail)
+        if (extractedUser.isNotEmptyNickName()) {
 
-        try {
+            try {
 
-            val adminFromCollection =
-                findAdminInCollectionByDocumentName(extractedUser.adminEmailOrPhone)
+                val adminFromCollection =
+                    findAdminInCollectionByDocumentName(extractedUser.adminEmailOrPhone)
 
-            if (adminFromCollection != null && adminFromCollection.nickName != Admin.DEFAULT_NICK_NAME) {
-                admin = adminFromCollection
-                val userFromCollection = findUserInCollection(
-                    User(
-                        adminEmailOrPhone = extractedUser.adminEmailOrPhone,
-                        nickName = extractedUser.nickName
+                if (adminFromCollection != null && adminFromCollection.nickName != Admin.DEFAULT_NICK_NAME) {
+                    admin = adminFromCollection
+                    val userFromCollection = findUserInCollection(
+                        User(
+                            adminEmailOrPhone = extractedUser.adminEmailOrPhone,
+                            nickName = extractedUser.nickName
+                        )
                     )
-                )
-                if (userFromCollection != null) {
-                    if (userFromCollection.password == extractedUser.password) {
+                    if (userFromCollection != null) {
+                        if (userFromCollection.password == extractedUser.password) {
 
-                        if (FirebaseAuth.getInstance().currentUser != null) {
-                            FirebaseAuth.getInstance().signOut()
-                        }
-                        withContext(Dispatchers.IO) {
-                            val authRes =
-                                auth.signInWithEmailAndPassword(fakeEmail, password).await()
+                            if (FirebaseAuth.getInstance().currentUser != null) {
+                                FirebaseAuth.getInstance().signOut()
+                            }
+                            withContext(Dispatchers.IO) {
+                                val authRes =
+                                    auth.signInWithEmailAndPassword(fakeEmail, password).await()
 
-                            val firebaseAuthUser = authRes.user
-                            if (!globalRepoUser.pressedLogoutButton) {
-                                if (firebaseAuthUser != null) {
-                                    globalRepoUser = userFromCollection
-                                } else {
-                                    setUserWithError("signToFirebaseWithEmailAndPasswordFromPreferences: ERROR AUTH USER: $fakeEmail")
+                                val firebaseAuthUser = authRes.user
+                                if (!globalRepoUser.pressedLogoutButton) {
+                                    if (firebaseAuthUser != null) {
+                                        globalRepoUser = userFromCollection
+                                    } else {
+                                        setUserWithError("signToFirebaseWithEmailAndPasswordFromPreferences: ERROR AUTH USER: $fakeEmail")
+                                    }
                                 }
                             }
+                        } else {
+                            globalRepoUser = userFromCollection.copy(password = User.WRONG_PASSWORD)
+                            isWrongPassword =
+                                userFromCollection.copy(password = User.WRONG_PASSWORD)
                         }
                     } else {
-                        globalRepoUser = userFromCollection.copy(password = User.WRONG_PASSWORD)
-                        isWrongPassword =
-                            userFromCollection.copy(password = User.WRONG_PASSWORD)
+                        //setUserWithError("signToFirebaseWithEmailAndPasswordFromPreferences: ADMIN_NOT_FOUND: ${extractedUser.adminEmailOrPhone}")
+                        Storage.clearPreferences(context)
+                        val emptyUserNotSaved =
+                            User(
+                                nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES,
+                                language = phoneLang
+                            )
+                        globalRepoUser = emptyUserNotSaved
                     }
+
                 } else {
                     //setUserWithError("signToFirebaseWithEmailAndPasswordFromPreferences: ADMIN_NOT_FOUND: ${extractedUser.adminEmailOrPhone}")
                     Storage.clearPreferences(context)
@@ -576,35 +593,24 @@ class RegLogRepositoryImpl @Inject constructor(
                     globalRepoUser = emptyUserNotSaved
                 }
 
-            } else {
-                //setUserWithError("signToFirebaseWithEmailAndPasswordFromPreferences: ADMIN_NOT_FOUND: ${extractedUser.adminEmailOrPhone}")
-                Storage.clearPreferences(context)
-                val emptyUserNotSaved =
-                    User(
-                        nickName = Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES,
-                        language = phoneLang
-                    )
-                globalRepoUser = emptyUserNotSaved
-            }
+            } catch (e: FirebaseAuthException) {
+                val errCode = e.errorCode.trim()
+                if (errCode == "ERROR_INVALID_CREDENTIAL" || errCode == "ERROR_USER_NOT_FOUND") {
+                    isWrongPassword = globalRepoUser
+                } else {
+                    Storage.clearPreferences(context)
+                    setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
+                }
 
-        } catch (e: FirebaseAuthException) {
-            val errCode = e.errorCode.trim()
-            if (errCode == "ERROR_INVALID_CREDENTIAL" || errCode == "ERROR_USER_NOT_FOUND") {
-                isWrongPassword = globalRepoUser
-            } else {
-                Storage.clearPreferences(context)
+            } catch (e: Exception) {
+                logExceptionToFirebase(
+                    "signToFirebaseWithEmailAndPasswordFromPreferences",
+                    e.message.toString()
+                )
                 setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
             }
-
-        } catch (e: Exception) {
-            logExceptionToFirebase(
-                "signToFirebaseWithEmailAndPasswordFromPreferences",
-                e.message.toString()
-            )
-            setUserWithError(ERROR_LOADING_USER_DATA_FROM_FIREBASE)
         }
     }
-
 
     private suspend fun signToFirebaseWithEmailAndPassword(
         adminEmail: String,
@@ -980,25 +986,29 @@ class RegLogRepositoryImpl @Inject constructor(
     }
 
     private suspend fun findUserInCollection(userToFind: User): User? {
-        return try {
-            val userData: User?
-            withContext(Dispatchers.IO) {
-                val document =
-                    usersCollection.document(userToFind.adminEmailOrPhone)
-                        .collection(userToFind.nickName.lowercase())
-                        .document(userToFind.nickName.lowercase())
-                        .get()
-                        .await()
+        if (userToFind.isNotEmptyNickName()) {
+            return try {
+                val userData: User?
+                withContext(Dispatchers.IO) {
+                    val document =
+                        usersCollection.document(userToFind.adminEmailOrPhone)
+                            .collection(userToFind.nickName.lowercase())
+                            .document(userToFind.nickName.lowercase())
+                            .get()
+                            .await()
 
-                userData = document?.toObject(User::class.java)
+                    userData = document?.toObject(User::class.java)
+                }
+
+                return userData
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                setUserWithError(e.message ?: "findUserInCollection, Error: ${e.message}")
+                null
             }
-
-            return userData
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-            setUserWithError(e.message ?: "findUserInCollection, Error: ${e.message}")
-            null
+        } else {
+            return null
         }
     }
 
@@ -1297,6 +1307,8 @@ class RegLogRepositoryImpl @Inject constructor(
     }
 
     companion object {
+        const val NO_NOTIFICATION_PERMISSION_GRANTED = "NO_NOTIFICATION_PERMISSION_GRANTED"
+
         const val TIMEOUT_VERIFICATION_MAIL = 60000L * 60L * 24L
         const val TIMEOUT_VERIFICATION_CHECK = 15000L
 

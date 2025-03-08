@@ -2,12 +2,14 @@ package com.balex.common.extensions
 
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.lifecycle.doOnDestroy
+import com.balex.common.data.datastore.Storage
 import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.ExternalTasks
 import com.balex.common.domain.entity.PrivateTasks
 import com.balex.common.domain.entity.Reminder
 import com.balex.common.domain.entity.Task
 import com.balex.common.domain.entity.ToDoList
+import com.balex.common.domain.entity.User
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -152,33 +154,6 @@ fun ToDoList.allMyTasks(myNickName: String): ExternalTasks {
 
 }
 
-//val Long.dayInMillis: Long
-//    get() {
-//        val calendar = Calendar.getInstance().apply {
-//            timeInMillis = this@dayInMillis
-//            set(Calendar.HOUR_OF_DAY, 0)
-//            set(Calendar.MINUTE, 0)
-//            set(Calendar.SECOND, 0)
-//            set(Calendar.MILLISECOND, 0)
-//        }
-//        return calendar.timeInMillis
-//    }
-//
-//val Long.timeOfDayInMillis: Long
-//    get() = this % (24 * 60 * 60 * 1000)
-//
-//fun Calendar.formattedFullDate(): String {
-//    val format = SimpleDateFormat("EEEE | d MMM y", Locale.getDefault())
-//    return format.format(time)
-//}
-//
-//fun Calendar.formattedShortDayOfWeek(): String {
-//    val format = SimpleDateFormat("EEE", Locale.getDefault())
-//    return format.format(time)
-//}
-//
-//fun User.calendarLastTimeAvailableFCMWasUpdated(): Calendar {
-//    return Calendar.getInstance().apply {
-//        time = Date(this@calendarLastTimeAvailableFCMWasUpdated.lastTimeAvailableFCMWasUpdated)
-//    }
-//}
+fun User.isNotEmptyNickName(): Boolean {
+    return (this.nickName != User.DEFAULT_NICK_NAME && this.nickName != Storage.NO_USER_SAVED_IN_SHARED_PREFERENCES)
+}

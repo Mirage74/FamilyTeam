@@ -57,6 +57,7 @@ import com.balex.common.LocalLocalizedContext
 import com.balex.common.LocalizedContextProvider
 import com.balex.common.SwitchLanguage
 import com.balex.common.data.ads.InterstitialAdHelper
+import com.balex.common.data.repository.RegLogRepositoryImpl.Companion.NO_NOTIFICATION_PERMISSION_GRANTED
 import com.balex.common.domain.entity.MenuItems
 import com.balex.common.extensions.logTextToFirebase
 import com.balex.common.theme.DarkBlue
@@ -87,7 +88,7 @@ fun LoggedUserContent(
 
     LaunchedEffect(deviceToken) {
         if (isFirstRun || state.sessionId != previousSessionId) {
-            if (deviceToken.isNotEmpty()) {
+            if (deviceToken.isNotEmpty() && deviceToken != NO_NOTIFICATION_PERMISSION_GRANTED) {
                 component.sendIntent(LoggedUserStore.Intent.SaveDeviceToken(deviceToken))
             } else {
                 logTextToFirebase("LoggedUserContent, deviceToken is empty")
@@ -390,13 +391,15 @@ fun MainContent(
 
                 PagesNames.ShopList -> ShopListContent(
                     component = component,
-                    state = state
+                    state = state,
+                    activity = activity
                 )
 
                 PagesNames.MyTasksForOtherUsers -> MyTasksForOtherUsersContent(
                     component = component,
                     state = state,
                     deviceToken = deviceToken,
+                    activity = activity,
                     paddingValues = paddingValues
                 )
 

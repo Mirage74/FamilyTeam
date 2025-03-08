@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.balex.common.data.repository.TaskMode
 import com.balex.common.domain.entity.ExternalTask
 import com.balex.common.domain.entity.Task
@@ -233,11 +234,15 @@ fun InputOrEditTaskForm(
                         expanded = expanded,
                         onExpandedChange = { expanded = !expanded }
                     ) {
+                        val textChooseUser = context.getString(R.string.choose_user)
                         TextField(
                             value = selectedUser ?: "",
                             onValueChange = {},
                             readOnly = true,
-                            placeholder = { Text("choose user") },
+                            placeholder = { Text(
+                                text = textChooseUser,
+                                fontSize = 24.sp
+                            )},
                             modifier = Modifier.menuAnchor(
                                 type = MenuAnchorType.PrimaryNotEditable,
                                 enabled = true

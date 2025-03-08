@@ -1,7 +1,6 @@
 package com.balex.common.data.repository
 
 import android.app.Activity
-import android.content.Context
 import com.balex.common.BuildConfig
 import com.balex.common.data.iap.DataWrappers
 import com.balex.common.data.iap.IapConnector
@@ -9,6 +8,7 @@ import com.balex.common.data.iap.PurchaseServiceListener
 import com.balex.common.domain.repository.BillingRepository
 import com.balex.common.domain.usecases.regLog.GetUserUseCase
 import com.balex.common.domain.usecases.user.ExchangeCoinsUseCase
+import com.balex.common.extensions.isNotEmptyNickName
 import com.balex.common.extensions.logExceptionToFirebase
 import com.balex.common.extensions.logTextToFirebase
 import kotlinx.coroutines.CoroutineScope
@@ -19,8 +19,7 @@ import javax.inject.Inject
 
 class BillingRepositoryImpl @Inject constructor(
     private val getUserUseCase: GetUserUseCase,
-    private val exchangeCoinsUseCase: ExchangeCoinsUseCase,
-    private val context: Context
+    private val exchangeCoinsUseCase: ExchangeCoinsUseCase
 ) : BillingRepository {
 
 
@@ -33,7 +32,14 @@ class BillingRepositoryImpl @Inject constructor(
 
     private suspend fun addCreditsToUser(credits: Int) {
         val user = getUserUseCase()
-        exchangeCoinsUseCase(user.teamCoins + credits, user.availableTasksToAdd, user.availableFCM)
+        if (user.isNotEmptyNickName()) {
+            exchangeCoinsUseCase(
+                user.teamCoins + credits,
+                user.availableTasksToAdd,
+                user.availableFCM
+            )
+        }
+
     }
 
 
@@ -73,7 +79,10 @@ class BillingRepositoryImpl @Inject constructor(
                         addCreditsToUser(quantity)
                     }
                 } catch (e: Exception) {
-                    logExceptionToFirebase("launchPurchaseFlow, Wrong quantity in jsonObject:", "$jsonObject.")
+                    logExceptionToFirebase(
+                        "launchPurchaseFlow, Wrong quantity in jsonObject:",
+                        "$jsonObject."
+                    )
                     e.printStackTrace()
                 }
             }
